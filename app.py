@@ -182,6 +182,8 @@ def make(b:dict):
    if url:
     save(job,{'stage':'Reading video info','progress':.01})
     with _yt({'skip_download':True}) as y:info=y.extract_info(url,download=False)
+    if info.get('is_live') or info.get('live_status') in ('is_live','is_upcoming'):
+     raise RuntimeError('This stream is live right now. Use the Live clipping panel to clip it while it is on, or wait until it ends and use Make clips on the finished video.')
     video_lang=str(info.get('language') or '')
     fast=float(info.get('duration') or 0)>FAST_OVER and not info.get('is_live') and mode=='fast';title=info.get('title') or ''
     try:
@@ -282,18 +284,20 @@ def live_render(sess,start,dur,why,chat_feature):
  """Cut the backdated window out of the growing recording, caption it, write a hook, export with the user's layout."""
  import learn,excite
  from translit import to_hinglish
- o=sess.opts;name=uuid.uuid4().hex;out=DATA/(name+'.mp4')
+ o=sess.opts;name=uuid.uuid4().hex;out=DATA/(name+'.mp4');T={};_t=time.time()
+ def lap(k):
+  nonlocal _t;T[k]=round(time.time()-_t,1);_t=time.time()
  for enc in (['-c:v','h264_nvenc','-preset','p4','-cq','21'],['-c:v','libx264','-preset','veryfast','-crf','21']):
   r=subprocess.run(['ffmpeg','-y','-v','error','-ss',f'{start:.2f}','-i',str(sess.rec),'-t',f'{dur:.2f}',*enc,'-c:a','aac','-b:a','160k',str(out)],capture_output=True,text=True)
   if r.returncode==0 and out.exists() and out.stat().st_size>10000:break
  else:raise RuntimeError('Could not cut the clip from the recording: '+r.stderr[-150:])
- real=_dur(out)
+ real=_dur(out);lap('cut')
  lang=o.get('language') or None
  res=transcribe(out,0,real,DATA,lambda m:None,('hinglish' if lang=='hinglish' else lang),'base')
  words=res['words']
  if res.get('language')=='hi' and lang in (None,'hinglish'):
   words=[dict(w,text=to_hinglish(w['text'])) for w in words]
- text=' '.join(w['text'] for w in words)
+ text=' '.join(w['text'] for w in words);lap('captions')
  title,hook,llm='Live clip','',None
  try:
   import smart
@@ -301,15 +305,25 @@ def live_render(sess,start,dur,why,chat_feature):
   if m and len(text.split())>=4:
    sc,t,h=smart._ask(m,text);title,hook,llm=t or title,h,sc/10
  except Exception:pass
- feats={'chat':chat_feature,'words':excite.window_score(words,real),'llm':llm}
+ loud=None
+ try:
+  import numpy as np
+  from highlights import _audio
+  rms,hf=_audio(out)
+  if len(rms)>4:
+   base=float(np.median(rms))+1e-4;loud=float(min(1.0,max(0.0,(float(np.percentile(rms,95))/base-1.0)/3.0)))
+ except Exception:pass
+ feats={'chat':chat_feature,'words':excite.window_score(words,real),'llm':llm,'loud':loud}
  W=learn.load_weights(DATA);viral=min(99,round(100*learn.score(feats,W)))
  body={'id':name,'start':0,'end':real,'layout':o.get('layout','blur'),'captions':True,'caption_style':o.get('caption_style','gta'),'language':None,'hook':hook,
        'title':title,'post_caption':title,'cam':o['cam'],'game':o['game'],'top':o.get('top',.32),'words':words,'features':feats,'weights_used':W}
+ lap('score')
  ej=export(body)['job']
- while state.get(ej,{}).get('status')=='running':time.sleep(.7)
+ while state.get(ej,{}).get('status')=='running':time.sleep(.3)
  r=state[ej]
  if r.get('error'):raise RuntimeError(r['error'])
- return {'file':ej,'title':title,'hook':hook,'why':why,'viral':viral,'axes':axes(feats),'at':int(sess.now()),'reason':why,'start':round(start),'end':round(start+real)}
+ lap('render')
+ return {'secs':T,'file':ej,'title':title,'hook':hook,'why':why,'viral':viral,'axes':axes(feats),'at':int(sess.now()),'reason':why,'start':round(start),'end':round(start+real)}
 
 @app.post('/live/start')
 def live_start(b:dict):

@@ -81,8 +81,8 @@ class LiveSession:
                             s.sendall(b'PONG :tmi.twitch.tv\r\n')
                         elif ' PRIVMSG ' in ln:
                             self.counts[int(time.time() // BUCKET)] += 1
-            except Exception:
-                self._set(chat='reconnecting')
+            except Exception as e:
+                self._set(chat='reconnecting (' + type(e).__name__ + ')')
                 time.sleep(3)
 
     def _youtube_chat(self):
@@ -93,14 +93,14 @@ class LiveSession:
             return
         while not self.stop_ev.is_set():
             try:
-                chat = pytchat.create(video_id=self.ref)
+                chat = pytchat.create(video_id=self.ref, interruptable=False)   # True needs the main thread (signal handler)
                 self._set(chat='connected (read-only)')
                 while chat.is_alive() and not self.stop_ev.is_set():
                     for _ in chat.get().sync_items():
                         self.counts[int(time.time() // BUCKET)] += 1
                     time.sleep(0.5)
-            except Exception:
-                self._set(chat='reconnecting')
+            except Exception as e:
+                self._set(chat='reconnecting (' + type(e).__name__ + ': ' + str(e)[:80] + ')')
                 time.sleep(3)
 
     # ---- clips
