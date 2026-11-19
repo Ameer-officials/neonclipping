@@ -27,3 +27,8 @@ __pycache__/
 !tests/*.py
 
 !docs/*.md
+!install.ps1
+!install.sh
+!NeonClipping-Setup.bat
+!docs/.nojekyll
+!docs/*.mp4
