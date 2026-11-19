@@ -113,7 +113,7 @@ pages.append(f'''<section class="page"><h2><span class="n">06</span>Tips and fix
 <tr><td>Can't set it up</td><td>Paste the prompt into an AI agent again and tell it the error. <span class="hi">Prompt दोबारा AI agent को दो और एरर बताओ।</span></td></tr></table>
 <div class="cta"><h3>Liked it? Please star it ★ / पसंद आया? स्टार ज़रूर करें ★</h3>
 <p><b>Every star tells me this is useful and helps me keep making NeonClipping better. <span class="hi">हर स्टार मुझे बताता है कि यह काम का है और इसे आगे बेहतर बनाने में मदद करता है।</span></b><br><br>
-★ <a href="https://github.com/iamajmeena/neonclipping">{GH}</a><br>📷 Instagram: <a href="https://www.instagram.com/iamajmeena/">@iamajmeena</a> · Made by <b>Ajay K Meena</b></p></div>
+★ <a href="https://github.com/iamajmeena/neonclipping">{GH}</a><br>♥ Optional support (UPI / cards): <a href="https://rzp.io/rzp/JN41CpW">rzp.io/rzp/JN41CpW</a><br>📷 Instagram: <a href="https://www.instagram.com/iamajmeena/">@iamajmeena</a> · Made by <b>Ajay K Meena</b></p></div>
 {foot("6")}</section>''')
 
 doc = ('<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><title>NeonClipping Guide · English + हिंदी</title>\n'

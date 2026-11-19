@@ -131,6 +131,10 @@ Set `NEONCLIPPING_CPU=1` to force CPU. Set `NEONCLIPPING_PORT=9000` to use anoth
 - Deep mode was verified on a short video only; on multi-hour videos it downloads the whole file first and is slow by design.
 - Facecam presets are starting points, not detection: if you pick Bottom-right but the cam is bottom-left, the top half of the clip will show the wrong area. Pick the right corner or draw your own boxes.
 
+## Support
+
+NeonClipping is free. If it saves you time you can ⭐ star the repo, follow [@iamajmeena](https://www.instagram.com/iamajmeena/), or optionally donate via Razorpay (UPI / cards): <https://rzp.io/rzp/JN41CpW>. The app also has a ♥ Donate button. Nothing is ever locked behind a donation.
+
 ## Credits and inspiration
 
 Design ideas studied from open-source clippers: [PeakCut](https://github.com/haziqahmedqasmi/PeakCut) (audio-first download, captions as transcript, section download), [ClipCutter](https://github.com/curtyo18/ClipCutter), [content-ai](https://github.com/buddah0/content-ai), and the Growlance live-clipper script. Built on FFmpeg, yt-dlp, FastAPI, faster-whisper, OpenCV, Ollama.
