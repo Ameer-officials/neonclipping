@@ -9,6 +9,30 @@ from fastapi import HTTPException
 
 CHANGE_KEYS = {'layout','top','cam','game','caption_style','caption_y','captions','hook','title','post_caption'}
 
+def latest_file(data, file):
+    """If a clip was re-edited, its newer version is the one to work on (stale cards still point at the old file)."""
+    seen=set()
+    while isinstance(file,str) and file.isalnum() and file not in seen:
+        seen.add(file);path=data/(file+'.json')
+        try:newer=json.loads(path.read_text(encoding='utf-8')).get('superseded_by')
+        except (OSError,ValueError):break
+        if not newer:break
+        file=newer
+    return file
+
+def ancestors(data, file):
+    """Older file names that this clip replaced (result cards on screen may still hold one of them)."""
+    out=[];todo=[file]
+    while todo:
+        cur=todo.pop()
+        for path in data.glob('*.json'):
+            if path.name.endswith(('.state.json','.words.json','.request.json')):continue
+            try:
+                if json.loads(path.read_text(encoding='utf-8')).get('superseded_by')==cur and path.stem not in out:
+                    out.append(path.stem);todo.append(path.stem)
+            except (OSError,ValueError):pass
+    return out
+
 def read_record(data, file):
     if not isinstance(file,str) or not file.isalnum():
         raise HTTPException(400,'Choose a saved clip.')
@@ -82,7 +106,7 @@ def attach(app,data,state,probe,export,save):
 
     @app.get('/clips/{file}/edit')
     def editor(file:str):
-        record=read_record(data,file);settings=record['settings'];source=record['source']
+        file=latest_file(data,file);record=read_record(data,file);settings=record['settings'];source=record['source']
         if not source.isalnum() or not (data/(source+'.mp4')).exists():
             raise HTTPException(409,'Original source is unavailable. Restore it to edit this clip without downloading again.')
         return {'file':file,'settings':{**settings,'words':saved_words(data,file,record)},
@@ -90,7 +114,7 @@ def attach(app,data,state,probe,export,save):
 
     @app.post('/clips/reedit')
     def apply(body:dict):
-        anchor=str(body.get('file',''));base=read_record(data,anchor)
+        anchor=latest_file(data,str(body.get('file','')));base=read_record(data,anchor)
         changes=body.get('changes',{})
         if not isinstance(changes,dict) or set(changes)-CHANGE_KEYS:
             raise HTTPException(400,'Choose supported layout or caption settings.')
@@ -147,7 +171,7 @@ def attach(app,data,state,probe,export,save):
                     old['superseded_by']=child
                     path=data/(file+'.json');temp=path.with_suffix('.json.tmp')
                     temp.write_text(json.dumps(old,ensure_ascii=False,indent=2),encoding='utf-8');temp.replace(path)
-                    clips.append({'file':child,'previous':file,'title':settings.get('title','Edited clip'),'srt':result.get('srt')})
+                    clips.append({'file':child,'previous':file,'was':ancestors(data,file),'title':settings.get('title','Edited clip'),'srt':result.get('srt')})
                     save(job,{'clips':clips,'progress':(i+1)/len(prepared),'stage':f'Updated {i+1}/{len(prepared)}'})
                 save(job,{'status':'done','stage':'Edits applied','elapsed_seconds':round(time.monotonic()-began,2)})
             except Exception as error:save(job,{'status':'error','error':str(error)[-600:]})
