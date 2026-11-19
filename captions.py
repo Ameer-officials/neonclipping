@@ -1,7 +1,24 @@
 """Independent word-timed ASR, editable transcript and styled ASS/SRT."""
 from pathlib import Path
+from translit import to_hinglish
 import json,os,threading,subprocess
 MODELS={}
+ROMAN_PROMPT='Aaj hum GTA 6 ke baare mein baat karenge, yeh bahut mast hai. Kya haal hai bhai, chalo shuru karte hain. Matlab ekdum sahi hai, nahi yaar, bilkul.'
+DEVA_PROMPT='यह हिंदी और अंग्रेज़ी में गेमिंग वीडियो है। GTA, गेमप्ले, क्लिपिंग, वीडियो, टूल।'
+
+def large_v3():
+    snaps=list((Path.home()/'.cache/huggingface/hub/models--Systran--faster-whisper-large-v3/snapshots').glob('*'))
+    return str(snaps[0]) if snaps else 'large-v3'
+
+def _best_hindi():
+    """large-v3 is clearly better at Hindi than distilled turbo, but on a 6 GB GPU shared with other apps it measured
+    ~6 minutes for a 40 s clip (memory spill). Auto-use it only when 3.4 GB of GPU memory is really free."""
+    try:
+        if os.environ.get('NEONCLIPPING_CPU')=='1':return ''
+        free=int(subprocess.run(['nvidia-smi','--query-gpu=memory.free','--format=csv,noheader,nounits'],capture_output=True,text=True,timeout=5).stdout.split()[0])
+        if free>=3400:return large_v3()
+    except Exception:pass
+    return ''
 
 def _load(WhisperModel,spec,data):
     """GPU first (int8_float16, ~10x faster than CPU), CPU int8 as fallback. Never crashes on a missing CUDA runtime."""
@@ -25,13 +42,13 @@ LOCK=threading.Lock()
 def transcribe(source,start,end,data,report=lambda message:None,language=None,model=None):
     report('Loading local speech model (first use may download it)')
     from faster_whisper import WhisperModel
-    spec=model or os.environ.get('FACECAM_ASR_MODEL','')
+    spec=model or os.environ.get('FACECAM_ASR_MODEL','') or (_best_hindi() if language in ('hi','hinglish') else '')
     if not spec:
         snapshots=Path.home()/'.cache/huggingface/hub/models--mobiuslabsgmbh--faster-whisper-large-v3-turbo/snapshots'
         available=[p for p in snapshots.glob('*') if (p/'model.bin').exists()]
-        spec=str(available[0]) if available else 'base'
+        spec=str(available[0]) if available else 'large-v3-turbo'
     model_tag=Path(spec).name[:14]
-    key=f'{source.stem}-{start:.2f}-{end:.2f}-{language or "auto"}-{model_tag}-v2'
+    key=f'{source.stem}-{start:.2f}-{end:.2f}-{language or "auto"}-{model_tag}-v3'
     cached=data/(key+'.words.json')
     if cached.exists():return json.loads(cached.read_text(encoding='utf-8'))
     with LOCK:
@@ -42,12 +59,14 @@ def transcribe(source,start,end,data,report=lambda message:None,language=None,mo
         subprocess.run(['ffmpeg','-y','-v','error','-ss',str(start),'-t',str(end-start),'-i',str(source),'-vn','-ac','1','-ar','16000',str(audio)],capture_output=True,check=True,timeout=300)
         try:
             report('Transcribing selected clip locally')
-            prompt='यह हिंदी और अंग्रेज़ी में गेमिंग वीडियो है। GTA, गेमप्ले, क्लिपिंग, वीडियो, टूल।' if language=='hi' else None
-            segments,info=MODEL.transcribe(str(audio),beam_size=3,language=language or None,initial_prompt=prompt,word_timestamps=True,vad_filter=True,condition_on_previous_text=False)
+            # 'hinglish' = Hindi speech written in Roman letters (a Roman-script prompt steers Whisper to it)
+            prompt=DEVA_PROMPT if language in ('hi','hinglish') else None
+            segments,info=MODEL.transcribe(str(audio),beam_size=5,language=('hi' if language=='hinglish' else language) or None,initial_prompt=prompt,word_timestamps=True,vad_filter=True,condition_on_previous_text=False)
             words=[]
             for segment in segments:
                 for w in segment.words or []:
                     text=w.word.strip()
+                    if language=='hinglish':text=to_hinglish(text)
                     if text and w.end>w.start:words.append({'start':round(max(0,w.start),3),'end':round(min(end-start,w.end),3),'text':text})
             result={'words':words,'language':info.language,'duration':end-start,'model':model_tag}
             cached.write_text(json.dumps(result,ensure_ascii=False),encoding='utf-8');return result

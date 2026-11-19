@@ -9,7 +9,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse
 import uvicorn
 import math
-from captions import transcribe, write as write_captions
+from captions import transcribe, large_v3, write as write_captions
 ROOT=Path(__file__).resolve().parent
 DATA=ROOT/'data';DATA.mkdir(exist_ok=True)
 app=FastAPI()
@@ -73,7 +73,7 @@ def caption_job(b:dict):
  id,src,m,start,end=source_range(b);job=uuid.uuid4().hex
  state[job]={'status':'running','message':'Starting local captions'}
  language=b.get('language') or None
- if language not in (None,'hi','en'):raise HTTPException(400,'Choose Auto, Hindi or English.')
+ if language not in (None,'hi','en','hinglish'):raise HTTPException(400,'Choose Auto, Hinglish, Hindi or English.')
  def work():
   try:
    result=transcribe(src,start,end,DATA,lambda msg:state[job].update(message=msg),language)
@@ -162,17 +162,20 @@ def make(b:dict):
   count=max(1,min(12,int(b.get('count',4))));max_len=max(10,min(180,float(b.get('max_len',b.get('length',60)))));min_len=max(5,min(max_len,float(b.get('min_len',30))))
  except (TypeError,ValueError):raise HTTPException(400,'Choose a valid clip count and length range.')
  mode='deep' if b.get('mode')=='deep' else 'fast'
+ acc=b.get('accurate','accurate');acc='fast' if acc in (False,'fast') else 'best' if acc=='best' else 'accurate'
  layout=b.get('layout','blur');style=b.get('caption_style','gta');language=b.get('language') or None
- cam=b.get('cam') or {'x':0,'y':0,'w':.25,'h':.3};game=b.get('game') or {'x':.25,'y':0,'w':.75,'h':1}
+ from translit import to_hinglish
+ top_h=b.get('top');cam=b.get('cam') or {'x':0,'y':0,'w':.25,'h':.3};game=b.get('game') or {'x':.25,'y':0,'w':.75,'h':1}
  job=uuid.uuid4().hex;save(job,{'id':job,'status':'running','stage':'Starting','progress':0,'clips':[],'source':{'url':url}})
  def work():
   began=time.monotonic()
   try:
    from smart import find
-   fast=False;title='';yt_words=None
+   fast=False;title='';yt_words=None;video_lang=''
    if url:
     save(job,{'stage':'Reading video info','progress':.01})
     with _yt({'skip_download':True}) as y:info=y.extract_info(url,download=False)
+    video_lang=str(info.get('language') or '')
     fast=float(info.get('duration') or 0)>FAST_OVER and not info.get('is_live') and mode=='fast';title=info.get('title') or ''
     try:
      from captions_yt import from_info
@@ -209,9 +212,13 @@ def make(b:dict):
     if sections:
      sid2=sections[i].result();real=section_start(p,DATA/(sid2+'.mp4'),max(0,c['start']-PAD));start=max(0,c['start']-real);end=min(_dur(DATA/(sid2+'.mp4')),start+c['end']-c['start']);words=c.get('words')
     else:sid2=sid;start=c['start'];end=c['end'];words=c.get('words')
-    body={'id':sid2,'start':start,'end':end,'layout':layout,'captions':True,'caption_style':style,'language':language,'hook':c.get('hook',''),
+    lang=language or ('hinglish' if (video_lang.startswith('hi') or c.get('language')=='hi') else None)
+    body={'id':sid2,'start':start,'end':end,'layout':layout,'top':(top_h if isinstance(top_h,(int,float)) and .2<=top_h<=.5 else .32),'captions':True,'caption_style':style,'language':language,'hook':(' '.join(to_hinglish(w) for w in c.get('hook','').split()) if lang=='hinglish' else c.get('hook','')),
           'title':c.get('title',''),'post_caption':c.get('title',''),'cam':cam,'game':game}
-    body['words']=c.get('words') or transcribe(DATA/(sid2+'.mp4'),start,end,DATA,lambda m:None,language,'base')['words']
+    if acc!='fast' or lang in ('hinglish','hi') or not c.get('words'):
+     save(job,{'stage':f'Accurate captions {i+1}/{len(found)}'})
+     body['words']=transcribe(DATA/(sid2+'.mp4'),start,end,DATA,lambda m:None,lang,(large_v3() if acc=='best' else None))['words']
+    else:body['words']=c['words']
     ej=export(body)['job']
     while state.get(ej,{}).get('status')=='running':time.sleep(.7)
     r=state[ej]

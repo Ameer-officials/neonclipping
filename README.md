@@ -10,7 +10,8 @@ NeonClipping turns long YouTube / Twitch / Kick videos (or your own MP4) into ve
 
 ![UI](docs/neonclipping-ui.jpg)
 
-📘 **Guides (Hindi + English, PDF):** [docs/NeonClipping-Guide-EN-HI.pdf](docs/NeonClipping-Guide-EN-HI.pdf)
+📘 **Guides (Hindi + English, PDF):** [docs/NeonClipping-Guide-EN-HI.pdf](docs/NeonClipping-Guide-EN-HI.pdf)  
+🤖 **Let an AI agent install it for you:** copy [docs/NEONCLIPPING-AGENT-SETUP-PROMPT.txt](docs/NEONCLIPPING-AGENT-SETUP-PROMPT.txt) into Claude Code, Codex CLI or Cursor.
 
 ## How it finds good moments
 
@@ -43,7 +44,9 @@ Your numbers depend on network and CPU.
 - **Min / Max clip length** (e.g. 30–80 s). Clips end on a sentence.
 - **Facecam position presets** (top-left, top-right, bottom-left, bottom-right, bottom-centre, none) for the usual streamer layouts, remembered between sessions. Or draw the face and gameplay boxes yourself in the editor.
 - Layouts: face + gameplay stack, blurred fill, fill screen, gameplay only.
-- Caption styles: GTA Neon, Impact, Clean. Word-timed, editable words, SRT export, Hindi/Hinglish and English.
+- Caption styles: GTA Neon, Impact, Clean. Word-timed, editable words, SRT export.
+- **Hinglish captions**: Hindi speech is written in English letters ("kya haal hai bhai") by default. Pick Hinglish / हिंदी / English explicitly if you like. Caption accuracy: Fast, Accurate (Whisper large-v3-turbo, default) or Best Hindi (large-v3, much slower on small GPUs).
+- **Make clips uses your own setup**: facecam preset or the boxes you draw in step 03.
 - Optical-flow motion + audio highlight ranking, frame-accurate NVENC export (falls back to x264).
 - Nothing leaves your computer. The server binds to `127.0.0.1` only.
 
@@ -79,6 +82,7 @@ Set `NEONCLIPPING_CPU=1` to force CPU. Set `NEONCLIPPING_PORT=9000` to use anoth
 | `highlights.py` | Audio-jump / shout / optical-flow / cut ranking, parallel decode |
 | `captions_yt.py` | YouTube word-timed captions (json3) parser |
 | `captions.py` | Local Whisper (GPU first, CPU fallback), ASS/SRT styles |
+| `translit.py` | Devanagari → Hinglish (word by word, keeps timings) |
 | `standalone.py`, `previews.py` | Link import, early preview frames |
 
 ## Honest limits

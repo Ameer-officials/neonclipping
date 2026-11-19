@@ -65,9 +65,10 @@ th{background:#17122a;color:#fff}
   <p>NeonClipping turns a long YouTube, Twitch or Kick video (or your own MP4) into short vertical clips for Reels, Shorts and TikTok. Each clip comes with burned-in captions, a title and a hook line. Everything runs on your own computer: no account, no subscription, nothing uploaded.</p>
   <div class="flow"><div><b>1</b>Paste link</div><div><b>2</b>Audio only downloads</div><div><b>3</b>AI picks best moments</div><div><b>4</b>Only those parts download</div><div><b>5</b>Captioned 9:16 clips</div></div>
   <img class="shot" src="home.jpg" width="100%">
+  <div class="note"><b>Free and open-source:</b> <a href="https://github.com/iamajmeena/neonclipping">github.com/iamajmeena/neonclipping</a> · ★ please star the repo so I can keep improving it.</div>
   <h3>Why it is fast</h3>
   <p>It never reads the whole video. It downloads only the audio (about 80 MB for an 85-minute video), reads the transcript (YouTube's own captions when available), scores the audio for sudden loud, energetic moments, lets a small local AI choose, and then fetches just the chosen few minutes of video. We measured <b>97 seconds</b> for 3 clips from an 85-minute YouTube stream.</p>
-  <div class="foot"><span>NeonClipping · by Ajay K Meena</span><span>EN 1</span></div>
+  <div class="foot"><span>NeonClipping · by Ajay K Meena · ★ Star: github.com/iamajmeena/neonclipping</span><span>EN 1</span></div>
 </section>
 
 <section class="page"><div class="tab">ENGLISH</div>
@@ -82,7 +83,7 @@ cd neonclipping
   <p>The first run creates a private Python environment and installs the packages. Then open <code>http://127.0.0.1:8770</code> in your browser.</p>
   <div class="note"><b>GPU speech model (optional).</b> Only used for videos that have no YouTube captions (Twitch VODs, uploaded files): <code>.venv\Scripts\pip install nvidia-cublas-cu12 "nvidia-cudnn-cu12==9.*"</code>. Set <code>NEONCLIPPING_CPU=1</code> to force CPU.</div>
   <div class="note warn"><b>Stays on your machine.</b> The app listens on 127.0.0.1 only. Your videos and clips are saved in the <code>data</code> folder next to the app.</div>
-  <div class="foot"><span>NeonClipping · by Ajay K Meena</span><span>EN 2</span></div>
+  <div class="foot"><span>NeonClipping · by Ajay K Meena · ★ Star: github.com/iamajmeena/neonclipping</span><span>EN 2</span></div>
 </section>
 
 <section class="page"><div class="tab">ENGLISH</div>
@@ -96,8 +97,9 @@ cd neonclipping
   <tr><td><b>Clips</b></td><td>How many clips you want (1–12).</td></tr>
   <tr><td><b>Min / Max length</b></td><td>For example 30 and 60, or 30 and 80 seconds. Clips end at the end of a sentence inside this range.</td></tr>
   <tr><td><b>Layout</b></td><td>Face + gameplay (stack), Blurred fill, Fill screen, Gameplay only.</td></tr>
-  <tr><td><b>Facecam position</b></td><td>Pick where the streamer's webcam sits: top-left, top-right, bottom-left, bottom-right, bottom-centre, or no facecam. NeonClipping then stacks the face on top and the game below.</td></tr></table>
-  <div class="foot"><span>NeonClipping · by Ajay K Meena</span><span>EN 3</span></div>
+  <tr><td><b>Caption language</b></td><td><b>Auto</b> writes Hindi speech as <b>Hinglish</b> (Hindi in English letters, e.g. “kya haal hai bhai”). You can also force Hinglish, Hindi (Devanagari) or English. <b>Caption accuracy</b>: <b>Accurate</b> (default) re-listens to each chosen clip with Whisper large-v3-turbo; <b>Fast</b> reuses the quick transcript; <b>Best Hindi</b> uses Whisper large-v3 (clearly better Hindi, but very slow on a small GPU: about 6 minutes for a 40-second clip on a 6 GB card).</td></tr>
+  <tr><td><b>Facecam position</b></td><td>Pick where the streamer's webcam sits: top-left, top-right, bottom-left, bottom-right, bottom-centre, or no facecam. NeonClipping then stacks the face on top and the game below. If you draw the boxes yourself in step 03, <b>Make clips</b> uses exactly your boxes.</td></tr></table>
+  <div class="foot"><span>NeonClipping · by Ajay K Meena · ★ Star: github.com/iamajmeena/neonclipping</span><span>EN 3</span></div>
 </section>
 
 <section class="page"><div class="tab">ENGLISH</div>
@@ -106,7 +108,7 @@ cd neonclipping
   <ol><li>Press <b>Get preview</b>. Actual frames of the video appear within seconds while the full video downloads.</li><li>Choose a frame. Press <b>Facecam area</b> and draw a box around the webcam. Press <b>Gameplay area</b> and draw the game. Press <b>Save layout</b> to reuse it.</li><li>Press <b>✦ Find highlights</b>, pick a moment from the list and press <b>Open highlight</b>. Adjust start, end and face height.</li><li>In <b>Give it a voice</b>, choose a caption style: <b>GTA Neon</b>, <b>Impact</b> or <b>Clean</b>. Press <b>Generate subtitles</b> and fix any word directly in the boxes. Add an opening hook if you like.</li><li>Press <b>Export clip</b> for one clip or <b>Export video highlights</b> for all candidates.</li></ol>
   <h3>Tips for better clips</h3>
   <ul><li>Use videos where the creator talks a lot and reacts: gaming streams, podcasts, interviews, tutorials.</li><li>YouTube links are the fastest (free captions). Twitch VODs work too and are slower because speech must be recognised.</li><li>Install Ollama and <code>llama3.2:3b</code>. Titles and the choice of moments get clearly better.</li><li>Always watch each clip before posting. The picker finds loud, energetic, quotable moments; it cannot see the screen.</li><li>If the facecam sits somewhere unusual, draw your own boxes instead of using a preset.</li></ul>
-  <div class="foot"><span>NeonClipping · by Ajay K Meena</span><span>EN 4</span></div>
+  <div class="foot"><span>NeonClipping · by Ajay K Meena · ★ Star: github.com/iamajmeena/neonclipping</span><span>EN 4</span></div>
 </section>
 
 <section class="page"><div class="tab">ENGLISH</div>
@@ -119,10 +121,99 @@ cd neonclipping
   <tr><td>Download fails for a restricted video</td><td>Use the original MP4 with <b>Upload video</b>.</td></tr>
   <tr><td>Port 8770 already in use</td><td>Another copy is running. Close it, then start again.</td></tr></table>
   <div class="cta"><h3>If NeonClipping saves you time</h3>
-  <p>It is free and open-source, built by <b>Ajay K Meena</b> (Director, DOP, colorist, DaVinci Resolve educator, Jaipur).<br>
+  <p><b>Every star on GitHub tells me this is useful, and helps me keep making NeonClipping better: faster clips, smarter picks, more languages.</b> Please take 5 seconds to star it.<br><br>It is free and open-source, built by <b>Ajay K Meena</b> (Director, DOP, colorist, DaVinci Resolve educator, Jaipur).<br>
   ★ Star the repo: <a href="https://github.com/iamajmeena/neonclipping">github.com/iamajmeena/neonclipping</a><br>
   📷 Follow on Instagram: <a href="https://www.instagram.com/iamajmeena/">@iamajmeena</a></p></div>
-  <div class="foot"><span>NeonClipping · by Ajay K Meena</span><span>EN 5</span></div>
+  <div class="foot"><span>NeonClipping · by Ajay K Meena · ★ Star: github.com/iamajmeena/neonclipping</span><span>EN 5</span></div>
+</section>
+
+
+<section class="page"><div class="tab">ENGLISH</div>
+  <h2><span class="n">06</span>Let an AI agent install it for you</h2>
+  <p>Never used a terminal? You do not need to. Give the prompt on the next page to an AI coding agent that can run commands on your computer (for example <b>Claude Code</b>, <b>OpenAI Codex CLI</b> or <b>Cursor</b> in agent mode). It installs Python, FFmpeg and Git, downloads NeonClipping, sets up the local AI, starts the app and tests it. It asks you before every big download.</p>
+  <h3>How to use it</h3>
+  <ol><li>Install one coding agent and open it (it shows a chat box in a terminal or in an editor).</li><li>Open an empty folder in it, for example <code>NeonClipping-setup</code>.</li><li>Copy the whole prompt (pages EN 7 and EN 8, or the file <code>docs/NEONCLIPPING-AGENT-SETUP-PROMPT.txt</code> on GitHub) and paste it into the agent.</li><li>Say <b>yes</b> when it asks about big downloads (the speech model is about 1.6 GB, the optional Ollama model about 2 GB).</li><li>When it prints the final report, open <code>http://127.0.0.1:8770</code>.</li></ol>
+  <div class="note"><b>Safe by design.</b> The prompt tells the agent not to touch system or security settings, not to ask for passwords, and to confirm before large downloads. NeonClipping itself needs no account and no API key.</div>
+  <div class="note warn"><b>Always read what an agent is about to run.</b> If you use a tool that asks for permission before running commands, approve only commands that match the steps in the prompt.</div>
+  <h3>What the prompt does</h3>
+  <table><tr><th>Step</th><th>Result</th></tr><tr><td>0–1</td><td>Checks disk space and GPU, installs Python, FFmpeg, Git</td></tr><tr><td>2–3</td><td>Clones NeonClipping, creates its environment, installs packages</td></tr><tr><td>4–6</td><td>Optional Ollama + llama3.2:3b for AI titles; optional NVIDIA GPU libraries; speech model note</td></tr><tr><td>7–8</td><td>Starts the app and runs a 30-second smoke test</td></tr><tr><td>9</td><td>Shows you how to make your first clips</td></tr></table>
+  <div class="foot"><span>NeonClipping · by Ajay K Meena · ★ Star: github.com/iamajmeena/neonclipping</span><span>EN 6</span></div>
+</section>
+<section class="page"><div class="tab">ENGLISH</div>
+  <h2><span class="n">07</span>The prompt (copy everything)</h2>
+  <pre style="font-size:7.6pt;line-height:1.38;padding:3mm 4mm;margin:2mm 0;color:#e8f9ff">You are a careful setup agent. Install and start NeonClipping on this computer, verify it works, and report honestly. Work step by step. Run every command yourself in a terminal (you need a coding agent that can run shell commands, such as Claude Code, Codex CLI or Cursor agent mode). Do not ask me to type commands unless a step truly needs my hands (an installer dialog, a login, an admin prompt).
+
+GOAL
+NeonClipping (https://github.com/iamajmeena/neonclipping) turns a long YouTube / Twitch / Kick video, or an MP4, into captioned vertical 9:16 clips. It runs locally at http://127.0.0.1:8770.
+
+RULES
+- Install only what this list says. Do not change system settings, do not disable antivirus or firewall, do not run anything as administrator unless an installer requires it and you tell me first.
+- Before each large download (anything over 500 MB), tell me the name, size and source, and wait for my yes. The speech model (about 1.6 GB) and the Ollama model (about 2 GB) are large.
+- Never type or ask for my passwords or API keys. NeonClipping needs none.
+- If a step fails, show me the exact error, try one sensible fix, and if it still fails stop and explain.
+- At the end, report what worked, what did not, and what you did not verify.
+
+STEP 0. CHECK THE MACHINE
+Detect the operating system. Check free disk space (need at least 10 GB). Check whether an NVIDIA GPU exists (nvidia-smi). Report this to me in 3 lines.
+
+STEP 1. INSTALL THE BASICS (skip anything already installed; check with --version)
+- Python 3.10 or newer. Windows: winget install Python.Python.3.12. macOS: brew install python. Linux: use the package manager. Make sure it is on PATH.
+- FFmpeg (with ffprobe). Windows: winget install Gyan.FFmpeg. macOS: brew install ffmpeg. Linux: apt install ffmpeg. Verify: ffmpeg -version and ffprobe -version.
+- Git. Windows: winget install Git.Git. macOS: xcode-select --install or brew install git.
+If a new terminal is needed for PATH to update, tell me, then continue in a new shell.
+
+STEP 2. GET NEONCLIPPING
+git clone https://github.com/iamajmeena/neonclipping
+cd neonclipping
+
+STEP 3. CREATE THE ENVIRONMENT AND INSTALL PACKAGES
+Windows:
+  python -m venv .venv
+  .venv\Scripts\python.exe -m pip install --upgrade pip
+  .venv\Scripts\python.exe -m pip install -r requirements.txt
+Linux/macOS:
+  python3 -m venv .venv
+  .venv/bin/pip install --upgrade pip
+  .venv/bin/pip install -r requirements.txt
+Verify: run  .venv/.../python -c &quot;import fastapi, uvicorn, yt_dlp, numpy, cv2, faster_whisper, PIL; print(&#x27;imports ok&#x27;)&quot;
+
+STEP 4. OPTIONAL BUT RECOMMENDED: LOCAL AI FOR TITLES, HOOKS AND MOMENT SCORES
+Ask me: &quot;Do you want AI titles and better moment picking? It needs Ollama and a 2 GB model.&quot; If I say yes:
+- Install Ollama from https://ollama.com (Windows: winget install Ollama.Ollama; macOS: brew install ollama; Linux: curl -fsSL https://ollama.com/install.sh | sh).
+- Make sure Ollama is running (it listens on http://127.0.0.1:11434).
+- ollama pull llama3.2:3b
+- Verify: curl http://127.0.0.1:11434/api/tags  must list llama3.2:3b.
+If I say no, skip it. NeonClipping still works and picks clips by audio and motion score.
+</pre>
+  <div class="foot"><span>NeonClipping · by Ajay K Meena · ★ Star: github.com/iamajmeena/neonclipping</span><span>EN 7</span></div>
+</section>
+<section class="page"><div class="tab">ENGLISH</div>
+  <h2><span class="n">07</span>The prompt (continued)</h2>
+  <pre style="font-size:7.6pt;line-height:1.38;padding:3mm 4mm;margin:2mm 0;color:#e8f9ff">STEP 5. OPTIONAL: NVIDIA GPU SPEED-UP (only if STEP 0 found an NVIDIA GPU)
+Install the GPU runtime libraries into the same environment:
+  &lt;venv python&gt; -m pip install nvidia-cublas-cu12 &quot;nvidia-cudnn-cu12==9.*&quot;
+This speeds up speech recognition for videos without YouTube captions (Twitch VODs, uploaded files). If anything fails, ignore it: NeonClipping falls back to CPU automatically. To force CPU later, set NEONCLIPPING_CPU=1.
+
+STEP 6. THE ACCURATE-CAPTION SPEECH MODEL (downloads by itself the first time)
+Accurate captions use Whisper large-v3-turbo (about 1.6 GB). It downloads automatically the first time a clip is rendered. For Hindi videos the app writes captions in Hinglish (Hindi in Roman letters). The optional &quot;Best Hindi&quot; setting uses Whisper large-v3 (about 3 GB download) and is very slow on small GPUs. Tell me this now. I can untick &quot;Accurate captions&quot; in the app to use a lighter model.
+
+STEP 7. START THE APP
+Windows:  powershell -ExecutionPolicy Bypass -File run.ps1      (or:  .venv\Scripts\python.exe app.py)
+Linux/macOS:  ./run.sh   (or:  .venv/bin/python app.py)
+Run it in the background so this terminal stays free. If port 8770 is busy, set NEONCLIPPING_PORT=8771 and use that port below.
+Verify: curl http://127.0.0.1:8770/healthz must return {&quot;ok&quot;:true,...}. Then open http://127.0.0.1:8770 in my browser.
+
+STEP 8. SMOKE TEST (ask me first; it downloads a few MB)
+Use the public YouTube video https://www.youtube.com/watch?v=QdBZY2fkU-0 (a 90-second trailer).
+POST http://127.0.0.1:8770/make with JSON: {&quot;url&quot;:&quot;https://www.youtube.com/watch?v=QdBZY2fkU-0&quot;,&quot;count&quot;:2,&quot;min_len&quot;:15,&quot;max_len&quot;:30,&quot;layout&quot;:&quot;blur&quot;,&quot;mode&quot;:&quot;fast&quot;}
+It returns {&quot;job&quot;: &quot;...&quot;}. Poll GET /make/&lt;job&gt; every 3 seconds until status is &quot;done&quot; (about 30 seconds). Check that 2 clips exist and each file is playable: ffprobe data/&lt;clip file&gt;.mp4 shows 1080x1920. Tell me the result.
+
+STEP 9. TEACH ME THE FIRST USE (3 lines)
+1) Paste a YouTube, Twitch or Kick link. 2) Press Make clips. 3) Preview and Download MP4 under each clip; all clips are also in My clips. Mention: pick the Facecam position (top-left, top-right, bottom-left, bottom-right, bottom-centre, or none) that matches where the streamer&#x27;s webcam is.
+
+FINAL REPORT
+List: OS, versions installed (Python, FFmpeg, Git, Ollama yes/no, GPU yes/no), URL of the running app, smoke-test result, anything skipped, anything unverified. If NeonClipping saved me time, remind me once that I can star https://github.com/iamajmeena/neonclipping and follow @iamajmeena on Instagram.</pre>
+  <div class="foot"><span>NeonClipping · by Ajay K Meena · ★ Star: github.com/iamajmeena/neonclipping</span><span>EN 8</span></div>
 </section>
 
 <!-- ============== हिंदी ============== -->
@@ -131,9 +222,10 @@ cd neonclipping
   <p>NeonClipping किसी लंबे YouTube, Twitch या Kick वीडियो (या आपकी अपनी MP4) से Reels, Shorts और TikTok के लिए छोटी वर्टिकल क्लिप बनाता है। हर क्लिप में कैप्शन जले हुए (burned-in) होते हैं, साथ में एक टाइटल और हुक लाइन भी मिलती है। सब कुछ आपके अपने कंप्यूटर पर चलता है: कोई अकाउंट नहीं, कोई सब्सक्रिप्शन नहीं, कुछ भी अपलोड नहीं होता।</p>
   <div class="flow"><div><b>१</b>लिंक पेस्ट करो</div><div><b>२</b>सिर्फ़ ऑडियो डाउनलोड</div><div><b>३</b>AI बेस्ट मोमेंट चुनता है</div><div><b>४</b>सिर्फ़ वही हिस्से डाउनलोड</div><div><b>५</b>कैप्शन वाली 9:16 क्लिप</div></div>
   <img class="shot" src="home.jpg" width="100%">
+  <div class="note"><b>फ्री और ओपन-सोर्स:</b> <a href="https://github.com/iamajmeena/neonclipping">github.com/iamajmeena/neonclipping</a> · ★ कृपया repo को स्टार करें ताकि मैं इसे आगे बेहतर बना सकूँ।</div>
   <h3>यह तेज़ क्यों है</h3>
   <p>यह पूरा वीडियो कभी नहीं देखता। सिर्फ़ ऑडियो डाउनलोड करता है (85 मिनट के वीडियो के लिए करीब 80 MB), ट्रांसक्रिप्ट पढ़ता है (जहाँ मिले वहाँ YouTube के अपने कैप्शन), ऑडियो में अचानक तेज़ और जोशीले पल ढूँढता है, छोटा लोकल AI चुनाव करता है, और फिर सिर्फ़ चुने हुए कुछ मिनट का वीडियो लाता है। हमारे टेस्ट में 85 मिनट की YouTube स्ट्रीम से 3 क्लिप <b>97 सेकंड</b> में बनीं।</p>
-  <div class="foot"><span>NeonClipping · अजय के मीणा</span><span>HI 1</span></div>
+  <div class="foot"><span>NeonClipping · अजय के मीणा · ★ Star: github.com/iamajmeena/neonclipping</span><span>HI 1</span></div>
 </section>
 
 <section class="page hi"><div class="tab">हिंदी</div>
@@ -148,7 +240,7 @@ cd neonclipping
   <p>पहली बार चलाने पर यह एक अलग Python environment बनाता है और पैकेज इंस्टॉल करता है। फिर ब्राउज़र में <code>http://127.0.0.1:8770</code> खोलें।</p>
   <div class="note"><b>GPU स्पीच मॉडल (वैकल्पिक)।</b> यह सिर्फ़ उन वीडियो के लिए इस्तेमाल होता है जिनमें YouTube कैप्शन नहीं हैं (Twitch VOD, अपलोड की गई फ़ाइलें): <code>.venv\Scripts\pip install nvidia-cublas-cu12 "nvidia-cudnn-cu12==9.*"</code>। CPU पर ही चलाना हो तो <code>NEONCLIPPING_CPU=1</code> सेट करें।</div>
   <div class="note warn"><b>सब कुछ आपकी मशीन पर।</b> ऐप सिर्फ़ 127.0.0.1 पर सुनता है। आपके वीडियो और क्लिप ऐप के पास वाले <code>data</code> फ़ोल्डर में सेव होते हैं।</div>
-  <div class="foot"><span>NeonClipping · अजय के मीणा</span><span>HI 2</span></div>
+  <div class="foot"><span>NeonClipping · अजय के मीणा · ★ Star: github.com/iamajmeena/neonclipping</span><span>HI 2</span></div>
 </section>
 
 <section class="page hi"><div class="tab">हिंदी</div>
@@ -162,8 +254,9 @@ cd neonclipping
   <tr><td><b>Clips</b></td><td>कितनी क्लिप चाहिए (1–12)।</td></tr>
   <tr><td><b>Min / Max length</b></td><td>जैसे 30 और 60, या 30 और 80 सेकंड। क्लिप इसी रेंज में किसी वाक्य के अंत पर खत्म होती है।</td></tr>
   <tr><td><b>Layout</b></td><td>Face + gameplay (stack), Blurred fill, Fill screen, Gameplay only।</td></tr>
-  <tr><td><b>Facecam position</b></td><td>स्ट्रीमर का वेबकैम कहाँ है, चुनें: top-left, top-right, bottom-left, bottom-right, bottom-centre, या no facecam। फिर चेहरा ऊपर और गेम नीचे स्टैक हो जाता है।</td></tr></table>
-  <div class="foot"><span>NeonClipping · अजय के मीणा</span><span>HI 3</span></div>
+  <tr><td><b>Caption language</b></td><td><b>Auto</b> हिंदी बोली को <b>Hinglish</b> में लिखता है (अंग्रेज़ी अक्षरों में हिंदी, जैसे “kya haal hai bhai”)। आप Hinglish, हिंदी (देवनागरी) या English ज़बरदस्ती भी चुन सकते हैं। <b>Caption accuracy</b>: <b>Accurate</b> (डिफ़ॉल्ट) हर चुनी हुई क्लिप को Whisper large-v3-turbo से दोबारा सुनता है; <b>Fast</b> तेज़ ट्रांसक्रिप्ट ही रखता है; <b>Best Hindi</b> Whisper large-v3 इस्तेमाल करता है (हिंदी साफ़ बेहतर, पर छोटे GPU पर बहुत धीमा: 6 GB कार्ड पर 40 सेकंड की क्लिप के लिए करीब 6 मिनट)।</td></tr>
+  <tr><td><b>Facecam position</b></td><td>स्ट्रीमर का वेबकैम कहाँ है, चुनें: top-left, top-right, bottom-left, bottom-right, bottom-centre, या no facecam। फिर चेहरा ऊपर और गेम नीचे स्टैक हो जाता है। अगर आप स्टेप 03 में बॉक्स खुद बनाते हैं, तो <b>Make clips</b> ठीक आपके बॉक्स इस्तेमाल करता है।</td></tr></table>
+  <div class="foot"><span>NeonClipping · अजय के मीणा · ★ Star: github.com/iamajmeena/neonclipping</span><span>HI 3</span></div>
 </section>
 
 <section class="page hi"><div class="tab">हिंदी</div>
@@ -172,7 +265,7 @@ cd neonclipping
   <ol><li><b>Get preview</b> दबाएँ। पूरा वीडियो डाउनलोड होते समय ही कुछ सेकंड में वीडियो के असली फ्रेम दिखने लगते हैं।</li><li>कोई फ्रेम चुनें। <b>Facecam area</b> दबाकर वेबकैम के चारों ओर बॉक्स बनाएँ। <b>Gameplay area</b> दबाकर गेम का बॉक्स बनाएँ। दोबारा इस्तेमाल के लिए <b>Save layout</b> दबाएँ।</li><li><b>✦ Find highlights</b> दबाएँ, सूची से कोई मोमेंट चुनें और <b>Open highlight</b> दबाएँ। स्टार्ट, एंड और face height ठीक करें।</li><li><b>Give it a voice</b> में कैप्शन स्टाइल चुनें: <b>GTA Neon</b>, <b>Impact</b> या <b>Clean</b>। <b>Generate subtitles</b> दबाएँ और कोई भी शब्द सीधे बॉक्स में ठीक करें। चाहें तो शुरुआती हुक जोड़ें।</li><li>एक क्लिप के लिए <b>Export clip</b> या सभी candidates के लिए <b>Export video highlights</b> दबाएँ।</li></ol>
   <h3>बेहतर क्लिप के लिए टिप्स</h3>
   <ul><li>ऐसे वीडियो चुनें जिनमें क्रिएटर खूब बोलता और रिएक्ट करता हो: गेमिंग स्ट्रीम, पॉडकास्ट, इंटरव्यू, ट्यूटोरियल।</li><li>YouTube लिंक सबसे तेज़ हैं (मुफ़्त कैप्शन)। Twitch VOD भी चलते हैं, पर धीमे, क्योंकि बोले हुए को पहचानना पड़ता है।</li><li>Ollama और <code>llama3.2:3b</code> इंस्टॉल करें। टाइटल और मोमेंट का चुनाव साफ़ बेहतर होता है।</li><li>पोस्ट करने से पहले हर क्लिप ज़रूर देखें। यह तेज़, जोशीले, बोलने लायक पल चुनता है; स्क्रीन नहीं देख सकता।</li><li>अगर फेसकैम अजीब जगह पर है, तो preset की जगह अपने बॉक्स खुद बनाएँ।</li></ul>
-  <div class="foot"><span>NeonClipping · अजय के मीणा</span><span>HI 4</span></div>
+  <div class="foot"><span>NeonClipping · अजय के मीणा · ★ Star: github.com/iamajmeena/neonclipping</span><span>HI 4</span></div>
 </section>
 
 <section class="page hi"><div class="tab">हिंदी</div>
@@ -185,9 +278,22 @@ cd neonclipping
   <tr><td>किसी restricted वीडियो का डाउनलोड फेल होता है</td><td><b>Upload video</b> से ओरिजिनल MP4 इस्तेमाल करें।</td></tr>
   <tr><td>पोर्ट 8770 पहले से इस्तेमाल में है</td><td>ऐप की दूसरी कॉपी चल रही है। उसे बंद करके दोबारा शुरू करें।</td></tr></table>
   <div class="cta"><h3>अगर NeonClipping से आपका समय बचा</h3>
-  <p>यह फ्री और ओपन-सोर्स है, <b>अजय के मीणा</b> ने बनाया है (Director, DOP, colorist, DaVinci Resolve educator, जयपुर)।<br>
+  <p><b>GitHub पर हर स्टार मुझे बताता है कि यह काम का है, और NeonClipping को आगे बेहतर बनाने में मदद करता है: और तेज़ क्लिप, और समझदार चुनाव, और भाषाएँ।</b> कृपया 5 सेकंड निकालकर स्टार ज़रूर करें।<br><br>यह फ्री और ओपन-सोर्स है, <b>अजय के मीणा</b> ने बनाया है (Director, DOP, colorist, DaVinci Resolve educator, जयपुर)।<br>
   ★ Repo को स्टार करें: <a href="https://github.com/iamajmeena/neonclipping">github.com/iamajmeena/neonclipping</a><br>
   📷 Instagram पर फ़ॉलो करें: <a href="https://www.instagram.com/iamajmeena/">@iamajmeena</a></p></div>
-  <div class="foot"><span>NeonClipping · अजय के मीणा</span><span>HI 5</span></div>
+  <div class="foot"><span>NeonClipping · अजय के मीणा · ★ Star: github.com/iamajmeena/neonclipping</span><span>HI 5</span></div>
 </section>
+
+<section class="page hi"><div class="tab">हिंदी</div>
+  <h2><span class="n">०६</span>AI एजेंट से सब कुछ इंस्टॉल करवाओ</h2>
+  <p>टर्मिनल कभी नहीं चलाया? कोई बात नहीं। English पन्नों (EN 7–8) में दिया गया prompt किसी ऐसे AI coding agent को दे दो जो आपके कंप्यूटर पर कमांड चला सके (जैसे <b>Claude Code</b>, <b>OpenAI Codex CLI</b> या <b>Cursor</b> का agent mode)। वह Python, FFmpeg और Git इंस्टॉल करेगा, NeonClipping डाउनलोड करेगा, लोकल AI सेट करेगा, ऐप चालू करेगा और टेस्ट भी करेगा। हर बड़े डाउनलोड से पहले वह आपसे पूछेगा।</p>
+  <h3>इस्तेमाल कैसे करें</h3>
+  <ol><li>कोई एक coding agent इंस्टॉल करके खोलें (उसमें टर्मिनल या एडिटर के अंदर चैट बॉक्स दिखता है)।</li><li>उसमें एक खाली फ़ोल्डर खोलें, जैसे <code>NeonClipping-setup</code>।</li><li>पूरा prompt कॉपी करें (पन्ने EN 7–8, या GitHub पर <code>docs/NEONCLIPPING-AGENT-SETUP-PROMPT.txt</code> फ़ाइल) और agent में पेस्ट कर दें। <b>Prompt को English में ही रहने दें</b>; agent उसे सबसे अच्छी तरह समझते हैं।</li><li>बड़े डाउनलोड के बारे में पूछे तो <b>yes</b> कहें (स्पीच मॉडल करीब 1.6 GB, वैकल्पिक Ollama मॉडल करीब 2 GB)।</li><li>जब agent फ़ाइनल रिपोर्ट दे दे, तब <code>http://127.0.0.1:8770</code> खोलें।</li></ol>
+  <div class="note"><b>सुरक्षित तरीके से बना है।</b> Prompt agent को कहता है कि सिस्टम या सिक्योरिटी सेटिंग न छुए, पासवर्ड न माँगे और बड़े डाउनलोड से पहले पूछे। NeonClipping को खुद कोई अकाउंट या API key नहीं चाहिए।</div>
+  <div class="note warn"><b>Agent जो कमांड चलाने वाला है, उसे हमेशा पढ़ लें।</b> अगर आपका टूल कमांड चलाने से पहले अनुमति माँगता है, तो सिर्फ़ वही कमांड मंज़ूर करें जो prompt के स्टेप्स से मेल खाती हों।</div>
+  <h3>Prompt क्या-क्या करता है</h3>
+  <table><tr><th>स्टेप</th><th>नतीजा</th></tr><tr><td>0–1</td><td>डिस्क स्पेस और GPU जाँचता है, Python, FFmpeg, Git इंस्टॉल करता है</td></tr><tr><td>2–3</td><td>NeonClipping क्लोन करता है, उसका environment बनाता है, पैकेज इंस्टॉल करता है</td></tr><tr><td>4–6</td><td>वैकल्पिक Ollama + llama3.2:3b (AI टाइटल के लिए); वैकल्पिक NVIDIA GPU लाइब्रेरी; स्पीच मॉडल की जानकारी</td></tr><tr><td>7–8</td><td>ऐप चालू करता है और 30 सेकंड का स्मोक टेस्ट चलाता है</td></tr><tr><td>9</td><td>पहली क्लिप बनाना सिखाता है</td></tr></table>
+  <div class="foot"><span>NeonClipping · अजय के मीणा · ★ Star: github.com/iamajmeena/neonclipping</span><span>HI 6</span></div>
+</section>
+
 </body></html>
