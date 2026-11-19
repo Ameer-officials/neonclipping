@@ -8,6 +8,8 @@ NeonClipping turns long YouTube / Twitch / Kick videos (or your own MP4) into ve
 
 **Made by [Ajay K Meena](https://www.instagram.com/iamajmeena/)** (Director, DOP, colorist, DaVinci Resolve educator, Jaipur). If NeonClipping saves you time, please ⭐ star the repo and follow [@iamajmeena](https://www.instagram.com/iamajmeena/) on Instagram.
 
+![demo](docs/demo.gif)
+
 ![UI](docs/neonclipping-ui.jpg)
 
 📘 **Guides (Hindi + English, PDF):** [docs/NeonClipping-Guide-EN-HI.pdf](docs/NeonClipping-Guide-EN-HI.pdf)  
@@ -37,6 +39,20 @@ Measured on one machine (RTX 2060, 16 threads), Fast mode, 3 clips each:
 | 90-second local MP4 | 14 s |
 
 Your numbers depend on network and CPU.
+
+## How it decides what is a good moment
+
+Every candidate moment is scored from several signals, then the best ones are kept:
+
+| Signal | What it looks for |
+|---|---|
+| Loudness jump | A sudden boom or shout compared with the last two minutes |
+| Raised voice | Energy in the 2–4 kHz band (screaming, yelling) |
+| What is said | "oh my god", "oh shit", "run", "police", "bhaago", "arre yaar" and similar (English, Hinglish, Hindi) |
+| On-screen action | Fast motion (optical flow), explosion-like flashes, red/blue light flicker, scene cuts |
+| AI score | A small local LLM reads the transcript: emotion, punchline, payoff |
+
+**It learns from you.** Under every clip there are 5 stars. Your ratings stay on your computer (`data/feedback.jsonl`). After 8 ratings the weights of the signals above are re-fitted (ridge regression pulled toward the defaults, blended in gradually), so a gamer-shouting-heavy taste ranks shouting higher and a calm-explainer taste ranks it lower. Nothing is uploaded.
 
 ## Features
 
@@ -85,9 +101,14 @@ Set `NEONCLIPPING_CPU=1` to force CPU. Set `NEONCLIPPING_PORT=9000` to use anoth
 | `translit.py` | Devanagari → Hinglish (word by word, keeps timings) |
 | `standalone.py`, `previews.py` | Link import, early preview frames |
 
+## Live clipper
+
+`live/live_clip.py` records a Twitch or YouTube live stream, counts chat messages in 10 s buckets and cuts a 30 s 9:16 clip with captions (and an optional `--credit @handle` badge) around every chat spike. It is a separate command-line tool, see `live/README.txt`.
+
 ## Honest limits
 
 - Highlight picking is a heuristic plus a small local LLM. It finds loud, energetic, quotable moments, not guaranteed "viral" ones. Review before posting.
+- The action cues (motion, flash, light flicker) are simple heuristics on a tiny low-resolution copy; they rank moments, they do not recognise "a police chase". Star ratings are how it gets better at your taste.
 - The LLM sees text only. It cannot see the screen.
 - Without YouTube captions (Twitch VODs, uploaded files) a speech model must transcribe each candidate, which is slow on CPU.
 - Auto-caption accuracy follows the source: YouTube's auto captions are imperfect, especially Hinglish.

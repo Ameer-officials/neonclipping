@@ -80,7 +80,7 @@ def _z(x, n, win=120):
     mu = np.convolve(y, k, 'same'); sd = np.sqrt(np.maximum(np.convolve(y * y, k, 'same') - mu * mu, 0)) + 1e-6
     return np.clip((y - mu) / sd / 3.5, 0, 1)
 
-def rank(source, duration, count=4, length=30, report=lambda seconds: None, motion_on=True):
+def rank(source, duration, count=4, length=30, report=lambda seconds: None, motion_on=True, extra=None):
     with ThreadPoolExecutor(max_workers=2) as pool:
         m = pool.submit(_motion, source, duration, report) if motion_on else pool.submit(lambda: (np.zeros(0), np.zeros(0))); a = pool.submit(_audio, source)
         (flow, cuts), (rms, hf) = m.result(), a.result()
@@ -90,6 +90,9 @@ def rank(source, duration, count=4, length=30, report=lambda seconds: None, moti
     loud = _z(rms, n) if has_audio else np.zeros(n)
     shout = np.clip(_z(hf * rms, n) if has_audio else np.zeros(n), 0, 1)
     sig = (.35 * motion + .30 * loud + .20 * shout + .15 * cut) if motion_on and has_audio else (.55 * loud + .45 * shout) if has_audio else (.7 * motion + .3 * cut)
+    if extra is not None and len(extra):                 # what is SAID (exclamations) attracts candidates too
+        e = np.zeros(n); e[:min(n, len(extra))] = extra[:n]
+        sig = .75 * sig + .25 * e
     width = min(n, 7); smooth = np.convolve(sig, np.ones(width) / width, 'same')
     length = min(float(length), duration); clips = []
     for center in np.argsort(smooth)[::-1]:
@@ -100,7 +103,9 @@ def rank(source, duration, count=4, length=30, report=lambda seconds: None, moti
         top = sorted(parts, key=lambda k: -parts[k][int(center) - 3:int(center) + 4].mean() if len(parts[k]) else 0)[:2]
         clips.append({'start': round(start, 2), 'end': round(end, 2), 'title': f'Activity highlight {len(clips) + 1}',
                       'score': round(float(smooth[center]) * 100 / max(float(smooth.max()), 1e-6)),
-                      'reason': 'Peak: ' + ' + '.join(top), 'status': 'done'})
+                      'reason': 'Peak: ' + ' + '.join(top), 'status': 'done',
+                      'features': {'loud': float(loud[lo:hi].mean()) if has_audio else None, 'shout': float(shout[lo:hi].mean()) if has_audio else None,
+                                   'motion': float(motion[lo:hi].mean()) if motion_on else None, 'cuts': float(cut[lo:hi].mean()) if motion_on else None}})
         if len(clips) >= count: break
     if not clips: clips = [{'start': 0, 'end': round(length, 2), 'title': 'Review source opening', 'score': 0, 'reason': 'No strong activity peak found', 'status': 'done'}]
     return clips

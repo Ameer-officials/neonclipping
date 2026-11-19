@@ -13,8 +13,11 @@
 !docs/
 !docs/*.jpg
 !docs/*.pdf
+!docs/*.gif
 !docs/guide/
 !docs/guide/*
 highlights_v1.py
 __pycache__/
 !docs/*.txt
+!live/
+!live/*

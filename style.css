@@ -31,3 +31,7 @@ main>header h1{text-shadow:0 4px 30px #ff4ba5aa}
 .star-ask{margin-top:10px;padding:12px 16px;border-radius:12px;background:#1f1829;border:1px solid var(--line)}.star-ask a{color:var(--lime);font-weight:700}
 
 .controls .toggle{display:flex;flex-direction:column;align-items:flex-start;gap:3px;font-size:13px;font-weight:600}
+
+.stars{display:flex;gap:2px;margin-top:6px}.stars button{background:none;border:0;color:#5b4d70;font-size:22px;cursor:pointer;padding:0 2px;line-height:1}.stars button:hover,.stars button.on{color:#ffd45a}
+.stars:hover button{color:#ffd45a}.stars button:hover~button{color:#5b4d70}
+.fb{display:block;color:var(--muted);margin-top:2px}

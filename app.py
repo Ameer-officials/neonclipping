@@ -183,6 +183,45 @@ def make(b:dict):
      yt_words=from_info(info);save(job,{'transcript_source':'YouTube captions' if yt_words else 'speech model'})
     except Exception:yt_words=None
    save(job,{'fast_path':fast,'title':title})
+   import learn, action
+   from concurrent.futures import ThreadPoolExecutor as _TP
+   W=learn.load_weights(DATA)
+   def lowres_section(u,c):
+    """A tiny 144p copy of just this candidate, only for looking at the action (motion, flashes, light strobes)."""
+    from yt_dlp.utils import download_range_func
+    name='lr_'+uuid.uuid4().hex
+    with _yt({'format':'worst[ext=mp4]/bv*[height<=240][ext=mp4]/worst','outtmpl':str(DATA/(name+'.%(ext)s')),'merge_output_format':'mp4',
+              'download_ranges':download_range_func(None,[(max(0,c['start']),c['end'])])}) as y:y.download([u])
+    f=next(x for x in DATA.glob(name+'.*') if x.suffix not in ('.part','.ytdl'))
+    return f,0.0
+   def choose(pool_clips,locate):
+    """Look at the action in the best candidates, re-rank with the learned weights, keep `count`."""
+    K=min(len(pool_clips),count*2)
+    top=pool_clips[:K];save(job,{'stage':'Checking action in the best moments','progress':.5})
+    def one(c):
+     tmp=None
+     try:
+      f,off=locate(c)
+      tmp=f if str(f).startswith(str(DATA)) and Path(f).name.startswith('lr_') else None
+      c['_act']=action.analyze(f,off,c['end']-c['start'])
+     except Exception as e:c['_act']=None;c['reason']=c.get('reason','')+' (no action check)'
+     finally:
+      if tmp:Path(tmp).unlink(missing_ok=True)
+    with _TP(max_workers=4) as ex:list(ex.map(one,top))
+    for key in ('motion','flash','strobe','cuts'):
+     vals=[c['_act'][key] for c in top if c.get('_act')]
+     if not vals:continue
+     lo,hi=min(vals),max(vals)
+     for c in top:
+      if c.get('_act'):
+       v=c['_act'][key];c['features'][key]=round(.5*v+.5*((v-lo)/(hi-lo) if hi>lo else v),3)
+    for c in top:
+     c['rank']=learn.score(c['features'],W);c['score']=round(c['rank']*100)
+     cues=[n for n,k,t in (('shouting','shout',.6),('loud jump','loud',.6),('exclamations','words',.5),('fast motion','motion',.7),('explosion/flash','flash',.5),('police-light flicker','strobe',.5)) if (c['features'].get(k) or 0)>=t]
+     c['reason']=(('Cues: '+', '.join(cues)) if cues else 'Steady energy')+(f" · AI {c['llm']:g}/10" if c.get('llm') else '')
+     c.pop('_act',None)
+    top.sort(key=lambda c:-c['rank'])
+    return top[:count]
    sections=None
    if fast:
     def hook(d):
@@ -191,8 +230,9 @@ def make(b:dict):
     with _yt({'format':'ba[ext=m4a]/ba/worst','outtmpl':str(DATA/(job+'.audio.%(ext)s')),'progress_hooks':[hook]}) as y:y.download([url])
     p=next(f for f in DATA.glob(job+'.audio.*') if f.suffix not in ('.part','.ytdl'));duration=_dur(p);sid=job
     save(job,{'meta':{'duration':duration},'stage':'Finding moments in audio','progress':.12})
-    found,engine=find(p,duration,count,max_len,lambda f,m:save(job,{'stage':m,'progress':.12+.4*f}),language,DATA,min_len,False,yt_words,False)
-    save(job,{'engine':engine+' (audio-first)','stage':'Fetching only the chosen sections','progress':.55,'candidates':len(found)})
+    found,engine=find(p,duration,count,max_len,lambda f,m:save(job,{'stage':m,'progress':.12+.4*f}),language,DATA,min_len,False,yt_words,False,W,False)
+    found=choose(found,lambda c:lowres_section(url,c))
+    save(job,{'engine':engine+' (audio-first)','stage':'Fetching only the chosen sections','progress':.58,'candidates':len(found)})
     from concurrent.futures import ThreadPoolExecutor
     from yt_dlp.utils import download_range_func
     def section(i,c):
@@ -206,7 +246,8 @@ def make(b:dict):
      save(job,{'stage':'Downloading source','progress':.02});sid,p=app.neon['download'](url,job)
     else:sid,p=src0.stem,src0
     meta=probe(p);duration=meta['duration'];save(job,{'source_id':sid,'meta':meta,'stage':'Finding moments','progress':.1})
-    found,engine=find(p,duration,count,max_len,lambda f,m:save(job,{'stage':m,'progress':.1+.5*f}),language,DATA,min_len,True,yt_words,mode=='deep')
+    found,engine=find(p,duration,count,max_len,lambda f,m:save(job,{'stage':m,'progress':.1+.5*f}),language,DATA,min_len,True,yt_words,mode=='deep',W,False)
+    found=choose(found,lambda c:(p,c['start']))
     save(job,{'engine':engine,'stage':'Rendering clips','progress':.6,'candidates':len(found)})
    done=[]
    for i,c in enumerate(found):
@@ -215,7 +256,7 @@ def make(b:dict):
     else:sid2=sid;start=c['start'];end=c['end'];words=c.get('words')
     lang=language or ('hinglish' if (video_lang.startswith('hi') or c.get('language')=='hi') else None)
     body={'id':sid2,'start':start,'end':end,'layout':layout,'top':(top_h if isinstance(top_h,(int,float)) and .2<=top_h<=.5 else .32),'captions':True,'caption_style':style,'language':language,'hook':(' '.join(to_hinglish(w) for w in c.get('hook','').split()) if lang=='hinglish' else c.get('hook','')),
-          'title':c.get('title',''),'post_caption':c.get('title',''),'cam':cam,'game':game}
+          'title':c.get('title',''),'post_caption':c.get('title',''),'cam':cam,'game':game,'features':c.get('features'),'weights_used':W}
     if acc!='fast' or lang in ('hinglish','hi') or not c.get('words'):
      save(job,{'stage':f'Accurate captions {i+1}/{len(found)}'})
      body['words']=transcribe(DATA/(sid2+'.mp4'),start,end,DATA,lambda m:None,lang,(large_v3() if acc=='best' else None))['words']
@@ -229,6 +270,25 @@ def make(b:dict):
    save(job,{'status':'done','stage':'Clips ready','progress':1,'elapsed_seconds':round(time.monotonic()-began,1)})
   except Exception as e:save(job,{'status':'error','error':str(e)[-600:]})
  threading.Thread(target=work,daemon=True).start();return {'job':job}
+@app.post('/feedback')
+def feedback(b:dict):
+ """A star rating (1-5) for a finished clip. Stored locally; the scoring weights are refitted from the ratings (learn.py)."""
+ import learn
+ file=str(b.get('file',''))
+ try:rating=int(b.get('rating',0))
+ except (TypeError,ValueError):rating=0
+ if not file.isalnum() or not 1<=rating<=5:raise HTTPException(400,'Choose 1 to 5 stars for a finished clip.')
+ f=DATA/(file+'.json')
+ if not f.exists():raise HTTPException(404,'Clip not found.')
+ m=json.loads(f.read_text(encoding='utf-8')).get('settings',{})
+ if not m.get('features'):raise HTTPException(400,'This clip has no scoring data (made before ratings existed).')
+ return learn.record(DATA,file,rating,m['features'],{'layout':m.get('layout'),'style':m.get('caption_style')})
+
+@app.get('/feedback/summary')
+def feedback_summary():
+ import learn
+ return learn.refit(DATA)
+
 @app.get('/make/{job}')
 def make_status(job:str):
  if job not in state:raise HTTPException(404,'Job unavailable after restart. Please retry.')

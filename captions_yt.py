@@ -5,8 +5,13 @@ import json, re, urllib.request
 def from_info(info):
     auto = info.get('automatic_captions') or {}; manual = info.get('subtitles') or {}
     lang = info.get('language') or ''
-    key = next((k for k in auto if k.endswith('-orig')), None)
-    if not key and lang in auto: key = lang
+    origs = [k for k in auto if k.endswith('-orig')]
+    key = None
+    if lang and f'{lang}-orig' in auto: key = f'{lang}-orig'
+    elif lang and lang in auto: key = lang
+    elif len(origs) == 1: key = origs[0]
+    elif 'en-orig' in auto: key = 'en-orig'          # several tracks and no declared language: English is the safest guess
+    elif origs: key = origs[0]
     group = auto
     if not key:                                           # a human-written track in the spoken language
         key = lang if lang in manual else None; group = manual
