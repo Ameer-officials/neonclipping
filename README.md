@@ -68,7 +68,7 @@ Optional GPU speech model support (only used when a video has no YouTube caption
 .venv/bin/pip install nvidia-cublas-cu12 "nvidia-cudnn-cu12==9.*"
 ```
 
-Set `NEONCLIPPING_CPU=1` to force CPU.
+Set `NEONCLIPPING_CPU=1` to force CPU. Set `NEONCLIPPING_PORT=9000` to use another port.
 
 ## How it is built
 

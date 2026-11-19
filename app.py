@@ -227,4 +227,4 @@ def make_status(job:str):
  return state[job]
 @app.get('/status/{id}')
 def status(id:str):return state.get(id,{'status':'error','error':'Server restarted. Paste the link again to retry.'})
-if __name__=='__main__':uvicorn.run(app,host='127.0.0.1',port=8770)
+if __name__=='__main__':uvicorn.run(app,host='127.0.0.1',port=int(os.environ.get('NEONCLIPPING_PORT','8770')))
