@@ -1,6 +1,6 @@
 # NeonClipping test report
 
-Generated 2026-11-20 03:23 by tests/make_report.py from tests/report.json.
+Generated 2026-11-20 03:24 by tests/make_report.py from tests/report.json.
 
 **248 of 248 checks pass.**
 
@@ -299,7 +299,7 @@ Generated 2026-11-20 03:23 by tests/make_report.py from tests/report.json.
 
 | Result | Check | Evidence |
 |---|---|---|
-| PASS | https://iamajmeena.github.io/neonclipping/ loads | 200 18586 bytes |
+| PASS | https://iamajmeena.github.io/neonclipping/ loads | 200 19525 bytes |
 | PASS | https://iamajmeena.github.io/neonclipping/ has title, download button, demo video |  |
 | PASS | link https://github.com/iamajmeena/neonclipping | 200 |
 | PASS | link https://github.com/iamajmeena/neonclipping/releases/latest/download/NeonClipping-Setup.bat | 200 |
@@ -310,7 +310,7 @@ Generated 2026-11-20 03:23 by tests/make_report.py from tests/report.json.
 | PASS | link https://iamajmeena.github.io/neonclipping/neonclipping-ui.jpg | 200 |
 | PASS | link https://rzp.io/rzp/JN41CpW | 200 |
 | PASS | https://iamajmeena.github.io/neonclipping/ no leftover github.io / edtrust names |  |
-| PASS | https://editorsgurukul.com/neonclipping/ loads | 200 19021 bytes |
+| PASS | https://editorsgurukul.com/neonclipping/ loads | 200 19960 bytes |
 | PASS | https://editorsgurukul.com/neonclipping/ has title, download button, demo video |  |
 | PASS | link https://editorsgurukul.com/ | 200 |
 | PASS | link https://editorsgurukul.com/neonclipping/NEONCLIPPING-AGENT-SETUP-PROMPT.txt | 200 |
@@ -323,7 +323,7 @@ Generated 2026-11-20 03:23 by tests/make_report.py from tests/report.json.
 | PASS | link https://rzp.io/rzp/JN41CpW | 200 |
 | PASS | link https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d873017920 | 200 |
 | PASS | https://editorsgurukul.com/neonclipping/ no leftover github.io / edtrust names |  |
-| PASS | both site copies carry the same content (only the back link and line endings differ) | 18519 vs 18953 bytes |
+| PASS | both site copies carry the same content (only the back link and line endings differ) | 19446 vs 19880 bytes |
 | PASS | release asset NeonClipping-Setup.bat | ['NEONCLIPPING-AGENT-SETUP-PROMPT.txt', 'NeonClipping-Guide-EN-HI.pdf', 'NeonClipping-Setup.bat', 'install.ps1', 'install.sh'] |
 | PASS | release asset install.ps1 | ['NEONCLIPPING-AGENT-SETUP-PROMPT.txt', 'NeonClipping-Guide-EN-HI.pdf', 'NeonClipping-Setup.bat', 'install.ps1', 'install.sh'] |
 | PASS | release asset install.sh | ['NEONCLIPPING-AGENT-SETUP-PROMPT.txt', 'NeonClipping-Guide-EN-HI.pdf', 'NeonClipping-Setup.bat', 'install.ps1', 'install.sh'] |
