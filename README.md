@@ -117,9 +117,11 @@ Set `NEONCLIPPING_CPU=1` to force CPU. Set `NEONCLIPPING_PORT=9000` to use anoth
 | `translit.py` | Devanagari → Hinglish (word by word, keeps timings) |
 | `standalone.py`, `previews.py` | Link import, early preview frames |
 
-## Live clipper
+## Live clipping (while the stream is on)
 
-`live/live_clip.py` records a Twitch or YouTube live stream, counts chat messages in 10 s buckets and cuts a 30 s 9:16 clip with captions (and an optional `--credit @handle` badge) around every chat spike. It is a separate command-line tool, see `live/README.txt`.
+Paste a Twitch channel link or a YouTube Live link into the **Live clipping** panel and press Start. NeonClipping records the stream (Streamlink), reads chat anonymously, counts messages in 10 s buckets and cuts a clip around every chat spike (chat velocity more than 2.5 sigma and 2.5x the 5-minute baseline). The clip starts about 24 s *before* the spike, because chat reacts after the moment. It then gets captions, a hook and title, your layout and facecam boxes, and a viral score like any other clip. **Clip the last 30 s now** cuts on demand, **Stop** ends the session. It only works while the stream is live; for finished videos use Make clips.
+
+There is also a command-line version in `live/live_clip.py`.
 
 ## Honest limits
 

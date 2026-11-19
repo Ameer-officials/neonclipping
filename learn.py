@@ -10,8 +10,8 @@ import time
 from pathlib import Path
 import numpy as np
 
-FEATURES = ['loud', 'shout', 'words', 'motion', 'flash', 'strobe', 'cuts', 'llm']
-DEFAULT = {'loud': .17, 'shout': .13, 'words': .20, 'motion': .17, 'flash': .08, 'strobe': .04, 'cuts': .03, 'llm': .18}
+FEATURES = ['loud', 'shout', 'words', 'motion', 'flash', 'strobe', 'cuts', 'llm', 'chat']
+DEFAULT = {'loud': .17, 'shout': .13, 'words': .20, 'motion': .17, 'flash': .08, 'strobe': .04, 'cuts': .03, 'llm': .18, 'chat': .14}
 MIN_RATINGS = 8
 
 

@@ -6,3 +6,5 @@ numpy>=1.26,<3
 Pillow>=10
 faster-whisper>=1.2,<2
 opencv-python-headless
+streamlink
+pytchat

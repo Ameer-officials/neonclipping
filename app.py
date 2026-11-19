@@ -158,7 +158,7 @@ def axes(f):
  def mean(keys):
   v=[f[k] for k in keys if f.get(k) is not None]
   return round(100*sum(v)/len(v)) if v else None
- return {'energy':mean(('loud','shout')),'action':mean(('motion','flash','strobe')),'words':mean(('words',)),'ai':mean(('llm',))}
+ return {'energy':mean(('loud','shout')),'action':mean(('motion','flash','strobe')),'words':mean(('words',)),'ai':mean(('llm',)),'chat':mean(('chat',))}
 
 @app.post('/make')
 def make(b:dict):
@@ -276,6 +276,78 @@ def make(b:dict):
    save(job,{'status':'done','stage':'Clips ready','progress':1,'elapsed_seconds':round(time.monotonic()-began,1)})
   except Exception as e:save(job,{'status':'error','error':str(e)[-600:]})
  threading.Thread(target=work,daemon=True).start();return {'job':job}
+LIVE={}
+
+def live_render(sess,start,dur,why,chat_feature):
+ """Cut the backdated window out of the growing recording, caption it, write a hook, export with the user's layout."""
+ import learn,excite
+ from translit import to_hinglish
+ o=sess.opts;name=uuid.uuid4().hex;out=DATA/(name+'.mp4')
+ for enc in (['-c:v','h264_nvenc','-preset','p4','-cq','21'],['-c:v','libx264','-preset','veryfast','-crf','21']):
+  r=subprocess.run(['ffmpeg','-y','-v','error','-ss',f'{start:.2f}','-i',str(sess.rec),'-t',f'{dur:.2f}',*enc,'-c:a','aac','-b:a','160k',str(out)],capture_output=True,text=True)
+  if r.returncode==0 and out.exists() and out.stat().st_size>10000:break
+ else:raise RuntimeError('Could not cut the clip from the recording: '+r.stderr[-150:])
+ real=_dur(out)
+ lang=o.get('language') or None
+ res=transcribe(out,0,real,DATA,lambda m:None,('hinglish' if lang=='hinglish' else lang),'base')
+ words=res['words']
+ if res.get('language')=='hi' and lang in (None,'hinglish'):
+  words=[dict(w,text=to_hinglish(w['text'])) for w in words]
+ text=' '.join(w['text'] for w in words)
+ title,hook,llm='Live clip','',None
+ try:
+  import smart
+  m=smart._model()
+  if m and len(text.split())>=4:
+   sc,t,h=smart._ask(m,text);title,hook,llm=t or title,h,sc/10
+ except Exception:pass
+ feats={'chat':chat_feature,'words':excite.window_score(words,real),'llm':llm}
+ W=learn.load_weights(DATA);viral=min(99,round(100*learn.score(feats,W)))
+ body={'id':name,'start':0,'end':real,'layout':o.get('layout','blur'),'captions':True,'caption_style':o.get('caption_style','gta'),'language':None,'hook':hook,
+       'title':title,'post_caption':title,'cam':o['cam'],'game':o['game'],'top':o.get('top',.32),'words':words,'features':feats,'weights_used':W}
+ ej=export(body)['job']
+ while state.get(ej,{}).get('status')=='running':time.sleep(.7)
+ r=state[ej]
+ if r.get('error'):raise RuntimeError(r['error'])
+ return {'file':ej,'title':title,'hook':hook,'why':why,'viral':viral,'axes':axes(feats),'at':int(sess.now()),'reason':why,'start':round(start),'end':round(start+real)}
+
+@app.post('/live/start')
+def live_start(b:dict):
+ import live_session
+ try:target=live_session.parse_target(str(b.get('url','')))
+ except ValueError as e:raise HTTPException(400,str(e))
+ before=max(10,min(60,float(b.get('before',24))));after=max(5,min(40,float(b.get('after',14))))
+ for s_ in LIVE.values():
+  if s_.state['status'] in ('starting','recording'):raise HTTPException(400,'A live session is already running. Stop it first.')
+ sess=live_session.LiveSession(target,DATA,live_render,before,after)
+ sess.opts={'layout':b.get('layout','blur'),'caption_style':b.get('caption_style','gta'),'language':b.get('language') or None,
+            'cam':b.get('cam') or {'x':0,'y':0,'w':.25,'h':.3},'game':b.get('game') or {'x':.25,'y':0,'w':.75,'h':1},'top':b.get('top') if isinstance(b.get('top'),(int,float)) else .32}
+ LIVE[sess.id]=sess;sess.start();return {'live':sess.id}
+
+@app.get('/live-active')
+def live_active():
+ """The running live session, if any, so the page can re-attach to it after a reload."""
+ for s_ in LIVE.values():
+  if s_.state['status'] in ('starting','recording'):return {'live':s_.id}
+ return {'live':None}
+
+@app.get('/live/{lid}')
+def live_state(lid:str):
+ if lid not in LIVE:raise HTTPException(404,'Live session not found (the app was restarted).')
+ return LIVE[lid].state
+
+@app.post('/live/{lid}/clip-now')
+def live_clip_now(lid:str):
+ if lid not in LIVE:raise HTTPException(404,'Live session not found.')
+ try:LIVE[lid].clip_now(30)
+ except RuntimeError as e:raise HTTPException(400,str(e))
+ return {'ok':True}
+
+@app.post('/live/{lid}/stop')
+def live_stop(lid:str):
+ if lid not in LIVE:raise HTTPException(404,'Live session not found.')
+ LIVE[lid].stop();return {'ok':True}
+
 @app.get('/donate')
 def donate():
  """Optional donate links (donate.json or NEONCLIPPING_DONATE_RAZORPAY / NEONCLIPPING_DONATE_PAYPAL). Only https links are served; nothing is unlocked by donating."""
