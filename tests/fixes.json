@@ -1,0 +1,14 @@
+[
+ {"found": "Caption grouping lost a whole caption group and repeated the last one whenever a single trailing word was merged (visible in the MrBeast style: 'TEST OH MY GOD' missing). Python stored `groups[-2] += groups.pop()` into the wrong list entry. Found by looking at the rendered frames, not by the pass/fail checks.", "fix": "captions.group_words pops first, then appends; new unit tests check every word appears exactly once in order over 500 random word streams."},
+ {"found": "POST /make with min_len longer than max_len silently started a job.", "fix": "Rejected with HTTP 400 and a clear message; NaN / infinite lengths also rejected."},
+ {"found": "Caption accuracy defaulted to 'Accurate (turbo)'. You wanted Fast by default.", "fix": "UI select and the API default are Fast now."},
+ {"found": "Make failed with 'Cannot load the vocabulary from the model directory': the turbo speech model folder had only model.bin (half-finished download).", "fix": "Missing small files downloaded; captions._turbo_spec() now requires a complete snapshot and repairs an incomplete one itself."},
+ {"found": "Result cards (Make clips / Live) kept pointing at old clips after 'apply to all'; Live cards had no Edit button; Edit on an old card used a replaced clip.", "fix": "Cards follow the newest file, Live cards got Edit clip, the server resolves old ids to the newest version."},
+ {"found": "The creator list was stored as data/creators.json, which the library and editor read as a clip record (library would have returned 500).", "fix": "Stored as data/creators.store; counting code ignores non-record files."},
+ {"found": "Stop then 'Check now' on a creator restarted recording at once.", "fix": "Stop settles a 30-minute pause first; Check now no longer cancels it; Auto off/on resumes immediately; the chip shows the pause."},
+ {"found": "Hindi Whisper loops ('chal chal chal chal ...') and stray accented / non-Latin junk ('funcao', 'nosga') ended up in Hinglish captions.", "fix": "Words said more than 3 times in a row are cut back to 3; Hinglish captions are folded to plain ASCII letters. Unit-tested."},
+ {"found": "My clips with 100+ clips requested metadata for every video at once.", "fix": "Videos load only when they scroll near the screen (IntersectionObserver)."},
+ {"found": "An unattended (auto) live recording could grow without limit.", "fix": "3-hour cap per session, stop below 8 GB free disk, recording deleted after the last clip is cut."},
+ {"found": "install.ps1 printed the Desktop-shortcut message even with -NoShortcut.", "fix": "Message follows the option; script is still ASCII-only and parses."},
+ {"found": "Browser could keep an old app.js after a fix.", "fix": "Asset version in index.html bumped on every change."}
+]

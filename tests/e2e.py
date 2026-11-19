@@ -88,7 +88,8 @@ class Report:
             old = json.loads(REPORT.read_text(encoding='utf-8'))
         except (OSError, ValueError):
             pass
-        keep = [r for r in old if r['group'] not in {x['group'] for x in self.rows}]
+        names = {(x['group'], x['name']) for x in self.rows}
+        keep = [r for r in old if (r['group'], r['name']) not in names]
         REPORT.write_text(json.dumps(keep + self.rows, indent=1, ensure_ascii=False), encoding='utf-8')
 
 

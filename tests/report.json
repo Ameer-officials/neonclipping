@@ -1,0 +1,1311 @@
+[
+ {
+  "group": "site",
+  "name": "https://iamajmeena.github.io/neonclipping/ loads",
+  "ok": true,
+  "evidence": "200 18586 bytes",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "https://iamajmeena.github.io/neonclipping/ has title, download button, demo video",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "link https://github.com/iamajmeena/neonclipping",
+  "ok": true,
+  "evidence": "200",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "link https://github.com/iamajmeena/neonclipping/releases/latest/download/NeonClipping-Setup.bat",
+  "ok": true,
+  "evidence": "200",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "link https://iamajmeena.github.io/neonclipping/NEONCLIPPING-AGENT-SETUP-PROMPT.txt",
+  "ok": true,
+  "evidence": "200",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "link https://iamajmeena.github.io/neonclipping/NeonClipping-Guide-EN-HI.pdf",
+  "ok": true,
+  "evidence": "200",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "link https://iamajmeena.github.io/neonclipping/demo-poster.jpg",
+  "ok": true,
+  "evidence": "200",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "link https://iamajmeena.github.io/neonclipping/demo.mp4",
+  "ok": true,
+  "evidence": "200",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "link https://iamajmeena.github.io/neonclipping/neonclipping-ui.jpg",
+  "ok": true,
+  "evidence": "200",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "link https://rzp.io/rzp/JN41CpW",
+  "ok": true,
+  "evidence": "200",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "https://iamajmeena.github.io/neonclipping/ no leftover github.io / edtrust names",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "https://editorsgurukul.com/neonclipping/ loads",
+  "ok": true,
+  "evidence": "200 19021 bytes",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "https://editorsgurukul.com/neonclipping/ has title, download button, demo video",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "link https://editorsgurukul.com/",
+  "ok": true,
+  "evidence": "200",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "link https://editorsgurukul.com/neonclipping/NEONCLIPPING-AGENT-SETUP-PROMPT.txt",
+  "ok": true,
+  "evidence": "200",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "link https://editorsgurukul.com/neonclipping/NeonClipping-Guide-EN-HI.pdf",
+  "ok": true,
+  "evidence": "200",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "link https://editorsgurukul.com/neonclipping/demo-poster.jpg",
+  "ok": true,
+  "evidence": "200",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "link https://editorsgurukul.com/neonclipping/demo.mp4",
+  "ok": true,
+  "evidence": "200",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "link https://editorsgurukul.com/neonclipping/neonclipping-ui.jpg",
+  "ok": true,
+  "evidence": "200",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "link https://github.com/iamajmeena/neonclipping",
+  "ok": true,
+  "evidence": "200",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "link https://github.com/iamajmeena/neonclipping/releases/latest/download/NeonClipping-Setup.bat",
+  "ok": true,
+  "evidence": "200",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "link https://rzp.io/rzp/JN41CpW",
+  "ok": true,
+  "evidence": "200",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "link https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d873017920",
+  "ok": true,
+  "evidence": "200",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "https://editorsgurukul.com/neonclipping/ no leftover github.io / edtrust names",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "both site copies carry the same content (only the back link and line endings differ)",
+  "ok": true,
+  "evidence": "18519 vs 18953 bytes",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "release asset NeonClipping-Setup.bat",
+  "ok": true,
+  "evidence": "['NEONCLIPPING-AGENT-SETUP-PROMPT.txt', 'NeonClipping-Guide-EN-HI.pdf', 'NeonClipping-Setup.bat', 'install.ps1', 'install.sh']",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "release asset install.ps1",
+  "ok": true,
+  "evidence": "['NEONCLIPPING-AGENT-SETUP-PROMPT.txt', 'NeonClipping-Guide-EN-HI.pdf', 'NeonClipping-Setup.bat', 'install.ps1', 'install.sh']",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "release asset install.sh",
+  "ok": true,
+  "evidence": "['NEONCLIPPING-AGENT-SETUP-PROMPT.txt', 'NeonClipping-Guide-EN-HI.pdf', 'NeonClipping-Setup.bat', 'install.ps1', 'install.sh']",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "release asset NeonClipping-Guide-EN-HI.pdf",
+  "ok": true,
+  "evidence": "['NEONCLIPPING-AGENT-SETUP-PROMPT.txt', 'NeonClipping-Guide-EN-HI.pdf', 'NeonClipping-Setup.bat', 'install.ps1', 'install.sh']",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "release asset NEONCLIPPING-AGENT-SETUP-PROMPT.txt",
+  "ok": true,
+  "evidence": "['NEONCLIPPING-AGENT-SETUP-PROMPT.txt', 'NeonClipping-Guide-EN-HI.pdf', 'NeonClipping-Setup.bat', 'install.ps1', 'install.sh']",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "one-click download URL resolves",
+  "ok": true,
+  "evidence": "200",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "raw install.ps1 reachable (the .bat downloads it when run alone)",
+  "ok": true,
+  "evidence": "200",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "install.ps1 is ASCII only (no encoding surprises in PowerShell 5.1)",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "guide PDF is a PDF with pages",
+  "ok": true,
+  "evidence": "963080",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "agent prompt has the 9 steps + simple-Hindi explanation + stop rules",
+  "ok": true,
+  "evidence": "8091",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "https://editorsgurukul.com/free-resources lists NeonClipping",
+  "ok": true,
+  "evidence": "200",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "https://editorsgurukul.com/free-websites/ lists NeonClipping",
+  "ok": true,
+  "evidence": "200",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "https://editorsgurukul.com/free-websites/neonclipping/ lists NeonClipping",
+  "ok": true,
+  "evidence": "200",
+  "sec": 0.0
+ },
+ {
+  "group": "site",
+  "name": "sitemap lists /neonclipping/",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "ui",
+  "name": "4 presets each become active when clicked",
+  "ok": true,
+  "evidence": "checked in the browser pane (30 in-page assertions, 0 failed)",
+  "sec": 0
+ },
+ {
+  "group": "ui",
+  "name": "all 5 caption-style buttons become active",
+  "ok": true,
+  "evidence": "checked in the browser pane (30 in-page assertions, 0 failed)",
+  "sec": 0
+ },
+ {
+  "group": "ui",
+  "name": "11 layout cards render and all are clickable",
+  "ok": true,
+  "evidence": "checked in the browser pane (30 in-page assertions, 0 failed)",
+  "sec": 0
+ },
+ {
+  "group": "ui",
+  "name": "default caption accuracy is Fast",
+  "ok": true,
+  "evidence": "checked in the browser pane (30 in-page assertions, 0 failed)",
+  "sec": 0
+ },
+ {
+  "group": "ui",
+  "name": "default mode is Fast",
+  "ok": true,
+  "evidence": "checked in the browser pane (30 in-page assertions, 0 failed)",
+  "sec": 0
+ },
+ {
+  "group": "ui",
+  "name": "every accuracy option selectable (fast/accurate/best)",
+  "ok": true,
+  "evidence": "checked in the browser pane (30 in-page assertions, 0 failed)",
+  "sec": 0
+ },
+ {
+  "group": "ui",
+  "name": "every language option selectable (auto/en/hi/hinglish)",
+  "ok": true,
+  "evidence": "checked in the browser pane (30 in-page assertions, 0 failed)",
+  "sec": 0
+ },
+ {
+  "group": "ui",
+  "name": "Editor / My clips views both open",
+  "ok": true,
+  "evidence": "checked in the browser pane (30 in-page assertions, 0 failed)",
+  "sec": 0
+ },
+ {
+  "group": "ui",
+  "name": "safe-zone toggle on/off",
+  "ok": true,
+  "evidence": "checked in the browser pane (30 in-page assertions, 0 failed)",
+  "sec": 0
+ },
+ {
+  "group": "ui",
+  "name": "Creators and Live panels present",
+  "ok": true,
+  "evidence": "checked in the browser pane (30 in-page assertions, 0 failed)",
+  "sec": 0
+ },
+ {
+  "group": "ui",
+  "name": "page loads with no JS errors (only stale ERR_CONNECTION_REFUSED from a server restart)",
+  "ok": true,
+  "evidence": "checked in the browser pane (30 in-page assertions, 0 failed)",
+  "sec": 0
+ },
+ {
+  "group": "ui",
+  "name": "My clips with 108 clips defers video loading (only ~6 near the screen requested metadata)",
+  "ok": true,
+  "evidence": "102 deferred, first visible clip playable (readyState 4)",
+  "sec": 0
+ },
+ {
+  "group": "ui",
+  "name": "Creators: add offline creator, row, status chip, feed, remove",
+  "ok": true,
+  "evidence": "seen in the browser pane (xqc), screenshot checked",
+  "sec": 0
+ },
+ {
+  "group": "ui",
+  "name": "Edit stale card -> newest clip; Apply to all 4 clips; both cards follow",
+  "ok": true,
+  "evidence": "28.5 s, library 4/4 updated",
+  "sec": 0
+ },
+ {
+  "group": "installer",
+  "name": "install.ps1 into an empty folder from local source (-Yes -SkipOptional -NoShortcut -NoStart)",
+  "ok": true,
+  "evidence": "exit 0, 78 s, \"imports ok\"",
+  "sec": 0
+ },
+ {
+  "group": "installer",
+  "name": "installed copy starts via Start-NeonClipping.bat on port 8791",
+  "ok": true,
+  "evidence": "/healthz, /library, / (12 KB), /layouts (11) all OK; stopped cleanly",
+  "sec": 0
+ },
+ {
+  "group": "installer",
+  "name": "install.ps1 is ASCII only and parses with the PowerShell parser",
+  "ok": true,
+  "evidence": "13 KB, 0 parse errors",
+  "sec": 0
+ },
+ {
+  "group": "unit",
+  "name": "14 unit tests: chat-spike rule, target parsing, caption grouping (500 random streams), re-edit",
+  "ok": true,
+  "evidence": "python -m unittest tests.test_live tests.test_captions tests.test_reedit -> OK",
+  "sec": 0
+ },
+ {
+  "group": "live",
+  "name": "clip-now on unknown session -> 404",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "live",
+  "name": "start live clipping",
+  "ok": true,
+  "evidence": "{'live': '01117990e8704f8eac77bf8cbb15ed0d'}",
+  "sec": 0.0
+ },
+ {
+  "group": "live",
+  "name": "second start while running is refused with a clear message",
+  "ok": true,
+  "evidence": "{'detail': 'A live session is already running. Stop it first.'}",
+  "sec": 0.0
+ },
+ {
+  "group": "live",
+  "name": "/live-active returns the running session",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "live",
+  "name": "recording starts and elapsed time counts up",
+  "ok": true,
+  "evidence": "{'status': 'recording', 'elapsed': 20, 'stage': 'Recording and watching chat'}",
+  "sec": 0.0
+ },
+ {
+  "group": "live",
+  "name": "chat reader connected (read-only)",
+  "ok": true,
+  "evidence": "connected (read-only)",
+  "sec": 0.0
+ },
+ {
+  "group": "live",
+  "name": "chat messages are being counted (>0 in the last windows)",
+  "ok": true,
+  "evidence": "chat_now=13 baseline=0.4",
+  "sec": 0.0
+ },
+ {
+  "group": "live",
+  "name": "Clip now accepted",
+  "ok": true,
+  "evidence": "200",
+  "sec": 0.0
+ },
+ {
+  "group": "live",
+  "name": "live clip is produced without error",
+  "ok": true,
+  "evidence": "{'cut': 4.6, 'captions': 8.1, 'score': 0.7, 'render': 8.1}",
+  "sec": 0.0
+ },
+ {
+  "group": "live",
+  "name": "live clip is 1080x1920 h264/aac, about 30 s",
+  "ok": true,
+  "evidence": "{'w': 1080, 'h': 1920, 'vcodec': 'h264', 'acodec': 'aac', 'dur': 30.004667}",
+  "sec": 0.0
+ },
+ {
+  "group": "live",
+  "name": "live clip has title, viral score and axes",
+  "ok": true,
+  "evidence": "{'title': 'Hot Take Shower Time with Lee', 'viral': 55, 'axes': {'energy': 75, 'action': None, 'words': 14, 'ai': 80, 'chat': None}}",
+  "sec": 0.0
+ },
+ {
+  "group": "live",
+  "name": "live clip is editable (edit panel data)",
+  "ok": true,
+  "evidence": "200",
+  "sec": 0.1
+ },
+ {
+  "group": "live",
+  "name": "live clip can be re-edited (style -> bold)",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "live",
+  "name": "live clip appears in My clips exactly once",
+  "ok": true,
+  "evidence": "1",
+  "sec": 0.0
+ },
+ {
+  "group": "live",
+  "name": "stop ends the session",
+  "ok": true,
+  "evidence": "stopped",
+  "sec": 0.0
+ },
+ {
+  "group": "live",
+  "name": "/live-active is empty after stop",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "live",
+  "name": "start works again after stop",
+  "ok": true,
+  "evidence": "{'live': 'd93371cbe55d461ab65524861e7f8edb'}",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "index.html served",
+  "ok": true,
+  "evidence": "13269",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "every $(\"id\") used by app.js exists in index.html",
+  "ok": true,
+  "evidence": "missing: []",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "app.js syntax (node --check)",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "GET /assets/app.js",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.1
+ },
+ {
+  "group": "static",
+  "name": "GET /assets/style.css",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "GET /library",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.2
+ },
+ {
+  "group": "static",
+  "name": "GET /donate",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "GET /feedback/summary",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "GET /live-active",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "GET /creators",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.1
+ },
+ {
+  "group": "static",
+  "name": "GET /layouts",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/layouts returns 11 layouts with geometry",
+  "ok": true,
+  "evidence": "11",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/layouts rejects bad speaker size",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "donate links are https only",
+  "ok": true,
+  "evidence": "{'razorpay': 'https://rzp.io/rzp/JN41CpW'}",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/make without link or id -> 4xx",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/make with bad count -> 400",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/export unknown source -> 400",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/export rejects bad layout",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/export rejects bad caption style",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.1
+ },
+ {
+  "group": "static",
+  "name": "/export rejects end before start",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.1
+ },
+ {
+  "group": "static",
+  "name": "/export rejects clip > 10 min",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.1
+ },
+ {
+  "group": "static",
+  "name": "/export rejects caption_y out of range",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/export rejects NaN crop",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.1
+ },
+ {
+  "group": "static",
+  "name": "/transcribe rejects unknown language",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.1
+ },
+ {
+  "group": "static",
+  "name": "/upload rejects a file that is not a video",
+  "ok": true,
+  "evidence": "{\"detail\":\"Choose a playable video file.\"}",
+  "sec": 0.1
+ },
+ {
+  "group": "static",
+  "name": "/live/start rejects junk",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/live/start rejects YouTube link without id",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/live/<unknown> -> 404",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/status/<unknown> not 500",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/make/<unknown> not 500",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/media path traversal blocked",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/text path traversal blocked",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/clips/<bad>/edit -> 4xx",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/clips/reedit rejects unknown change key",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "export",
+  "name": "render layout stack (gta captions)",
+  "ok": true,
+  "evidence": "1080x1920 h264/aac 6.0s enc=h264_nvenc words=12",
+  "sec": 3.3
+ },
+ {
+  "group": "export",
+  "name": "render layout bottom (gta captions)",
+  "ok": true,
+  "evidence": "1080x1920 h264/aac 6.0s enc=h264_nvenc words=12",
+  "sec": 3.3
+ },
+ {
+  "group": "export",
+  "name": "render layout blur (gta captions)",
+  "ok": true,
+  "evidence": "1080x1920 h264/aac 6.0s enc=h264_nvenc words=12",
+  "sec": 3.4
+ },
+ {
+  "group": "export",
+  "name": "render layout fill (gta captions)",
+  "ok": true,
+  "evidence": "1080x1920 h264/aac 6.0s enc=h264_nvenc words=12",
+  "sec": 3.4
+ },
+ {
+  "group": "export",
+  "name": "render layout game (gta captions)",
+  "ok": true,
+  "evidence": "1080x1920 h264/aac 6.0s enc=h264_nvenc words=12",
+  "sec": 3.4
+ },
+ {
+  "group": "export",
+  "name": "render layout pip_tl (gta captions)",
+  "ok": true,
+  "evidence": "1080x1920 h264/aac 6.0s enc=h264_nvenc words=12",
+  "sec": 3.3
+ },
+ {
+  "group": "export",
+  "name": "render layout pip_tr (gta captions)",
+  "ok": true,
+  "evidence": "1080x1920 h264/aac 6.0s enc=h264_nvenc words=12",
+  "sec": 3.5
+ },
+ {
+  "group": "export",
+  "name": "render layout pip_bl (gta captions)",
+  "ok": true,
+  "evidence": "1080x1920 h264/aac 6.0s enc=h264_nvenc words=12",
+  "sec": 3.4
+ },
+ {
+  "group": "export",
+  "name": "render layout pip_br (gta captions)",
+  "ok": true,
+  "evidence": "1080x1920 h264/aac 6.0s enc=h264_nvenc words=12",
+  "sec": 3.4
+ },
+ {
+  "group": "export",
+  "name": "render layout circle (gta captions)",
+  "ok": true,
+  "evidence": "1080x1920 h264/aac 6.0s enc=h264_nvenc words=12",
+  "sec": 4.8
+ },
+ {
+  "group": "export",
+  "name": "render layout side (gta captions)",
+  "ok": true,
+  "evidence": "1080x1920 h264/aac 6.0s enc=h264_nvenc words=12",
+  "sec": 3.3
+ },
+ {
+  "group": "export",
+  "name": "render caption style gta (blur layout)",
+  "ok": true,
+  "evidence": "1080x1920 h264/aac 6.0s enc=h264_nvenc words=12",
+  "sec": 3.3
+ },
+ {
+  "group": "export",
+  "name": "render caption style bold (blur layout)",
+  "ok": true,
+  "evidence": "1080x1920 h264/aac 6.0s enc=h264_nvenc words=12",
+  "sec": 3.3
+ },
+ {
+  "group": "export",
+  "name": "render caption style clean (blur layout)",
+  "ok": true,
+  "evidence": "1080x1920 h264/aac 6.0s enc=h264_nvenc words=12",
+  "sec": 3.3
+ },
+ {
+  "group": "export",
+  "name": "render caption style hormozi (blur layout)",
+  "ok": true,
+  "evidence": "1080x1920 h264/aac 6.0s enc=h264_nvenc words=12",
+  "sec": 3.4
+ },
+ {
+  "group": "export",
+  "name": "render caption style mrbeast (blur layout)",
+  "ok": true,
+  "evidence": "1080x1920 h264/aac 6.0s enc=h264_nvenc words=12",
+  "sec": 3.3
+ },
+ {
+  "group": "export",
+  "name": "render without captions",
+  "ok": true,
+  "evidence": "words=0",
+  "sec": 3.1
+ },
+ {
+  "group": "export",
+  "name": "render caption position top (caption_y=600)",
+  "ok": true,
+  "evidence": "1080x1920 h264/aac 6.0s enc=h264_nvenc words=12",
+  "sec": 3.4
+ },
+ {
+  "group": "export",
+  "name": "render caption position bottom (caption_y=1700)",
+  "ok": true,
+  "evidence": "1080x1920 h264/aac 6.0s enc=h264_nvenc words=12",
+  "sec": 3.3
+ },
+ {
+  "group": "export",
+  "name": "render speaker size 0.2 / 0.5",
+  "ok": true,
+  "evidence": "",
+  "sec": 6.7
+ },
+ {
+  "group": "export",
+  "name": "render accepts unicode hook (Hinglish) ",
+  "ok": true,
+  "evidence": "1080x1920 h264/aac 6.0s enc=h264_nvenc words=12",
+  "sec": 3.3
+ },
+ {
+  "group": "export",
+  "name": "SRT downloadable for a captioned clip",
+  "ok": true,
+  "evidence": "b1261591e046453bafae1c96a91e6b0e",
+  "sec": 0.0
+ },
+ {
+  "group": "edit",
+  "name": "edit panel data for a saved clip",
+  "ok": true,
+  "evidence": "3",
+  "sec": 0.1
+ },
+ {
+  "group": "edit",
+  "name": "apply style=bold to ONLY this clip",
+  "ok": true,
+  "evidence": "1 clips, ",
+  "sec": 3.1
+ },
+ {
+  "group": "edit",
+  "name": "only the chosen clip changed",
+  "ok": true,
+  "evidence": "['bold', 'gta', 'gta']",
+  "sec": 0.0
+ },
+ {
+  "group": "edit",
+  "name": "apply layout+style to ALL clips of the video",
+  "ok": true,
+  "evidence": "3 clips, ",
+  "sec": 10.7
+ },
+ {
+  "group": "edit",
+  "name": "all 3 clips changed, each kept its own title/hook",
+  "ok": true,
+  "evidence": "[('circle', 'hormozi', 'T0'), ('circle', 'hormozi', 'T1'), ('circle', 'hormozi', 'T2')]",
+  "sec": 0.0
+ },
+ {
+  "group": "edit",
+  "name": "stale (old) clip id still edits the newest version",
+  "ok": true,
+  "evidence": "914a3dd3",
+  "sec": 0.1
+ },
+ {
+  "group": "edit",
+  "name": "apply captions OFF to all",
+  "ok": true,
+  "evidence": "3 clips, ",
+  "sec": 9.2
+ },
+ {
+  "group": "edit",
+  "name": "apply speaker size + caption position to all",
+  "ok": true,
+  "evidence": "3 clips, ",
+  "sec": 12.2
+ },
+ {
+  "group": "edit",
+  "name": "apply new cam/game boxes to all",
+  "ok": true,
+  "evidence": "3 clips, ",
+  "sec": 12.3
+ },
+ {
+  "group": "edit",
+  "name": "reedit rejects invalid layout",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "edit",
+  "name": "reedit rejects invalid caption style",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "edit",
+  "name": "library shows exactly 3 live clips of the batch (no duplicates)",
+  "ok": true,
+  "evidence": "3",
+  "sec": 0.2
+ },
+ {
+  "group": "creators",
+  "name": "parse \"kaicenat\"",
+  "ok": true,
+  "evidence": "{'platform': 'twitch', 'ref': 'kaicenat', 'url': 'https://twitch.tv/kaicenat', 'name': 'kaicenat'}",
+  "sec": 0.0
+ },
+ {
+  "group": "creators",
+  "name": "parse \"https://www.twitch.tv/xQc\"",
+  "ok": true,
+  "evidence": "{'platform': 'twitch', 'ref': 'xqc', 'url': 'https://twitch.tv/xqc', 'name': 'xqc'}",
+  "sec": 0.0
+ },
+ {
+  "group": "creators",
+  "name": "parse \"@pokimane\"",
+  "ok": true,
+  "evidence": "{'platform': 'twitch', 'ref': 'pokimane', 'url': 'https://twitch.tv/pokimane', 'name': 'pokimane'}",
+  "sec": 0.0
+ },
+ {
+  "group": "creators",
+  "name": "parse \"youtube.com/@IShowSpeed\"",
+  "ok": true,
+  "evidence": "{'platform': 'youtube', 'ref': '@IShowSpeed', 'url': 'https://www.youtube.com/@IShowSpeed', 'name': 'IShowSpeed'}",
+  "sec": 0.0
+ },
+ {
+  "group": "creators",
+  "name": "parse \"https://www.youtube.com/channel/UCWsDFcI\"",
+  "ok": true,
+  "evidence": "{'platform': 'youtube', 'ref': 'channel/UCWsDFcIhY2DBi3GB5uykGXA', 'url': 'https://www.youtube.com/channel/UCWsDFcIhY2DBi3GB5uykGXA', 'name': 'UCWsDFcIhY2DBi3GB5uykGXA'}",
+  "sec": 0.0
+ },
+ {
+  "group": "creators",
+  "name": "reject \"\"",
+  "ok": true,
+  "evidence": "rejected",
+  "sec": 0.0
+ },
+ {
+  "group": "creators",
+  "name": "reject \"ab\"",
+  "ok": true,
+  "evidence": "rejected",
+  "sec": 0.0
+ },
+ {
+  "group": "creators",
+  "name": "reject \"https://youtu.be/abc\"",
+  "ok": true,
+  "evidence": "rejected",
+  "sec": 0.0
+ },
+ {
+  "group": "creators",
+  "name": "reject \"hello world\"",
+  "ok": true,
+  "evidence": "rejected",
+  "sec": 0.0
+ },
+ {
+  "group": "creators",
+  "name": "reject \"xxxxxxxxxxxxxxxxxxxx\"",
+  "ok": true,
+  "evidence": "rejected",
+  "sec": 0.0
+ },
+ {
+  "group": "creators",
+  "name": "add offline creator",
+  "ok": true,
+  "evidence": "{'id': '42e448771b08'}",
+  "sec": 0.0
+ },
+ {
+  "group": "creators",
+  "name": "duplicate add rejected",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "creators",
+  "name": "bad add rejected",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "creators",
+  "name": "check now reports offline/online",
+  "ok": true,
+  "evidence": "{'live': False}",
+  "sec": 2.3
+ },
+ {
+  "group": "creators",
+  "name": "auto toggle off/on persists",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.1
+ },
+ {
+  "group": "creators",
+  "name": "save layout",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.1
+ },
+ {
+  "group": "creators",
+  "name": "library not broken by creators store (no .json in data)",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.2
+ },
+ {
+  "group": "creators",
+  "name": "remove",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "creators",
+  "name": "unknown creator -> 404",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "creators",
+  "name": "detect live Twitch channel (any of 5 big ones)",
+  "ok": true,
+  "evidence": "['kaicenat']",
+  "sec": 11.6
+ },
+ {
+  "group": "creators",
+  "name": "offline/nonexistent channel -> not live, no crash",
+  "ok": true,
+  "evidence": "",
+  "sec": 1.1
+ },
+ {
+  "group": "feedback",
+  "name": "summary readable",
+  "ok": true,
+  "evidence": "{'ratings': 2, 'weights': {'loud': 0.17, 'shout': 0.13, 'words': 0.2, 'motion': 0.17, 'flash': 0.08, 'strobe': 0.04, 'cuts': 0.03, 'llm': 0.18, 'chat': 0.14}, 'fitted': False, 'insight': []}",
+  "sec": 0.0
+ },
+ {
+  "group": "feedback",
+  "name": "rating 5 accepted",
+  "ok": true,
+  "evidence": "{'ratings': 3, 'weights': {'loud': 0.17, 'shout': 0.13, 'words': 0.2, 'motion': 0.17, 'flash': 0.08, 'strobe': 0.04, 'cuts': 0.03, 'llm': 0.18, 'chat': 0.14}, 'fitted': False, 'insight': []}",
+  "sec": 0.0
+ },
+ {
+  "group": "feedback",
+  "name": "rating 0 / 6 / text rejected",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "feedback",
+  "name": "unknown clip rejected",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "feedback",
+  "name": "after 10 ratings the weights are fitted",
+  "ok": true,
+  "evidence": "{'ratings': 12, 'fitted': True, 'alpha': 0.2}",
+  "sec": 0.0
+ },
+ {
+  "group": "feedback",
+  "name": "weights sum to 1 and stay positive",
+  "ok": true,
+  "evidence": "1.0",
+  "sec": 0.0
+ },
+ {
+  "group": "make",
+  "name": "Make 2-hour Hindi video, Best Hindi (large-v3), Hinglish captions",
+  "ok": true,
+  "evidence": "1 clips in 562s, all 1080x1920 h264/aac, titles+scores+captions OK",
+  "sec": 562.5
+ },
+ {
+  "group": "make",
+  "name": "error: nonexistent YouTube id",
+  "ok": true,
+  "evidence": "full run, tests/out/run_make.log (every clip checked: 1080x1920 h264/aac, duration range, titles, scores, caption style, no Devanagari in Hinglish)",
+  "sec": 4.1
+ },
+ {
+  "group": "make",
+  "name": "error: not a video URL",
+  "ok": true,
+  "evidence": "full run, tests/out/run_make.log (every clip checked: 1080x1920 h264/aac, duration range, titles, scores, caption style, no Devanagari in Hinglish)",
+  "sec": 0.0
+ },
+ {
+  "group": "make",
+  "name": "error: live stream link is refused with a clear message",
+  "ok": true,
+  "evidence": "full run, tests/out/run_make.log (every clip checked: 1080x1920 h264/aac, duration range, titles, scores, caption style, no Devanagari in Hinglish)",
+  "sec": 4.1
+ },
+ {
+  "group": "make",
+  "name": "error: min_len > max_len",
+  "ok": true,
+  "evidence": "full run, tests/out/run_make.log (every clip checked: 1080x1920 h264/aac, duration range, titles, scores, caption style, no Devanagari in Hinglish)",
+  "sec": 0.0
+ },
+ {
+  "group": "make",
+  "name": "Make 132s English video: mode=fast, accurate=fast, language=, style=gta, layout=blur",
+  "ok": true,
+  "evidence": "full run, tests/out/run_make.log (every clip checked: 1080x1920 h264/aac, duration range, titles, scores, caption style, no Devanagari in Hinglish)",
+  "sec": 40.4
+ },
+ {
+  "group": "make",
+  "name": "Make 132s English video: mode=deep, accurate=accurate, language=en, style=bold, layout=stack",
+  "ok": true,
+  "evidence": "full run, tests/out/run_make.log (every clip checked: 1080x1920 h264/aac, duration range, titles, scores, caption style, no Devanagari in Hinglish)",
+  "sec": 41.0
+ },
+ {
+  "group": "make",
+  "name": "Make 132s English video: mode=fast, accurate=accurate, language=hinglish, style=clean, layout=fill",
+  "ok": true,
+  "evidence": "full run, tests/out/run_make.log (every clip checked: 1080x1920 h264/aac, duration range, titles, scores, caption style, no Devanagari in Hinglish)",
+  "sec": 64.4
+ },
+ {
+  "group": "make",
+  "name": "Make 132s English video: mode=deep, accurate=fast, language=hi, style=hormozi, layout=circle",
+  "ok": true,
+  "evidence": "full run, tests/out/run_make.log (every clip checked: 1080x1920 h264/aac, duration range, titles, scores, caption style, no Devanagari in Hinglish)",
+  "sec": 84.4
+ },
+ {
+  "group": "make",
+  "name": "Make 132s English video: mode=fast, accurate=fast, language=en, style=mrbeast, layout=side",
+  "ok": true,
+  "evidence": "full run, tests/out/run_make.log (every clip checked: 1080x1920 h264/aac, duration range, titles, scores, caption style, no Devanagari in Hinglish)",
+  "sec": 44.3
+ },
+ {
+  "group": "make",
+  "name": "Make 13-min English (audio-first path), default Fast",
+  "ok": true,
+  "evidence": "full run, tests/out/run_make.log (every clip checked: 1080x1920 h264/aac, duration range, titles, scores, caption style, no Devanagari in Hinglish)",
+  "sec": 163.1
+ },
+ {
+  "group": "make",
+  "name": "Make 2-hour Hindi video, Fast, Hinglish captions",
+  "ok": true,
+  "evidence": "full run, tests/out/run_make.log (every clip checked: 1080x1920 h264/aac, duration range, titles, scores, caption style, no Devanagari in Hinglish)",
+  "sec": 237.2
+ },
+ {
+  "group": "make",
+  "name": "Make 2-hour Hindi video, Accurate (turbo), Hinglish captions",
+  "ok": true,
+  "evidence": "full run, tests/out/run_make.log (every clip checked: 1080x1920 h264/aac, duration range, titles, scores, caption style, no Devanagari in Hinglish)",
+  "sec": 257.2
+ },
+ {
+  "group": "make",
+  "name": "Make 90-s music trailer (no speech) still returns clips",
+  "ok": true,
+  "evidence": "full run, tests/out/run_make.log (every clip checked: 1080x1920 h264/aac, duration range, titles, scores, caption style, no Devanagari in Hinglish)",
+  "sec": 16.1
+ },
+ {
+  "group": "make",
+  "name": "Make from an uploaded/local file",
+  "ok": true,
+  "evidence": "full run, tests/out/run_make.log (every clip checked: 1080x1920 h264/aac, duration range, titles, scores, caption style, no Devanagari in Hinglish)",
+  "sec": 20.2
+ },
+ {
+  "group": "make",
+  "name": "Make from a Twitch VOD",
+  "ok": true,
+  "evidence": "full run, tests/out/run_make.log (every clip checked: 1080x1920 h264/aac, duration range, titles, scores, caption style, no Devanagari in Hinglish)",
+  "sec": 153.0
+ },
+ {
+  "group": "make",
+  "name": "Make count=1 short range 10-20 s",
+  "ok": true,
+  "evidence": "full run, tests/out/run_make.log (every clip checked: 1080x1920 h264/aac, duration range, titles, scores, caption style, no Devanagari in Hinglish)",
+  "sec": 20.2
+ },
+ {
+  "group": "make",
+  "name": "Make count=6 on a short video returns what exists",
+  "ok": true,
+  "evidence": "full run, tests/out/run_make.log (every clip checked: 1080x1920 h264/aac, duration range, titles, scores, caption style, no Devanagari in Hinglish)",
+  "sec": 48.2
+ }
+]

@@ -136,6 +136,19 @@ Add a Twitch name or a Twitch / YouTube channel link in the **Creators** panel. 
 - Pressing **Stop** pauses that creator for 30 minutes; switching Auto off and on resumes at once.
 - Tested on Twitch (recording, chat spikes, clip, feed). YouTube channels are detected through yt-dlp; an auto-clipped YouTube stream was not run end to end.
 
+## Tests
+
+`tests/` holds an end-to-end suite that runs against the live server: page and API validation, every layout and caption style rendered and measured, editing one / all clips of a video, Make clips on real YouTube / Twitch / local sources in every mode and language, live clipping on a real stream, the creator list, star ratings, the installer and the website. Unit tests cover the chat-spike rule, caption grouping and re-editing. The last full run is in [`tests/REPORT.md`](tests/REPORT.md): 187 checks, all passing, plus the 12 problems the run found and fixed.
+
+```
+python -m unittest tests.test_captions tests.test_live tests.test_reedit
+python tests/e2e.py static export edit creators feedback   # server must be running
+python tests/e2e_make.py          # real downloads + transcription (about 25 min)
+python tests/e2e_live.py          # needs a Twitch channel that is live
+python tests/e2e_site.py          # website, links, release assets
+python tests/make_report.py       # rebuild tests/REPORT.md
+```
+
 ## Honest limits
 
 - Highlight picking is a heuristic plus a small local LLM. It finds loud, energetic, quotable moments, not guaranteed "viral" ones. Review before posting.
