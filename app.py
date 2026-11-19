@@ -87,7 +87,7 @@ def export(b:dict):
  layout=b.get('layout','stack')
  if layout not in ('stack','blur','fill','game'):raise HTTPException(400,'Choose a valid layout.')
  style=b.get('caption_style','gta')
- if style not in ('gta','bold','clean'):raise HTTPException(400,'Choose a valid caption style.')
+ if style not in ('gta','bold','clean','hormozi','mrbeast'):raise HTTPException(400,'Choose a valid caption style.')
  try:
   top=float(b.get('top',.32));position=int(b.get('caption_y',1450))
   if not math.isfinite(top) or not .2<=top<=.5 or not 400<=position<=1750:raise ValueError()
@@ -119,7 +119,8 @@ def export(b:dict):
       a=float(word['start']);z=float(word['end']);text=str(word['text'])[:100]
       if math.isfinite(a) and math.isfinite(z) and 0<=a<z<=end-start+.1:words.append({'start':a,'end':z,'text':text})
     else:words=transcribe(src,start,end,DATA,lambda msg:state[job].update(message=msg),b.get('language') or None)['words']
-   ass,srt=write_captions(words,style,DATA,job,str(b.get('hook','')),position)
+   hook_y=(top+30) if layout=='stack' else 260
+   ass,srt=write_captions(words,style,DATA,job,str(b.get('hook','')),position,hook_y)
    fc=graph+f';[base]ass={ass}[v]'
    state[job].update(message='Rendering vertical clip with '+style+' captions' if words else 'Rendering vertical clip')
    base=['ffmpeg','-y','-v','error','-ss',str(start),'-t',str(end-start),'-i',str(src),'-filter_complex',fc,'-map','[v]','-map','0:a?','-c:a','aac','-b:a','160k','-movflags','+faststart']

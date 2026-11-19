@@ -76,15 +76,51 @@ def stamp(t,ass=False):
     units=int(round(max(0,float(t))*(100 if ass else 1000)));h,units=divmod(units,(360000 if ass else 3600000));m,units=divmod(units,(6000 if ass else 60000));s,u=divmod(units,(100 if ass else 1000))
     return f'{h}:{m:02}:{s:02}.{u:02}' if ass else f'{h:02}:{m:02}:{s:02},{u:03}'
 
+# style -> (rest colour, active colour, outline/shadow tags, font size, pop scale %). ASS colours are BGR.
+STYLES={
+ 'gta':('&H00EFFF43&','&H00A845FF&',r'ord4c&H00560C31&\shad5c&H00FFCC00&lur0.7',72,0),
+ 'bold':('&H00FFFFFF&','&H003DF3CB&',r'ord6\shad4',72,0),
+ 'hormozi':('&H00FFFFFF&','&H00FFFF00&',r'ord7c&H00000000&\shad4c&H80000000&',84,112),
+ 'mrbeast':('&H0000FFFF&','&H000066FF&',r'ord9c&H00000000&\shad5c&H00000000&',90,112),
+}
+STYLE_NAMES=tuple(STYLES)+('clean',)
+
 def safe(text):return str(text).replace('\\','/').replace('{','(').replace('}',')').replace('\n',' ')
 
-def write(words,style,folder,name,hook='',position=1450):
+def group_words(words,max_words=4,max_chars=24,gap=0.45):
+    """2-4 word caption groups that follow the speech: break after punctuation or a pause, never mid-phrase padding."""
+    groups=[];cur=[]
+    for i,w in enumerate(words):
+        cur.append(w)
+        nxt=words[i+1] if i+1<len(words) else None
+        text=w['text'].rstrip()
+        chars=sum(len(x['text'])+1 for x in cur)
+        stop=nxt is None or len(cur)>=max_words or (len(cur)>=2 and (text[-1:] in '.?!,;:।…' or nxt['start']-w['end']>gap)) or (len(cur)>=2 and chars+len(nxt['text'])>max_chars)
+        if stop:groups.append(cur);cur=[]
+    # a lone trailing word reads badly: merge it into the previous group when that stays <=4 words
+    if len(groups)>1 and len(groups[-1])==1 and len(groups[-2])<max_words and groups[-1][0]['start']-groups[-2][-1]['end']<gap:
+        groups[-2]+=groups.pop()
+    if len(groups)>1 and len(groups[-1])==1 and len(groups[-2])>=max_words:     # 4+1 -> 3+2
+        groups[-1].insert(0,groups[-2].pop())
+    return groups
+
+def hook_lines(hook,width=17,max_lines=3):
+    """Whole words only, 1-3 short centred lines (the old fixed-position hook ran off both screen edges)."""
+    import textwrap
+    words=safe(hook).split()
+    text=' '.join(words)
+    if len(text)>60:
+        text=text[:60].rsplit(' ',1)[0]
+    lines=textwrap.wrap(text,width=width) or ['']
+    return lines[:max_lines]
+
+def write(words,style,folder,name,hook='',position=1450,hook_y=300):
     # Font fallback resolves Hindi through installed Windows Nirmala UI.
     ass=['[Script Info]','ScriptType: v4.00+','PlayResX: 1080','PlayResY: 1920','WrapStyle: 2',
          '[V4+ Styles]','Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding',
          'Style: Main,Arial,72,&H00FFFFFF,&H0000FFFF,&H00100B18,&H99000000,-1,0,0,0,100,100,0,0,1,5,2,5,50,50,0,1',
          '[Events]','Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text']
-    srt=[];groups=[words[i:i+3] for i in range(0,len(words),3)]
+    srt=[];groups=group_words(words,max_chars=int(960/(STYLES.get(style,('','','',58,0))[3]*0.62)))
     for i,group in enumerate(groups):
         if not group:continue
         begin=group[0]['start'];end=group[-1]['end']
@@ -96,16 +132,19 @@ def write(words,style,folder,name,hook='',position=1450):
             for n,word in enumerate(group):
                 a=max(begin,word['start']);b=group[n+1]['start'] if n+1<len(group) else end
                 if b<=a:continue
+                rest,active,extra,size,pop=STYLES[style]
                 chunks=[]
                 for k,w in enumerate(group):
-                    color='&H003DF3CB&' if style=='bold' else ('&H00EFFF43&' if k!=n else '&H00A845FF&')
-                    if style=='bold' and k!=n:color='&H00FFFFFF&'
-                    chunks.append('{\\c'+color+'}'+safe(w['text']).upper())
-                extra='\\bord6\\shad4' if style=='bold' else '\\bord4\\3c&H00560C31&\\shad5\\4c&H00FFCC00&\\blur0.7'
-                text='{\\pos(540,'+str(position)+')'+extra+'}'+' '.join(chunks)
+                    t=safe(w['text']).upper()
+                    if k==n and pop:chunks.append('{\c'+active+r'\fscx100\fscy100\t(0,110,\fscx'+str(pop)+r'\fscy'+str(pop)+r')\t(110,230,\fscx100\fscy100)}'+t+r'{\fscx100\fscy100}')
+                    else:chunks.append('{\c'+(active if k==n else rest)+'}'+t)
+                text='{\pos(540,'+str(position)+')\fs'+str(size)+extra+'}'+' '.join(chunks)
                 ass.append(f'Dialogue: 1,{stamp(a,True)},{stamp(b,True)},Main,,0,0,0,,{text}')
     if hook.strip():
-        ass.append(f'Dialogue: 2,0:00:00.00,0:00:03.00,Main,,0,0,0,,{{\\pos(540,250)\\fs82\\c&H00A845FF&\\bord7}}{safe(hook)[:65]}')
+        lines=hook_lines(hook);size=82 if len(lines)==1 else 74 if len(lines)==2 else 66
+        text=r'\N'.join(lines).upper()
+        tags=r'{\an8\pos(540,%d)\fs%d\b1\c&H00FFFFFF&\3c&H00A845FF&\bord10\shad0\blur1\fad(150,200)}' % (hook_y,size)
+        ass.append('Dialogue: 2,0:00:00.00,0:00:03.20,Main,,0,0,0,,'+tags+text)
     (folder/(name+'.ass')).write_text('\n'.join(ass),encoding='utf-8')
     (folder/(name+'.srt')).write_text('\n'.join(srt),encoding='utf-8')
     return name+'.ass',name+'.srt'

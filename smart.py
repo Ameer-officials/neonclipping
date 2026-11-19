@@ -8,8 +8,14 @@ from captions import transcribe
 SCOUT_MODEL='base'     # deep mode overrides with a stronger model
 _=0   # fast reading of candidates; final captions use a better model
 OLLAMA='http://127.0.0.1:11434'
-PROMPT=('You pick viral short-form clips from gaming streams. Transcript of a candidate clip:\n"""{t}"""\n'
-        'Reply ONLY with JSON: {{"score":1-10 (how hooky, funny, intense or surprising),"title":"max 7 words, punchy, English","hook":"max 6 words on-screen opening line"}}')
+PROMPT=('You pick viral short-form clips (Reels/Shorts) from gaming streams, podcasts and vlogs. First decide the content type '
+        '(entertainment, gaming reaction, knowledge, opinion, story). Then score the candidate clip.\n'
+        'HIGH score: strong emotion (laughter, shock, rage, hype), a surprise or punchline, a quotable line, a clear beginning-to-payoff, '
+        'real reactions, a hot take, a funny fail.\n'
+        'LOW score: intros/outros, "like and subscribe", sponsor reads, reading chat messages, small talk, silence, half-finished thoughts.\n'
+        'Use ONLY words from the transcript; never invent facts.\n'
+        'Transcript of a candidate clip:\n"""{t}"""\n'
+        'Reply ONLY with JSON: {{"score":1-10,"title":"max 7 words, punchy, English, no quotes","hook":"max 6 words taken or paraphrased from what is SAID, shown on screen in the first 3 seconds"}}')
 
 def _model():
     try:
