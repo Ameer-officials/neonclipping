@@ -9,6 +9,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse
 import uvicorn
 import math
+from layouts import CATALOG, geometry, render_graph, text_positions
 from captions import transcribe, large_v3, write as write_captions
 ROOT=Path(__file__).resolve().parent
 DATA=ROOT/'data';DATA.mkdir(exist_ok=True)
@@ -21,6 +22,11 @@ def probe(p):
 @app.get('/')
 def home():return HTMLResponse((ROOT/'index.html').read_text(encoding='utf-8'))
 attach(app,DATA,state,probe)
+@app.get('/layouts')
+def native_layouts(top:float=.32):
+ try:return [{'id':key,'name':name,'description':description,**geometry(key,top),**text_positions(key,top)} for key,name,description in CATALOG]
+ except ValueError as e:raise HTTPException(400,str(e))
+
 @app.post('/upload')
 async def upload(file:UploadFile=File(...)):
  id=uuid.uuid4().hex;p=DATA/(id+'.mp4')
@@ -49,12 +55,13 @@ def text_file(id:str,kind:str):
 @app.get('/library')
 def library():
  records=[]
+ groups=app.reedit_groups()
  for f in DATA.glob('*.json'):
   if f.name.endswith(('.state.json','.request.json','.words.json')):continue
   try:
    j=json.loads(f.read_text());result=j.get('result',{})
-   if result.get('status')=='done' and (DATA/(f.stem+'.mp4')).exists():
-    records.append({'id':f.stem,'title':j.get('settings',{}).get('title') or 'NeonClipping clip','created':f.stat().st_mtime,'meta':result.get('meta',{}),'settings':j.get('settings',{}),'srt':(DATA/(f.stem+'.srt')).exists()})
+   if result.get('status')=='done' and not j.get('superseded_by') and (DATA/(f.stem+'.mp4')).exists():
+    records.append({'id':f.stem,'title':j.get('settings',{}).get('title') or 'NeonClipping clip','created':f.stat().st_mtime,'meta':result.get('meta',{}),'settings':j.get('settings',{}),'srt':bool(result.get('srt')) and (DATA/(f.stem+'.srt')).exists(),**app.reedit_metadata(f.stem,j,groups)})
   except (ValueError,OSError):pass
  return sorted(records,key=lambda j:j['created'],reverse=True)
 
@@ -85,7 +92,7 @@ def caption_job(b:dict):
 def export(b:dict):
  id,src,m,start,end=source_range(b)
  layout=b.get('layout','stack')
- if layout not in ('stack','blur','fill','game'):raise HTTPException(400,'Choose a valid layout.')
+ if layout not in {x[0] for x in CATALOG}:raise HTTPException(400,'Choose a valid layout.')
  style=b.get('caption_style','gta')
  if style not in ('gta','bold','clean','hormozi','mrbeast'):raise HTTPException(400,'Choose a valid caption style.')
  try:
@@ -99,16 +106,7 @@ def export(b:dict):
    w=max(2,min(m['w']-x,int(values[2]*m['w'])));h=max(2,min(m['h']-y,int(values[3]*m['h'])))
    rects.append((x,y,w,h))
  except (KeyError,ValueError,TypeError,OverflowError):raise HTTPException(400,'Check crop regions, face height and caption position.')
- if layout=='stack':
-  top=int(top*1920)//2*2;parts=[]
-  for k,((x,y,w,h),height) in enumerate(zip(rects,[top,1920-top])):
-   parts.append(f'[s{k}]crop={w}:{h}:{x}:{y},scale=1080:{height}:force_original_aspect_ratio=increase,crop=1080:{height},setsar=1[p{k}]')
-  graph='[0:v]split=2[s0][s1];'+';'.join(parts)+';[p0][p1]vstack=inputs=2[base]'
- elif layout=='blur':
-  graph='[0:v]split=2[b][f];[b]scale=270:480:force_original_aspect_ratio=increase,crop=270:480,boxblur=8:2,scale=1080:1920[bg];[f]scale=1080:1920:force_original_aspect_ratio=decrease[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2,setsar=1[base]'
- else:
-  crop='' if layout=='fill' else 'crop=%d:%d:%d:%d,'% (rects[1][2],rects[1][3],rects[1][0],rects[1][1])
-  graph='[0:v]'+crop+'scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1[base]'
+ graph=render_graph(layout,rects,top)
  job=uuid.uuid4().hex;out=DATA/(job+'.mp4');state[job]={'status':'running','message':'Preparing export'}
  def work():
   try:
@@ -119,8 +117,8 @@ def export(b:dict):
       a=float(word['start']);z=float(word['end']);text=str(word['text'])[:100]
       if math.isfinite(a) and math.isfinite(z) and 0<=a<z<=end-start+.1:words.append({'start':a,'end':z,'text':text})
     else:words=transcribe(src,start,end,DATA,lambda msg:state[job].update(message=msg),b.get('language') or None)['words']
-   hook_y=(top+30) if layout=='stack' else 260
-   ass,srt=write_captions(words,style,DATA,job,str(b.get('hook','')),position,hook_y)
+   placement=text_positions(layout,top,position);hook_y=placement['hook_y'];caption_pos=placement['caption_y']
+   ass,srt=write_captions(words,style,DATA,job,str(b.get('hook','')),caption_pos,hook_y)
    fc=graph+f';[base]ass={ass}[v]'
    state[job].update(message='Rendering vertical clip with '+style+' captions' if words else 'Rendering vertical clip')
    base=['ffmpeg','-y','-v','error','-ss',str(start),'-t',str(end-start),'-i',str(src),'-filter_complex',fc,'-map','[v]','-map','0:a?','-c:a','aac','-b:a','160k','-movflags','+faststart']
@@ -128,8 +126,9 @@ def export(b:dict):
     r=subprocess.run(base+encoder+['-pix_fmt','yuv420p',str(out)],capture_output=True,text=True,cwd=str(DATA))
     if r.returncode==0:break
    if r.returncode:raise RuntimeError(r.stderr[-900:])
-   state[job]={'status':'done','file':job,'meta':probe(out),'encoder':encoder[1],'caption_words':len(words),'srt':f'/text/{job}/srt' if words else None}
-   (DATA/(job+'.json')).write_text(json.dumps({'source':id,'settings':b,'result':state[job]},indent=2),encoding='utf-8')
+   finished={'status':'done','file':job,'meta':probe(out),'encoder':encoder[1],'caption_words':len(words),'srt':f'/text/{job}/srt' if words else None}
+   (DATA/(job+'.json')).write_text(json.dumps({'source':id,'settings':{**b,'words':words,'caption_y':caption_pos},'result':finished},indent=2),encoding='utf-8')
+   state[job]=finished
   except Exception as e:state[job]={'status':'error','error':str(e)}
  threading.Thread(target=work,daemon=True).start();return {'job':job}
 PAD=4.0         # seconds fetched before a section: yt-dlp cuts on a keyframe, export trims exactly
@@ -256,7 +255,7 @@ def make(b:dict):
     else:sid2=sid;start=c['start'];end=c['end'];words=c.get('words')
     lang=language or ('hinglish' if (video_lang.startswith('hi') or c.get('language')=='hi') else None)
     body={'id':sid2,'start':start,'end':end,'layout':layout,'top':(top_h if isinstance(top_h,(int,float)) and .2<=top_h<=.5 else .32),'captions':True,'caption_style':style,'language':language,'hook':(' '.join(to_hinglish(w) for w in c.get('hook','').split()) if lang=='hinglish' else c.get('hook','')),
-          'title':c.get('title',''),'post_caption':c.get('title',''),'cam':cam,'game':game,'features':c.get('features'),'weights_used':W}
+          'title':c.get('title',''),'post_caption':c.get('title',''),'batch_id':job,'source_url':url,'cam':cam,'game':game,'features':c.get('features'),'weights_used':W}
     if acc!='fast' or lang in ('hinglish','hi') or not c.get('words'):
      save(job,{'stage':f'Accurate captions {i+1}/{len(found)}'})
      body['words']=transcribe(DATA/(sid2+'.mp4'),start,end,DATA,lambda m:None,lang,(large_v3() if acc=='best' else None))['words']
@@ -295,4 +294,7 @@ def make_status(job:str):
  return state[job]
 @app.get('/status/{id}')
 def status(id:str):return state.get(id,{'status':'error','error':'Server restarted. Paste the link again to retry.'})
+from reedit import attach as attach_reedit
+attach_reedit(app,DATA,state,probe,export,app.neon['save'])
+
 if __name__=='__main__':uvicorn.run(app,host='127.0.0.1',port=int(os.environ.get('NEONCLIPPING_PORT','8770')))

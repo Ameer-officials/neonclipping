@@ -35,3 +35,42 @@ main>header h1{text-shadow:0 4px 30px #ff4ba5aa}
 .stars{display:flex;gap:2px;margin-top:6px}.stars button{background:none;border:0;color:#5b4d70;font-size:22px;cursor:pointer;padding:0 2px;line-height:1}.stars button:hover,.stars button.on{color:#ffd45a}
 .stars:hover button{color:#ffd45a}.stars button:hover~button{color:#5b4d70}
 .fb{display:block;color:var(--muted);margin-top:2px}
+
+
+/* Native dark palette: keep readable when browser auto-dark styles are injected. */
+:root{color-scheme:dark}
+html body{background:#0b0912!important;color:#fbf6ff!important}
+html body .sidebar{background:#100c17!important;border-color:#30263e!important}
+html body main,html body header :is(.eyebrow,.top,h1,p,.social),html body .panel :is(.section-head,h2,.step,.make-row,.import-note,.toggle,.controls,.muted,.preset-row),html body .make-row .muted{background:transparent!important}
+html body :is(h1,h2,h3,.choice b){color:#fbf6ff!important}
+html body :is(label,.muted,.choice small,header>p,.import-note){color:#bdaeca!important}
+html body :is(.eyebrow,.side-note){color:#58e8f7!important}
+html body em{color:#ff4ba5!important;background:transparent!important}
+html body .panel{background:#171320!important;border-color:#30263e!important}
+html body .import-panel{background:linear-gradient(125deg,#231526,#151222 70%)!important;border-color:#5c2f50!important}
+html body :is(input,select,textarea){background:#100c17!important;color:#fbf6ff!important;border-color:#493552!important}
+html body input::placeholder,html body textarea::placeholder{color:#aa98b9!important;opacity:1}
+html body button{background:#241c31!important;color:#f6edfc!important;border-color:#493552!important}
+html body button:hover{border-color:#ff4ba5!important}
+html body .primary{background:#ff4ba5!important;color:#1c0714!important;border-color:#ff4ba5!important}
+html body .primary.make{background:linear-gradient(90deg,#58e8f7,#d4fb58)!important;color:#0b0912!important}
+html body .secondary{background:#23383c!important;color:#58e8f7!important;border-color:#3e757d!important}
+html body .nav{background:transparent!important;color:#bdaeca!important}
+html body .nav.active{background:#382035!important;color:#ff86be!important}
+html body .brand{color:#ff4ba5!important}
+html body .brand div{color:#fbf6ff!important}
+html body main>header{background:radial-gradient(circle at 80% 120%,#ffd45a 0 11%,#ff8a3d 11% 20%,transparent 20.5%),linear-gradient(180deg,#1a0636,#4b0f6e 38%,#b3216f 72%,#ff6a4d)!important;padding:28px 30px 70px;border-color:#5b2a7a!important}
+html body .social a.gh{background:#fbf6ff!important;color:#160b22!important}
+html body .social a.ig{background:linear-gradient(90deg,#ff4ba5,#ff8a3d)!important;color:#fff!important}
+.layout-grid{grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px}
+html body .choice{display:flex;flex-direction:column;align-items:flex-start;min-height:146px;padding:15px;text-align:left;background:#1d1728!important}
+html body .choice.active{background:#322037!important;border-color:#ff4ba5!important;box-shadow:inset 0 0 0 1px #ff4ba566}
+.native-layout-mini{position:relative;display:block;width:30px;height:52px;overflow:hidden;border:1px solid #826689;border-radius:5px;background:#100c17!important;margin-bottom:10px}
+.native-layout-mini i{position:absolute;display:block;margin:0;border-radius:0;min-height:0}
+html body .native-layout-mini .layout-game{background:#58e8f7!important}
+html body .native-layout-mini .layout-cam{background:#ff4ba5!important;outline:1px solid #201126}
+html body .native-layout-mini .layout-full{background:linear-gradient(145deg,#58e8f7,#316c88)!important}
+html body .native-layout-mini .layout-circle{border-radius:50%}
+html body .native-layout-mini .layout-backdrop{inset:0;width:100%;height:100%;background:#46405c!important}
+html body .native-layout-mini .layout-inset{left:0;top:32%;width:100%;height:36%;background:#58e8f7!important}
+@media(max-width:760px){html body main>header{padding:22px 20px 55px}.top{align-items:flex-start;flex-direction:column}.layout-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.choice small{font-size:10px}.social a{font-size:11px}}

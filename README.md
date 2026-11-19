@@ -59,12 +59,28 @@ Every candidate moment is scored from several signals, then the best ones are ke
 - One-click **Make clips**, live progress, clips appear one by one with preview and MP4 download.
 - **Min / Max clip length** (e.g. 30–80 s). Clips end on a sentence.
 - **Facecam position presets** (top-left, top-right, bottom-left, bottom-right, bottom-centre, none) for the usual streamer layouts, remembered between sessions. Or draw the face and gameplay boxes yourself in the editor.
-- Layouts: face + gameplay stack, blurred fill, fill screen, gameplay only.
-- Caption styles: GTA Neon, Impact, Clean. Word-timed, editable words, SRT export.
+- **11 native layouts:** camera above/below gameplay, blurred fill, full-screen crop, gameplay only, four corner overlays, circle facecam and side-by-side. Independent face/game selection and a face-size slider. Preview-only platform safe zones.
+- Caption styles: GTA Neon, Impact, Clean, Hormozi and MrBeast. Word-timed, editable words, SRT export.
 - **Hinglish captions**: Hindi speech is written in English letters ("kya haal hai bhai") by default. Pick Hinglish / हिंदी / English explicitly if you like. Caption accuracy: Fast, Accurate (Whisper large-v3-turbo, default) or Best Hindi (large-v3, much slower on small GPUs).
 - **Make clips uses your own setup**: facecam preset or the boxes you draw in step 03.
 - Optical-flow motion + audio highlight ranking, frame-accurate NVENC export (falls back to x264).
 - Nothing leaves your computer. The server binds to `127.0.0.1` only.
+
+## Change clips after generating them
+
+![Saved clip editor with eleven layouts](docs/saved-clip-editor.jpg)
+
+Open **My clips → Edit clip**. The saved editor includes all **11 speaker position/shape layouts**, a speaker-size slider, editable subtitle words, caption style and caption height.
+
+- **Apply to this clip** updates the opened clip.
+- **Apply to this video's clips** updates the currently saved clips associated with the same source URL. Each keeps its own timestamps, transcript, title and hook. New clips still being generated are not included in that snapshot.
+- Source download, highlight discovery and speech recognition are **not repeated**. Burned-in captions and framing require encoding a new final MP4.
+- Original source files must remain in `data/`. Previous MP4s are kept; the library displays the latest versions. Old exports missing saved word timings can recover captions from their SRT, with approximate per-word timing.
+- This edits the selected moments; changing the clip's start/end or spoken language requires a separate trim/transcription workflow.
+
+Validation on one 796.9-second source: all 11 layouts and five caption styles exported with audio and decoded successfully. A seven-clip layout/style update took 119.58 seconds while reusing each clip's exact source, range and word list. These are local checks, not guaranteed runtimes or a caption-quality benchmark.
+
+Run the portable regression tests with `python -m unittest discover -s tests -v`.
 
 ## Install
 

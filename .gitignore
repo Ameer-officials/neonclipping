@@ -21,3 +21,8 @@ __pycache__/
 !docs/*.txt
 !live/
 !live/*
+
+!tests/
+!tests/*.py
+
+!docs/*.md

@@ -10,7 +10,7 @@ def prepare(url,job,data,probe,publish):
     frames=[]
     def ready(file,t,meta,kind):
         frames.append({'url':f'/preview/{job}/{len(frames)}','time':round(t,1),'kind':kind})
-        publish({'preview_status':'ready','preview_frames':list(frames),'preview_meta':meta})
+        publish({'preview_status':'ready' if len(frames)>=4 else 'loading','preview_frames':list(frames),'preview_meta':meta})
     # Own source cache enables full-resolution previews without a new download.
     cached=None
     for f in data.glob('*.request.json'):
