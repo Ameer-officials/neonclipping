@@ -4,7 +4,13 @@
 
 NeonClipping turns long YouTube / Twitch / Kick videos (or your own MP4) into vertical, captioned clips with a title and hook for each. Everything runs on your machine: no account, no subscription, no upload.
 
+[![Star on GitHub](https://img.shields.io/github/stars/iamajmeena/neonclipping?style=for-the-badge&logo=github&label=Star%20on%20GitHub)](https://github.com/iamajmeena/neonclipping) [![Instagram](https://img.shields.io/badge/Follow-%40iamajmeena-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://www.instagram.com/iamajmeena/)
+
+**Made by [Ajay K Meena](https://www.instagram.com/iamajmeena/)** (Director, DOP, colorist, DaVinci Resolve educator, Jaipur). If NeonClipping saves you time, please ⭐ star the repo and follow [@iamajmeena](https://www.instagram.com/iamajmeena/) on Instagram.
+
 ![UI](docs/neonclipping-ui.jpg)
+
+📘 **Guides (Hindi + English, PDF):** [docs/NeonClipping-Guide-EN-HI.pdf](docs/NeonClipping-Guide-EN-HI.pdf)
 
 ## How it finds good moments
 
@@ -20,7 +26,16 @@ Two modes, one button.
 
 **🔬 Deep mode** downloads the whole video, adds optical-flow motion (OpenCV Farneback: fast objects, impacts, camera whips) and cut density to the audio signals, shortlists 4× more candidates and gives the LLM 15 seconds of context before and after each one.
 
-Measured on one machine (RTX 2060, 16 threads), 3 clips from an 85-minute YouTube stream, Fast mode: **97 s** end to end. The 90-second GTA trailer: 3 clips in 21 s. Your numbers depend on network and CPU.
+Measured on one machine (RTX 2060, 16 threads), Fast mode, 3 clips each:
+
+| Source | Time |
+|---|---|
+| 85-minute YouTube stream (YouTube captions) | **97 s** |
+| 3-hour Twitch VOD (no captions, local speech model) | **136 s** |
+| 90-second YouTube trailer | 21 s |
+| 90-second local MP4 | 14 s |
+
+Your numbers depend on network and CPU.
 
 ## Features
 
@@ -73,7 +88,7 @@ Set `NEONCLIPPING_CPU=1` to force CPU.
 - Without YouTube captions (Twitch VODs, uploaded files) a speech model must transcribe each candidate, which is slow on CPU.
 - Auto-caption accuracy follows the source: YouTube's auto captions are imperfect, especially Hinglish.
 - Deep mode was verified on a short video only; on multi-hour videos it downloads the whole file first and is slow by design.
-- Presets are starting points; draw your own boxes if the cam sits elsewhere.
+- Facecam presets are starting points, not detection: if you pick Bottom-right but the cam is bottom-left, the top half of the clip will show the wrong area. Pick the right corner or draw your own boxes.
 
 ## Credits and inspiration
 

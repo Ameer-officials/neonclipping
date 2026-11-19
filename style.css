@@ -25,3 +25,7 @@ main>header h1{text-shadow:0 4px 30px #ff4ba5aa}
 .hero-sub{margin:6px 0 0;color:#ffe7f3;font-weight:600}
 .preset-row .chip{transition:transform .15s,box-shadow .15s}.preset-row .chip:hover{transform:translateY(-2px);box-shadow:0 0 18px #ff4ba566}
 .panel{box-shadow:0 10px 40px #0007}
+
+.social{display:flex;gap:10px;flex-wrap:wrap}.social a{border-radius:999px;padding:8px 16px;font-weight:700;font-size:13px;text-decoration:none;border:1px solid #ffffff55;color:#fff;background:#0b09128c;backdrop-filter:blur(6px)}
+.social a.gh{background:#fff;color:#0b0912;border-color:#fff}.social a.ig{background:linear-gradient(90deg,#ff4ba5,#ff8a3d);border-color:transparent}.social a:hover{transform:translateY(-2px)}
+.star-ask{margin-top:10px;padding:12px 16px;border-radius:12px;background:#1f1829;border:1px solid var(--line)}.star-ask a{color:var(--lime);font-weight:700}

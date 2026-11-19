@@ -43,7 +43,7 @@ def snap(c,words,min_len,max_len):
 def find(src,duration,count,length,report,language=None,data=None,min_len=None,motion=True,words=None,deep=False):
     """Return up to `count` clips, best first. Always returns `count` when the source is long enough."""
     pool=(count*4+2) if deep else (count*2+1 if count<6 else count+4)
-    if not words and not deep:pool=count+2      # no free transcript: every candidate costs a speech-model pass, so read fewer
+    if not words:pool=count+2 if not deep else min(pool,count*2+2)      # no free transcript: every candidate costs a speech-model pass, so read fewer
     clips=[]
     while length>=10:
         clips=rank(src,duration,pool,length,lambda s:report(.0+.3*s/max(duration,1),f'Scanning movement + audio: {int(s)}/{int(duration)}s'),motion)
