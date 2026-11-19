@@ -269,6 +269,18 @@ def make(b:dict):
    save(job,{'status':'done','stage':'Clips ready','progress':1,'elapsed_seconds':round(time.monotonic()-began,1)})
   except Exception as e:save(job,{'status':'error','error':str(e)[-600:]})
  threading.Thread(target=work,daemon=True).start();return {'job':job}
+@app.get('/donate')
+def donate():
+ """Optional donate links (donate.json or NEONCLIPPING_DONATE_RAZORPAY / NEONCLIPPING_DONATE_PAYPAL). Only https links are served; nothing is unlocked by donating."""
+ cfg={}
+ try:cfg=json.loads((ROOT/'donate.json').read_text(encoding='utf-8'))
+ except (OSError,ValueError):pass
+ out={}
+ for k in ('razorpay','paypal'):
+  v=str(os.environ.get('NEONCLIPPING_DONATE_'+k.upper()) or cfg.get(k) or '').strip()
+  if v.startswith('https://') and len(v)<300 and ' ' not in v:out[k]=v
+ return out
+
 @app.post('/feedback')
 def feedback(b:dict):
  """A star rating (1-5) for a finished clip. Stored locally; the scoring weights are refitted from the ratings (learn.py)."""

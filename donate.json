@@ -1,0 +1,5 @@
+{
+  "razorpay": "",
+  "paypal": "",
+  "note": "Put your own payment links here, e.g. https://rzp.io/l/yourname and https://paypal.me/yourname. Leave both empty to hide the Donate button."
+}
