@@ -153,6 +153,13 @@ def section_start(audio_file,section_file,expected):
  corr=np.fft.irfft(np.fft.rfft(hay,size)*np.conj(np.fft.rfft(needle,size)),size)[:len(hay)-len(needle)+1]
  return a0+int(np.argmax(corr))/8000
 
+def axes(f):
+ """Four readable 0-100 axes from the scoring features (None = not measured for this clip)."""
+ def mean(keys):
+  v=[f[k] for k in keys if f.get(k) is not None]
+  return round(100*sum(v)/len(v)) if v else None
+ return {'energy':mean(('loud','shout')),'action':mean(('motion','flash','strobe')),'words':mean(('words',)),'ai':mean(('llm',))}
+
 @app.post('/make')
 def make(b:dict):
  """One click. Short video: download, smart highlights, export. Long video (PeakCut-style): download AUDIO only, pick moments from
@@ -263,7 +270,7 @@ def make(b:dict):
     ej=export(body)['job']
     while state.get(ej,{}).get('status')=='running':time.sleep(.7)
     r=state[ej]
-    done.append({'file':ej,'start':c['start'],'end':c['end'],'title':c.get('title') or 'Clip %d'%(i+1),'hook':c.get('hook',''),'score':c['score'],'reason':c.get('reason',''),
+    done.append({'viral':min(99,c['score']),'axes':axes(c.get('features') or {}),'file':ej,'start':c['start'],'end':c['end'],'title':c.get('title') or 'Clip %d'%(i+1),'hook':c.get('hook',''),'score':c['score'],'reason':c.get('reason',''),
                  'error':r.get('error'),'srt':r.get('srt')})
     save(job,{'clips':list(done),'stage':f'Rendered {i+1}/{len(found)}','progress':.6+.4*(i+1)/len(found)})
    save(job,{'status':'done','stage':'Clips ready','progress':1,'elapsed_seconds':round(time.monotonic()-began,1)})
