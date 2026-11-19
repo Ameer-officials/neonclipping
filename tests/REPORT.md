@@ -1,8 +1,8 @@
 # NeonClipping test report
 
-Generated 2026-11-20 02:17 by tests/make_report.py from tests/report.json.
+Generated 2026-11-20 03:21 by tests/make_report.py from tests/report.json.
 
-**187 of 187 checks pass.**
+**248 of 248 checks pass.**
 
 ## Problems found by the tests and fixed
 
@@ -20,12 +20,17 @@ Generated 2026-11-20 02:17 by tests/make_report.py from tests/report.json.
 | 10 | An unattended (auto) live recording could grow without limit. | 3-hour cap per session, stop below 8 GB free disk, recording deleted after the last clip is cut. |
 | 11 | install.ps1 printed the Desktop-shortcut message even with -NoShortcut. | Message follows the option; script is still ASCII-only and parses. |
 | 12 | Browser could keep an old app.js after a fix. | Asset version in index.html bumped on every change. |
+| 13 | Facecam detection by border alone picked GTA's minimap (a static bordered panel) instead of the webcam. | Candidates are verified with a small local face detector (YuNet, MIT, 230 KB): the webcam is the box that holds a face; the minimap never does. |
+| 14 | Corner-only search missed webcams that float on the left or right side (Carry's stream) and boxes that were only the face inside a framed webcam. | Search any rectangle whose four sides are static lines or the frame edge, keep nested boxes and upgrade to the enclosing framed webcam. Checked by drawing the boxes on real frames. |
+| 15 | X-post templates hid the video: the card was drawn by the caption layer on top of the clip. | Card shapes are drawn on the background in a first pass, the clip is overlaid, text goes on top. |
+| 16 | Rounded corners (geq on every frame) made template and background renders 3x slower (17-31 s for an 8 s clip). | A cached mask image and alphamerge: 5-12 s. |
+| 17 | Music bed test failed to show the rise because the voice dominated the level. | Measured on a source without audio (also tests the music-only path): the bed rises from quiet to 9x louder. |
 
 ## Page, API and input validation  (34/34)
 
 | Result | Check | Evidence |
 |---|---|---|
-| PASS | index.html served | 13269 |
+| PASS | index.html served | 19450 |
 | PASS | every $("id") used by app.js exists in index.html | missing: [] |
 | PASS | app.js syntax (node --check) |  |
 | PASS | GET /assets/app.js |  |
@@ -85,7 +90,7 @@ Generated 2026-11-20 02:17 by tests/make_report.py from tests/report.json.
 | PASS | render caption position bottom (caption_y=1700) | 1080x1920 h264/aac 6.0s enc=h264_nvenc words=12 |
 | PASS | render speaker size 0.2 / 0.5 |  |
 | PASS | render accepts unicode hook (Hinglish)  | 1080x1920 h264/aac 6.0s enc=h264_nvenc words=12 |
-| PASS | SRT downloadable for a captioned clip | b1261591e046453bafae1c96a91e6b0e |
+| PASS | SRT downloadable for a captioned clip | 1e20c48bff184f92852a73fa60aac3fb |
 
 ## Editing saved clips (one / all clips of a video)  (12/12)
 
@@ -96,7 +101,7 @@ Generated 2026-11-20 02:17 by tests/make_report.py from tests/report.json.
 | PASS | only the chosen clip changed | ['bold', 'gta', 'gta'] |
 | PASS | apply layout+style to ALL clips of the video | 3 clips,  |
 | PASS | all 3 clips changed, each kept its own title/hook | [('circle', 'hormozi', 'T0'), ('circle', 'hormozi', 'T1'), ('circle', 'hormozi', 'T2')] |
-| PASS | stale (old) clip id still edits the newest version | 914a3dd3 |
+| PASS | stale (old) clip id still edits the newest version | 3f04937b |
 | PASS | apply captions OFF to all | 3 clips,  |
 | PASS | apply speaker size + caption position to all | 3 clips,  |
 | PASS | apply new cam/game boxes to all | 3 clips,  |
@@ -126,6 +131,73 @@ Generated 2026-11-20 02:17 by tests/make_report.py from tests/report.json.
 | PASS | Make from a Twitch VOD | full run, tests/out/run_make.log (every clip checked: 1080x1920 h264/aac, duration range, titles, scores, caption style, no Devanagari in Hi |
 | PASS | Make count=1 short range 10-20 s | full run, tests/out/run_make.log (every clip checked: 1080x1920 h264/aac, duration range, titles, scores, caption style, no Devanagari in Hi |
 | PASS | Make count=6 on a short video returns what exists | full run, tests/out/run_make.log (every clip checked: 1080x1920 h264/aac, duration range, titles, scores, caption style, no Devanagari in Hi |
+
+## Style extras: templates, background card, watermark, credit, outro, music  (26/26)
+
+| Result | Check | Evidence |
+|---|---|---|
+| PASS | upload image asset | {'id': 'd9a016db21244eab8ea9ec0bc8c72d5a', 'kind': 'image', 'name': 'logo.png'} |
+| PASS | upload audio asset | {'id': '57a37fe903254a40b8f32176b286012b', 'kind': 'audio', 'name': 'bed.mp3'} |
+| PASS | upload rejects a non-media file | {'error': '{"detail":"Allowed image files: .png, .jpg, .jpeg, .webp"}', 'status': 400} |
+| PASS | upload rejects unknown kind |  |
+| PASS | template x_light | 1080x1920 h264/aac 8.0s |
+| PASS | template x_dark | 1080x1920 h264/aac 8.0s |
+| PASS | template tiktok_hook | 1080x1920 h264/aac 8.0s |
+| PASS | template breaking_news | 1080x1920 h264/aac 8.0s |
+| PASS | template rejects unknown name |  |
+| PASS | background card blur + padding + rounded corners | 1080x1920 h264/aac 8.0s |
+| PASS | background card color + padding + rounded corners | 1080x1920 h264/aac 8.0s |
+| PASS | background card gradient + padding + rounded corners | 1080x1920 h264/aac 8.0s |
+| PASS | background image + dim + blur | 1080x1920 h264/aac 8.0s |
+| PASS | background image without upload is refused |  |
+| PASS | bad colour refused |  |
+| PASS | watermark tl | 1080x1920 h264/aac 8.0s |
+| PASS | watermark tr | 1080x1920 h264/aac 8.0s |
+| PASS | watermark bl | 1080x1920 h264/aac 8.0s |
+| PASS | watermark br | 1080x1920 h264/aac 8.0s |
+| PASS | credit line | 1080x1920 h264/aac 8.0s |
+| PASS | outro ribbon in the last 3 s | 1080x1920 h264/aac 8.0s |
+| PASS | music bed (source without audio) starts quiet and rises to its peak | bed -41.1 dB at start -> -24.8 dB at the end (peak 9x louder), audio=aac, 8.0s |
+| PASS | music mixed under a voice (source with audio): aac, right length | 1080x1920 h264/aac 8.0s |
+| PASS | music without upload is refused |  |
+| PASS | everything together (template off): card + watermark + credit + outro + music | 1080x1920 h264/aac 9.0s |
+| PASS | template + watermark + music together | 1080x1920 h264/aac 9.0s |
+
+## Caption animations, SRT/ASS import, facecam finder, AI parts, Make with moments  (31/31)
+
+| Result | Check | Evidence |
+|---|---|---|
+| PASS | caption animation highlight | 1080x1920 8.0s words=12 |
+| PASS | caption animation pop_in | 1080x1920 8.0s words=12 |
+| PASS | caption animation pop_in_line | 1080x1920 8.0s words=12 |
+| PASS | caption animation one_by_one | 1080x1920 8.0s words=12 |
+| PASS | caption animation build_up | 1080x1920 8.0s words=12 |
+| PASS | caption animation full_line | 1080x1920 8.0s words=12 |
+| PASS | caption animation with clean style | 1080x1920 8.0s words=12 |
+| PASS | unknown caption animation is refused |  |
+| PASS | SRT import gives words relative to the clip | [{'start': 1.0, 'end': 2.071, 'text': 'imported'}, {'start': 2.071, 'end': 3.024, 'text': 'caption'}] |
+| PASS | imported words render as captions | 1080x1920 10.0s words=7 |
+| PASS | SRT outside the clip is refused with a clear message | {'detail': 'No caption lines fall inside this clip. Check the clip start and end.'} |
+| PASS | garbage caption file is refused |  |
+| PASS | facecam endpoint answers for saved sources | 8 sources checked |
+| PASS | a webcam is found on at least one real stream, inside the frame, with a sensible size | [('f024ac', {'x': 0.0372, 'y': 0.4227, 'w': 0.1661, 'h': 0.188}, 0.99), ('8964af', {'x': 0.8279, 'y': 0.0171, 'w': 0.163, 'h': 0.3102}, 1.0) |
+| PASS | facecam on the GTA stream with a top-right webcam is in the top-right area | [{'x': 0.8029, 'y': 0.1116, 'w': 0.188, 'h': 0.2102}] |
+| PASS | facecam unknown id is refused |  |
+| PASS | footage without a webcam answers "no facecam" with a reason | {'found': False, 'confidence': 0.0, 'game_motion': 0.3, 'reason': 'no rectangle with a steady border holds a face, and no face sits in the s |
+| PASS | AI parts: 2-hour video split into the requested 5 parts | 5 |
+| PASS | AI parts: every part has lines and a complete prompt | [('00:00:00 - 00:25:30', 86, 14623), ('00:25:30 - 00:51:00', 87, 15994), ('00:51:00 - 01:16:30', 89, 18883), ('01:16:30 - 01:42:00', 93, 208 |
+| PASS | AI parts: part prompts stay small enough to paste (< 60k characters) | 20839 |
+| PASS | AI parts: the first prompt contains real transcript text with timestamps | 8] भाग इन्होंने मुझे देख लिया। ओ तेरी चुप चुप चुप बदमाशी नहीं बेटे अंदर आ चुका हूं। ओह वेट मैं डोनी तक पहुंच गया हूं। लेट्स गो डोनी बच जा। अ |
+| PASS | AI parts: not a link is refused |  |
+| PASS | AI parts: unreadable video is refused with a message | {'detail': 'Could not read that video: ERROR: [youtube] zzzzzzzzzzz: This video is unavailable'} |
+| PASS | AI answers: JSON from a chatbot becomes moments | {'moments': [{'start': 310.0, 'end': 355.0, 'title': 'Plane crash', 'hook': 'bhai plane gir gaya', 'start_label': '00:05:10', 'end_label': ' |
+| PASS | AI answers: nothing usable is refused |  |
+| PASS | Make refuses an empty moments list |  |
+| PASS | Make from pasted moments (+ template, credit, auto facecam on a video without webcam) | 2 clips [40, 42] s, engine=AI answer, facecam={'found': False, 'confidence': 0.0, 'method': None, 'cam': None, 'reason': 'no rectangle with  |
+| PASS | moments clips keep their own titles | ['First pick', 'Second pick'] |
+| PASS | auto facecam reported "not found" cleanly when there is no webcam | {'found': False, 'confidence': 0.0, 'method': None, 'cam': None, 'reason': 'no rectangle with a steady border holds a face, and no face sits |
+| PASS | edit ALL clips of a video: template + caption animation | 2 clips updated to tiktok_hook + build_up |
+| PASS | Make with "find my facecam": the detected webcam box is used for every clip | facecam={'found': True, 'confidence': 1.0, 'method': 'border+face', 'cam': {'x': 0.831, 'y': 0.0171, 'w': 0.1599, 'h': 0.3102}, 'reason': No |
 
 ## Live clipping on a real stream  (17/17)
 
@@ -163,16 +235,16 @@ Generated 2026-11-20 02:17 by tests/make_report.py from tests/report.json.
 | PASS | reject "https://youtu.be/abc" | rejected |
 | PASS | reject "hello world" | rejected |
 | PASS | reject "xxxxxxxxxxxxxxxxxxxx" | rejected |
-| PASS | add offline creator | {'id': '42e448771b08'} |
+| PASS | add offline creator | {'id': '0f056c2ef395'} |
 | PASS | duplicate add rejected |  |
 | PASS | bad add rejected |  |
-| PASS | check now reports offline/online | {'live': False} |
+| PASS | check now reports offline/online | {'live': True} |
 | PASS | auto toggle off/on persists |  |
 | PASS | save layout |  |
 | PASS | library not broken by creators store (no .json in data) |  |
 | PASS | remove |  |
 | PASS | unknown creator -> 404 |  |
-| PASS | detect live Twitch channel (any of 5 big ones) | ['kaicenat'] |
+| PASS | detect live Twitch channel (any of 5 big ones) | ['kaicenat', 'xqc'] |
 | PASS | offline/nonexistent channel -> not live, no crash |  |
 
 ## Star ratings and learning  (6/6)
@@ -186,7 +258,7 @@ Generated 2026-11-20 02:17 by tests/make_report.py from tests/report.json.
 | PASS | after 10 ratings the weights are fitted | {'ratings': 12, 'fitted': True, 'alpha': 0.2} |
 | PASS | weights sum to 1 and stay positive | 1.0 |
 
-## Browser UI  (14/14)
+## Browser UI  (17/17)
 
 | Result | Check | Evidence |
 |---|---|---|
@@ -204,6 +276,9 @@ Generated 2026-11-20 02:17 by tests/make_report.py from tests/report.json.
 | PASS | My clips with 108 clips defers video loading (only ~6 near the screen requested metadata) | 102 deferred, first visible clip playable (readyState 4) |
 | PASS | Creators: add offline creator, row, status chip, feed, remove | seen in the browser pane (xqc), screenshot checked |
 | PASS | Edit stale card -> newest clip; Apply to all 4 clips; both cards follow | 28.5 s, library 4/4 updated |
+| PASS | Style panel, AI panel, caption animation select, SRT import, Find my facecam button all present (25 in-page assertions) | browser pane, 0 failed; style options off by default leave exports unchanged; Reset turns everything off |
+| PASS | AI answers pasted in the page become tickable moments; SRT file through the real input fills the word editor | browser pane |
+| PASS | Keyboard shortcuts I / O / Space trim and play | browser pane: I set start 12.34, O set end, Space toggled play |
 
 ## One-click installer  (3/3)
 
@@ -213,11 +288,12 @@ Generated 2026-11-20 02:17 by tests/make_report.py from tests/report.json.
 | PASS | installed copy starts via Start-NeonClipping.bat on port 8791 | /healthz, /library, / (12 KB), /layouts (11) all OK; stopped cleanly |
 | PASS | install.ps1 is ASCII only and parses with the PowerShell parser | 13 KB, 0 parse errors |
 
-## Unit tests  (1/1)
+## Unit tests  (2/2)
 
 | Result | Check | Evidence |
 |---|---|---|
 | PASS | 14 unit tests: chat-spike rule, target parsing, caption grouping (500 random streams), re-edit | python -m unittest tests.test_live tests.test_captions tests.test_reedit -> OK |
+| PASS | 56 unit tests across the project (captions, animations, subtitles, AI parts, facecam, live spike rule, re-edit, queue, bundles, output formats) | python -m unittest discover -s tests -> OK |
 
 ## Website, links, release, editorsgurukul  (39/39)
 

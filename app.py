@@ -9,10 +9,12 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse
 import uvicorn
 import math
-from layouts import CATALOG, geometry, render_graph, text_positions
-from captions import transcribe, large_v3, write as write_captions
+from layouts import CATALOG, geometry, render_graph, text_positions, output_settings
+from captions import transcribe, large_v3, write as write_captions, ANIMS
+import styling
+import facecam_detect
 ROOT=Path(__file__).resolve().parent
-DATA=ROOT/'data';DATA.mkdir(exist_ok=True)
+DATA=Path(os.environ.get('NEONCLIPPING_DATA_DIR',str(ROOT/'data'))).resolve();DATA.mkdir(parents=True,exist_ok=True)
 app=FastAPI()
 state={}
 def probe(p):
@@ -23,8 +25,10 @@ def probe(p):
 def home():return HTMLResponse((ROOT/'index.html').read_text(encoding='utf-8'))
 attach(app,DATA,state,probe)
 @app.get('/layouts')
-def native_layouts(top:float=.32):
- try:return [{'id':key,'name':name,'description':description,**geometry(key,top),**text_positions(key,top)} for key,name,description in CATALOG]
+def native_layouts(top:float=.32,aspect:str='vertical',resolution:int=1080):
+ try:
+  width,height,_=output_settings({'aspect':aspect,'resolution':resolution})
+  return [{'id':key,'name':name,'description':description,**geometry(key,top,width,height),**text_positions(key,top,width=width,height=height)} for key,name,description in CATALOG]
  except ValueError as e:raise HTTPException(400,str(e))
 
 @app.post('/upload')
@@ -44,7 +48,7 @@ def media(id:str):
  return FileResponse(p,media_type='video/mp4')
 @app.get('/assets/{name}')
 def assets(name:str):
- if name not in ('app.js','style.css'):raise HTTPException(404)
+ if name not in ('app.js','style.css','extras.js'):raise HTTPException(404)
  return FileResponse(ROOT/name)
 @app.get('/text/{id}/{kind}')
 def text_file(id:str,kind:str):
@@ -95,6 +99,7 @@ def export(b:dict):
  if layout not in {x[0] for x in CATALOG}:raise HTTPException(400,'Choose a valid layout.')
  style=b.get('caption_style','gta')
  if style not in ('gta','bold','clean','hormozi','mrbeast'):raise HTTPException(400,'Choose a valid caption style.')
+ if (b.get('caption_anim') or 'highlight') not in ANIMS:raise HTTPException(400,'Choose a valid caption animation.')
  try:
   top=float(b.get('top',.32));position=int(b.get('caption_y',1450))
   if not math.isfinite(top) or not .2<=top<=.5 or not 400<=position<=1750:raise ValueError()
@@ -106,7 +111,11 @@ def export(b:dict):
    w=max(2,min(m['w']-x,int(values[2]*m['w'])));h=max(2,min(m['h']-y,int(values[3]*m['h'])))
    rects.append((x,y,w,h))
  except (KeyError,ValueError,TypeError,OverflowError):raise HTTPException(400,'Check crop regions, face height and caption position.')
- graph=render_graph(layout,rects,top)
+ try:width,height,fps=output_settings(b)
+ except (ValueError,TypeError,OverflowError) as e:raise HTTPException(400,str(e))
+ graph=render_graph(layout,rects,top,width,height)
+ try:plan=styling.plan(b,DATA)
+ except ValueError as e:raise HTTPException(400,str(e))
  job=uuid.uuid4().hex;out=DATA/(job+'.mp4');state[job]={'status':'running','message':'Preparing export'}
  def work():
   try:
@@ -117,17 +126,24 @@ def export(b:dict):
       a=float(word['start']);z=float(word['end']);text=str(word['text'])[:100]
       if math.isfinite(a) and math.isfinite(z) and 0<=a<z<=end-start+.1:words.append({'start':a,'end':z,'text':text})
     else:words=transcribe(src,start,end,DATA,lambda msg:state[job].update(message=msg),b.get('language') or None)['words']
-   placement=text_positions(layout,top,position);hook_y=placement['hook_y'];caption_pos=placement['caption_y']
-   ass,srt=write_captions(words,style,DATA,job,str(b.get('hook','')),caption_pos,hook_y)
-   fc=graph+f';[base]ass={ass}[v]'
+   dur=end-start;g2=graph
+   if plan:plan.data=DATA;plan.job=job;g2=plan.graph(graph,src,width,height,dur)
+   placement=text_positions(layout,top,position,width,height);hook_y=placement['hook_y'];caption_pos=placement['caption_y'];hook_text=str(b.get('hook',''))
+   if plan and plan.template!='none':caption_pos=plan.template_caption_y;hook_text=''
+   ass,srt=write_captions(words,style,DATA,job,hook_text,caption_pos,hook_y,width,height,b.get('caption_anim') or 'highlight')
+   if plan:styling.append_ass(DATA/ass,plan,dur)
+   fc=g2+f';[base]ass={ass}[v]'
+   af,amap=plan.audio(dur) if plan else (None,None)
+   if af:fc+=';'+af
    state[job].update(message='Rendering vertical clip with '+style+' captions' if words else 'Rendering vertical clip')
-   base=['ffmpeg','-y','-v','error','-ss',str(start),'-t',str(end-start),'-i',str(src),'-filter_complex',fc,'-map','[v]','-map','0:a?','-c:a','aac','-b:a','160k','-movflags','+faststart']
+   base=['ffmpeg','-y','-v','error','-ss',str(start),'-t',str(end-start),'-i',str(src),*(plan.inputs if plan else []),'-filter_complex',fc,'-map','[v]','-map',amap or '0:a?','-t',str(dur),'-c:a','aac','-b:a','160k','-movflags','+faststart']
+   if fps:base+=['-r',str(fps),'-fps_mode','cfr']
    for encoder in [['-c:v','h264_nvenc','-preset','p5','-cq','20'],['-c:v','libx264','-crf','20','-preset','fast']]:
     r=subprocess.run(base+encoder+['-pix_fmt','yuv420p',str(out)],capture_output=True,text=True,cwd=str(DATA))
     if r.returncode==0:break
    if r.returncode:raise RuntimeError(r.stderr[-900:])
    finished={'status':'done','file':job,'meta':probe(out),'encoder':encoder[1],'caption_words':len(words),'srt':f'/text/{job}/srt' if words else None}
-   (DATA/(job+'.json')).write_text(json.dumps({'source':id,'settings':{**b,'words':words,'caption_y':caption_pos},'result':finished},indent=2),encoding='utf-8')
+   (DATA/(job+'.json')).write_text(json.dumps({'source':id,'settings':{**b,'words':words},'result':finished},indent=2),encoding='utf-8')
    state[job]=finished
   except Exception as e:state[job]={'status':'error','error':str(e)}
  threading.Thread(target=work,daemon=True).start();return {'job':job}
@@ -160,6 +176,19 @@ def axes(f):
   return round(100*sum(v)/len(v)) if v else None
  return {'energy':mean(('loud','shout')),'action':mean(('motion','flash','strobe')),'words':mean(('words',)),'ai':mean(('llm',)),'chat':mean(('chat',))}
 
+def ai_found(moments,yt_words,duration):
+ """Candidates built from moments the user pasted from a chatbot (see aiparts.py) instead of the local finder."""
+ import captions_yt
+ out=[]
+ for m in moments:
+  try:s=float(m['start']);e=float(m['end'])
+  except (KeyError,TypeError,ValueError):continue
+  if not(math.isfinite(s) and math.isfinite(e)) or not 0<=s<e or s>=duration or e-s>180:continue
+  e=min(e,duration);w=captions_yt.window(yt_words,s,e) if yt_words else None
+  out.append({'start':s,'end':e,'score':50,'rank':.5,'title':str(m.get('title') or '')[:90],'hook':str(m.get('hook') or '')[:90],'words':w or None,'features':{'llm':.85},'reason':'Picked from your AI answer','language':None})
+ if not out:raise RuntimeError('None of the pasted moments fit inside this video.')
+ return out,'AI answer'
+
 @app.post('/make')
 def make(b:dict):
  """One click. Short video: download, smart highlights, export. Long video (PeakCut-style): download AUDIO only, pick moments from
@@ -171,6 +200,10 @@ def make(b:dict):
   max_len=max(10,min(180,raw_max));min_len=max(5,min(max_len,raw_min))
  except (TypeError,ValueError,OverflowError):raise HTTPException(400,'Choose a valid clip count and length range.')
  if raw_min>raw_max:raise HTTPException(400,'Minimum clip length is longer than the maximum. Make the minimum smaller or the maximum bigger.')
+ moments=b.get('moments')
+ if moments is not None:
+  if not isinstance(moments,list) or not 1<=len(moments)<=40 or not all(isinstance(m,dict) for m in moments):raise HTTPException(400,'Moments must be a list of 1 to 40 items with start and end.')
+  count=min(24,len(moments))
  mode='deep' if b.get('mode')=='deep' else 'fast'
  acc=b.get('accurate','fast');acc='best' if acc=='best' else 'accurate' if acc in (True,'accurate') else 'fast'
  layout=b.get('layout','blur');style=b.get('caption_style','gta');language=b.get('language') or None
@@ -241,7 +274,7 @@ def make(b:dict):
     with _yt({'format':'ba[ext=m4a]/ba/worst','outtmpl':str(DATA/(job+'.audio.%(ext)s')),'progress_hooks':[hook]}) as y:y.download([url])
     p=next(f for f in DATA.glob(job+'.audio.*') if f.suffix not in ('.part','.ytdl'));duration=_dur(p);sid=job
     save(job,{'meta':{'duration':duration},'stage':'Finding moments in audio','progress':.12})
-    found,engine=find(p,duration,count,max_len,lambda f,m:save(job,{'stage':m,'progress':.12+.4*f}),language,DATA,min_len,False,yt_words,False,W,False)
+    found,engine=ai_found(moments,yt_words,duration) if moments else find(p,duration,count,max_len,lambda f,m:save(job,{'stage':m,'progress':.12+.4*f}),language,DATA,min_len,False,yt_words,False,W,False)
     found=choose(found,lambda c:lowres_section(url,c))
     save(job,{'engine':engine+' (audio-first)','stage':'Fetching only the chosen sections','progress':.58,'candidates':len(found)})
     from concurrent.futures import ThreadPoolExecutor
@@ -257,17 +290,28 @@ def make(b:dict):
      save(job,{'stage':'Downloading source','progress':.02});sid,p=app.neon['download'](url,job)
     else:sid,p=src0.stem,src0
     meta=probe(p);duration=meta['duration'];save(job,{'source_id':sid,'meta':meta,'stage':'Finding moments','progress':.1})
-    found,engine=find(p,duration,count,max_len,lambda f,m:save(job,{'stage':m,'progress':.1+.5*f}),language,DATA,min_len,True,yt_words,mode=='deep',W,False)
+    found,engine=ai_found(moments,yt_words,duration) if moments else find(p,duration,count,max_len,lambda f,m:save(job,{'stage':m,'progress':.1+.5*f}),language,DATA,min_len,True,yt_words,mode=='deep',W,False)
     found=choose(found,lambda c:(p,c['start']))
     save(job,{'engine':engine,'stage':'Rendering clips','progress':.6,'candidates':len(found)})
-   done=[]
+   done=[];cam_use,game_use,cam_checked=cam,game,not b.get('cam_auto')
+   uploader=str((info.get('channel') or info.get('uploader') or '')) if url else ''
    for i,c in enumerate(found):
     if sections:
      sid2=sections[i].result();real=section_start(p,DATA/(sid2+'.mp4'),max(0,c['start']-PAD));start=max(0,c['start']-real);end=min(_dur(DATA/(sid2+'.mp4')),start+c['end']-c['start']);words=c.get('words')
     else:sid2=sid;start=c['start'];end=c['end'];words=c.get('words')
+    if not cam_checked:
+     cam_checked=True
+     try:
+      fc=facecam_detect.detect(DATA/(sid2+'.mp4'))
+      save(job,{'facecam':{k:fc.get(k) for k in ('found','confidence','method','cam','reason')}})
+      if fc.get('found'):cam_use,game_use=fc['cam'],fc['game']
+     except Exception as e:save(job,{'facecam':{'found':False,'reason':'detection failed: '+str(e)[:80]}})
     lang=language or ('hinglish' if (video_lang.startswith('hi') or c.get('language')=='hi') else None)
     body={'id':sid2,'start':start,'end':end,'layout':layout,'top':(top_h if isinstance(top_h,(int,float)) and .2<=top_h<=.5 else .32),'captions':True,'caption_style':style,'language':language,'hook':(' '.join(to_hinglish(w) for w in c.get('hook','').split()) if lang=='hinglish' else c.get('hook','')),
-          'title':c.get('title',''),'post_caption':c.get('title',''),'batch_id':job,'source_url':url,'cam':cam,'game':game,'features':c.get('features'),'weights_used':W}
+          'aspect':b.get('aspect','vertical'),'resolution':b.get('resolution',1080),'fps':b.get('fps',0),'title':c.get('title',''),'post_caption':c.get('title',''),'batch_id':job,'source_url':url,'cam':cam_use,'game':game_use,'features':c.get('features'),'weights_used':W}
+    for k in styling.KEYS:
+     if b.get(k) not in (None,''):body[k]=b[k]
+    if b.get('credit_auto') and uploader and not body.get('credit'):body['credit']='Clip: '+uploader[:40]
     if acc!='fast' or lang in ('hinglish','hi') or not c.get('words'):
      save(job,{'stage':f'Accurate captions {i+1}/{len(found)}'})
      body['words']=transcribe(DATA/(sid2+'.mp4'),start,end,DATA,lambda m:None,lang,(large_v3() if acc=='best' else None))['words']
@@ -319,7 +363,7 @@ def live_render(sess,start,dur,why,chat_feature):
  feats={'chat':chat_feature,'words':excite.window_score(words,real),'llm':llm,'loud':loud}
  W=learn.load_weights(DATA);viral=min(99,round(100*learn.score(feats,W)))
  body={'id':name,'start':0,'end':real,'layout':o.get('layout','blur'),'captions':True,'caption_style':o.get('caption_style','gta'),'language':None,'hook':hook,
-       'title':title,'post_caption':title,'cam':o['cam'],'game':o['game'],'top':o.get('top',.32),'words':words,'features':feats,'weights_used':W,'creator':o.get('creator')}
+       'aspect':o.get('aspect','vertical'),'resolution':o.get('resolution',1080),'fps':o.get('fps',0),'title':title,'post_caption':title,'cam':o['cam'],'game':o['game'],'top':o.get('top',.32),'words':words,'features':feats,'weights_used':W,'creator':o.get('creator')}
  lap('score')
  ej=export(body)['job']
  while state.get(ej,{}).get('status')=='running':time.sleep(.3)
@@ -337,7 +381,7 @@ def start_live(target,opts,creator=None,before=24,after=14):
  sess.creator=creator;sess.auto=bool(creator);sess.max_seconds=3*3600 if creator else None
  sess.opts={'layout':opts.get('layout','blur'),'caption_style':opts.get('caption_style','gta'),'language':opts.get('language') or None,
             'cam':opts.get('cam') or {'x':0,'y':0,'w':.25,'h':.3},'game':opts.get('game') or {'x':.25,'y':0,'w':.75,'h':1},
-            'top':opts.get('top') if isinstance(opts.get('top'),(int,float)) else .32,'creator':creator}
+            'aspect':opts.get('aspect','vertical'),'resolution':opts.get('resolution',1080),'fps':opts.get('fps',0),'top':opts.get('top') if isinstance(opts.get('top'),(int,float)) else .32,'creator':creator}
  LIVE[sess.id]=sess;sess.start();return sess.id
 
 @app.post('/live/start')
@@ -413,6 +457,18 @@ def make_status(job:str):
 def status(id:str):return state.get(id,{'status':'error','error':'Server restarted. Paste the link again to retry.'})
 from reedit import attach as attach_reedit
 attach_reedit(app,DATA,state,probe,export,app.neon['save'])
+
+import bundles
+bundles.attach(app,DATA)
+
+import jobs
+jobs.attach(app,DATA,state,{'make':make,'export':export,'transcribe':caption_job})
+
+styling.attach(app,DATA)
+import subtitles,facecam_detect,aiparts
+subtitles.attach(app)
+aiparts.attach(app)
+facecam_detect.attach(app,DATA)
 
 import creators
 creators.attach(app,DATA,LIVE,lambda target,opts,cid:start_live(target,opts,cid))

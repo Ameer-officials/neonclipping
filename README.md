@@ -149,6 +149,24 @@ python tests/e2e_site.py          # website, links, release assets
 python tests/make_report.py       # rebuild tests/REPORT.md
 ```
 
+## Style & extras
+
+- **Templates:** wrap the clip in an *X post* (light or dark), a *TikTok hook* box or a *Breaking news* broadcast frame. Type the name, handle and hook; the card, avatar letter, check mark and ticker are drawn for you.
+- **Background card:** padded, rounded-corner video card on a blurred copy, a colour, a gradient or your own image (dimmed, blurred).
+- **Logo / watermark** (4 corners, size, opacity), **credit line** (or "Clip: channel name" automatically), **outro ribbon** that slides in for the last seconds.
+- **Music bed:** one track under the voice that rises to a peak volume in the last seconds (volume, peak and riser length are yours).
+- **Six caption animations:** highlight (word by word), pop-in, pop-in line, one by one, build up, full line.
+- **Import captions:** drop an `.srt` or `.ass` file; the words are timed to the clip and can be edited.
+- All of it works in Make clips, single exports and "Edit saved clips" (including "apply to all clips of this video").
+
+## Find my facecam
+
+The **Find my facecam** chip (or "find it automatically when I press Make clips") looks at 14 frames of the video, finds rectangles whose border stays in the same place, and keeps the one that holds a face (small local YuNet face model, MIT licence, `models/`). It rejects the game's minimap and HUD panels, finds webcams in a corner or floating on a side, and answers "no facecam" when it is not sure. Measured on 30 real saved streams: found the webcam on every stream that has one; clean "not found" on trailers and talking-head videos. Not perfect: some boxes cover only the face inside a framed webcam.
+
+## Long streams with a free chatbot
+
+**AI parts** (below step 01): paste a YouTube link, NeonClipping splits the video's captions into ~25-minute parts and gives a copy-ready prompt per part. Paste each into any free chatbot, paste all answers back (JSON or lines like `12:30-13:10 title`), tick the moments and press Make clips: only those sections are downloaded and rendered. A chatbot given a 9-hour transcript in one go only reads the start; small parts fix that. Nothing is sent anywhere by NeonClipping; the chatbot step is manual.
+
 ## Honest limits
 
 - Highlight picking is a heuristic plus a small local LLM. It finds loud, energetic, quotable moments, not guaranteed "viral" ones. Review before posting.
@@ -165,7 +183,7 @@ NeonClipping is free. If it saves you time you can ⭐ star the repo, follow [@i
 
 ## Credits and inspiration
 
-Design ideas studied from open-source clippers: [PeakCut](https://github.com/haziqahmedqasmi/PeakCut) (audio-first download, captions as transcript, section download), [ClipCutter](https://github.com/curtyo18/ClipCutter), [content-ai](https://github.com/buddah0/content-ai), and the Growlance live-clipper script. Built on FFmpeg, yt-dlp, FastAPI, faster-whisper, OpenCV, Ollama.
+Design ideas studied from open-source clippers: [PeakCut](https://github.com/haziqahmedqasmi/PeakCut) (audio-first download, captions as transcript, section download), [ClipCutter](https://github.com/curtyo18/ClipCutter), [content-ai](https://github.com/buddah0/content-ai), and the Growlance live-clipper script. Also studied: PeakCut's facecam-by-static-border idea and creator list (reimplemented here with our own code, plus a face check), the public feature list of the YIZERGE desktop editor (templates, background card, music riser, caption animations; only its public web page was read), and a creator's walkthrough of splitting a 9-hour stream into small transcript parts for a free chatbot. Built on FFmpeg, yt-dlp, FastAPI, faster-whisper, OpenCV (YuNet face detector, MIT), Ollama.
 
 ## License
 
