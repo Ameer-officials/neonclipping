@@ -316,7 +316,7 @@ def live_render(sess,start,dur,why,chat_feature):
  feats={'chat':chat_feature,'words':excite.window_score(words,real),'llm':llm,'loud':loud}
  W=learn.load_weights(DATA);viral=min(99,round(100*learn.score(feats,W)))
  body={'id':name,'start':0,'end':real,'layout':o.get('layout','blur'),'captions':True,'caption_style':o.get('caption_style','gta'),'language':None,'hook':hook,
-       'title':title,'post_caption':title,'cam':o['cam'],'game':o['game'],'top':o.get('top',.32),'words':words,'features':feats,'weights_used':W}
+       'title':title,'post_caption':title,'cam':o['cam'],'game':o['game'],'top':o.get('top',.32),'words':words,'features':feats,'weights_used':W,'creator':o.get('creator')}
  lap('score')
  ej=export(body)['job']
  while state.get(ej,{}).get('status')=='running':time.sleep(.3)
@@ -325,18 +325,27 @@ def live_render(sess,start,dur,why,chat_feature):
  lap('render')
  return {'secs':T,'file':ej,'title':title,'hook':hook,'why':why,'viral':viral,'axes':axes(feats),'at':int(sess.now()),'reason':why,'start':round(start),'end':round(start+real)}
 
+def start_live(target,opts,creator=None,before=24,after=14):
+ """Start one live-clipping session (used by the Live panel and by the creator watcher). Only one runs at a time."""
+ import live_session
+ for s_ in LIVE.values():
+  if s_.state['status'] in ('starting','recording'):raise RuntimeError('A live session is already running. Stop it first.')
+ sess=live_session.LiveSession(target,DATA,live_render,before,after)
+ sess.creator=creator;sess.auto=bool(creator);sess.max_seconds=3*3600 if creator else None
+ sess.opts={'layout':opts.get('layout','blur'),'caption_style':opts.get('caption_style','gta'),'language':opts.get('language') or None,
+            'cam':opts.get('cam') or {'x':0,'y':0,'w':.25,'h':.3},'game':opts.get('game') or {'x':.25,'y':0,'w':.75,'h':1},
+            'top':opts.get('top') if isinstance(opts.get('top'),(int,float)) else .32,'creator':creator}
+ LIVE[sess.id]=sess;sess.start();return sess.id
+
 @app.post('/live/start')
 def live_start(b:dict):
  import live_session
  try:target=live_session.parse_target(str(b.get('url','')))
  except ValueError as e:raise HTTPException(400,str(e))
  before=max(10,min(60,float(b.get('before',24))));after=max(5,min(40,float(b.get('after',14))))
- for s_ in LIVE.values():
-  if s_.state['status'] in ('starting','recording'):raise HTTPException(400,'A live session is already running. Stop it first.')
- sess=live_session.LiveSession(target,DATA,live_render,before,after)
- sess.opts={'layout':b.get('layout','blur'),'caption_style':b.get('caption_style','gta'),'language':b.get('language') or None,
-            'cam':b.get('cam') or {'x':0,'y':0,'w':.25,'h':.3},'game':b.get('game') or {'x':.25,'y':0,'w':.75,'h':1},'top':b.get('top') if isinstance(b.get('top'),(int,float)) else .32}
- LIVE[sess.id]=sess;sess.start();return {'live':sess.id}
+ try:sid=start_live(target,b,None,before,after)
+ except RuntimeError as e:raise HTTPException(400,str(e))
+ return {'live':sid}
 
 @app.get('/live-active')
 def live_active():
@@ -401,5 +410,8 @@ def make_status(job:str):
 def status(id:str):return state.get(id,{'status':'error','error':'Server restarted. Paste the link again to retry.'})
 from reedit import attach as attach_reedit
 attach_reedit(app,DATA,state,probe,export,app.neon['save'])
+
+import creators
+creators.attach(app,DATA,LIVE,lambda target,opts,cid:start_live(target,opts,cid))
 
 if __name__=='__main__':uvicorn.run(app,host='127.0.0.1',port=int(os.environ.get('NEONCLIPPING_PORT','8770')))

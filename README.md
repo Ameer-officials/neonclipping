@@ -127,6 +127,15 @@ Paste a Twitch channel link or a YouTube Live link into the **Live clipping** pa
 
 There is also a command-line version in `live/live_clip.py`.
 
+## Creators (clip a streamer automatically)
+
+Add a Twitch name or a Twitch / YouTube channel link in the **Creators** panel. NeonClipping checks every minute; when that creator goes live it records the stream and clips the chat spikes, using the layout, facecam boxes and caption style you had selected when you added them (“Use my current layout” updates it). Clips appear under the creator and in My clips.
+
+- One stream at a time (recording and rendering are heavy); other creators wait their turn.
+- NeonClipping must stay open. Unattended recordings stop after 3 hours (a new one starts if the creator is still live), stop when less than 8 GB of disk is free, and the big recording file is deleted after the last clip is cut.
+- Pressing **Stop** pauses that creator for 30 minutes; switching Auto off and on resumes at once.
+- Tested on Twitch (recording, chat spikes, clip, feed). YouTube channels are detected through yt-dlp; an auto-clipped YouTube stream was not run end to end.
+
 ## Honest limits
 
 - Highlight picking is a heuristic plus a small local LLM. It finds loud, energetic, quotable moments, not guaranteed "viral" ones. Review before posting.

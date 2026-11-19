@@ -6,6 +6,7 @@ Chat is read anonymously (Twitch IRC, no login; YouTube Live via pytchat). Recor
 """
 import collections
 import re
+import shutil
 import socket
 import statistics
 import subprocess
@@ -21,6 +22,7 @@ SIGMA = 2.5        # spike = mean + SIGMA * stdev ...
 RATIO = 2.5        # ... and at least RATIO x the baseline mean
 MIN_MSGS = 8       # ... and at least this many messages in the bucket
 COOLDOWN = 60      # seconds between two automatic clips
+MIN_FREE_GB = 8    # an unattended (auto) session stops when the disk has less free space than this
 
 
 def parse_target(text):
@@ -46,6 +48,9 @@ class LiveSession:
         self.dir.mkdir(parents=True, exist_ok=True)
         self.rec = self.dir / 'recording.ts'
         self.render, self.before, self.after = render, before, after
+        self.creator = None          # set when the creator watcher started this session
+        self.auto = False            # unattended: capped length, disk guard, recording deleted at the end
+        self.max_seconds = None
         self.counts = collections.Counter()
         self.stop_ev = threading.Event()
         self.t0 = None
@@ -153,6 +158,14 @@ class LiveSession:
             while not self.stop_ev.is_set() and self.proc.poll() is None:
                 time.sleep(1)
                 done_bucket = int(time.time() // BUCKET) - 1
+                if self.auto and self.max_seconds and self.now() > self.max_seconds:
+                    self._set(stage='Reached the length limit; a new session starts if the stream is still live')
+                    self.proc.terminate()
+                    break
+                if self.auto and shutil.disk_usage(self.dir).free < MIN_FREE_GB * 1024 ** 3:
+                    self._set(status='error', error='Stopped: less than %d GB free on the disk.' % MIN_FREE_GB, stage='Disk almost full')
+                    self.proc.terminate()
+                    break
                 self._set(elapsed=int(self.now()), chat_now=self.counts.get(done_bucket + 1, 0))
                 if done_bucket == seen:
                     continue
@@ -170,11 +183,24 @@ class LiveSession:
                     self._set(spikes=self.state['spikes'] + 1)
                     why = f'Chat spike: {c} msgs/10s vs {mu:.0f} normal'
                     threading.Timer(self.after + 4, lambda a=at, w=why, f=feature: self._cut(a - self.before, self.before + self.after, w, f)).start()
-            if not self.stop_ev.is_set():
-                self._set(status='ended', stage='The stream ended.')
+            if not self.stop_ev.is_set() and self.state['status'] != 'error':
+                self._set(status='ended', stage=self.state['stage'] if self.auto and self.max_seconds and self.now() > self.max_seconds else 'The stream ended.')
         except Exception as e:
             self._set(status='error', error=str(e)[-300:], stage='Could not start')
         finally:
             self.stop_ev.set()
             if self.proc and self.proc.poll() is None:
                 self.proc.terminate()
+            if self.auto:
+                threading.Thread(target=self._cleanup_recording, daemon=True).start()
+
+    def _cleanup_recording(self):
+        """Unattended sessions delete their big recording once the last clip is cut (the clips stay in My clips)."""
+        end = time.time() + 600
+        while self.state['pending'] and time.time() < end:
+            time.sleep(2)
+        time.sleep(5)
+        try:
+            shutil.rmtree(self.dir, ignore_errors=True)
+        except OSError:
+            pass
