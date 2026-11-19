@@ -166,10 +166,13 @@ def make(b:dict):
  audio + transcript, then fetch just those video sections. Clips stream into state[job]['clips']."""
  url,src0=app.neon['new_source'](b);save=app.neon['save']
  try:
-  count=max(1,min(12,int(b.get('count',4))));max_len=max(10,min(180,float(b.get('max_len',b.get('length',60)))));min_len=max(5,min(max_len,float(b.get('min_len',30))))
- except (TypeError,ValueError):raise HTTPException(400,'Choose a valid clip count and length range.')
+  count=max(1,min(12,int(b.get('count',4))));raw_max=float(b.get('max_len',b.get('length',60)));raw_min=float(b.get('min_len',30))
+  if not (math.isfinite(raw_max) and math.isfinite(raw_min)):raise ValueError()
+  max_len=max(10,min(180,raw_max));min_len=max(5,min(max_len,raw_min))
+ except (TypeError,ValueError,OverflowError):raise HTTPException(400,'Choose a valid clip count and length range.')
+ if raw_min>raw_max:raise HTTPException(400,'Minimum clip length is longer than the maximum. Make the minimum smaller or the maximum bigger.')
  mode='deep' if b.get('mode')=='deep' else 'fast'
- acc=b.get('accurate','accurate');acc='fast' if acc in (False,'fast') else 'best' if acc=='best' else 'accurate'
+ acc=b.get('accurate','fast');acc='best' if acc=='best' else 'accurate' if acc in (True,'accurate') else 'fast'
  layout=b.get('layout','blur');style=b.get('caption_style','gta');language=b.get('language') or None
  from translit import to_hinglish
  top_h=b.get('top');cam=b.get('cam') or {'x':0,'y':0,'w':.25,'h':.3};game=b.get('game') or {'x':.25,'y':0,'w':.75,'h':1}

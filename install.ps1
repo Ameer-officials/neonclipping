@@ -204,9 +204,10 @@ try {
     Stop-Transcript | Out-Null
     Write-Host ""
     Write-Host "  SETUP COMPLETE" -ForegroundColor Green
-    Write-Host "  Agli baar: Desktop pe 'NeonClipping' pe double-click karo, browser mein khul jayega (http://127.0.0.1:8770)."
+    if ($NoShortcut) { Write-Host "  Agli baar: $startBat pe double-click karo, browser mein khul jayega (http://127.0.0.1:8770)." }
+    else { Write-Host "  Agli baar: Desktop pe 'NeonClipping' pe double-click karo, browser mein khul jayega (http://127.0.0.1:8770)." }
     Write-Host "  Use: 1) video link paste karo  2) 'Make clips' dabao  3) clip dekho aur 'Download MP4' dabao."
-    Write-Host "  Uninstall: $InstallDir folder aur Desktop shortcut delete kar do."
+    Write-Host $(if ($NoShortcut) { "  Uninstall: $InstallDir folder delete kar do." } else { "  Uninstall: $InstallDir folder aur Desktop shortcut delete kar do." })
     if (-not $NoStart) {
         Say "App start ho raha hai..."
         $env:Path = $(if ($ffbin) { "$ffbin;" } else { '' }) + $env:Path

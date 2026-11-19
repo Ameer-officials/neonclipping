@@ -43,6 +43,41 @@ def _load(WhisperModel,spec,data):
             return m
         except Exception:pass
     return WhisperModel(spec,device='cpu',compute_type='int8',cpu_threads=max(1,(os.cpu_count() or 4)-2),download_root=str(data/'models'))
+def ascii_fold(text):
+    """Hinglish is written in plain English letters: fold accents (nosga, funcao) and drop stray non-Latin symbols Whisper hallucinates."""
+    import unicodedata
+    folded=''.join(c for c in unicodedata.normalize('NFKD',text) if not unicodedata.combining(c))
+    return ''.join(c for c in folded if ord(c)<128 or c in '’‘“”…।')
+
+def collapse_repeats(words,limit=3):
+    """Whisper sometimes loops on noisy audio ("chal chal chal chal chal ..."). A word said more than `limit` times in a row is cut back to `limit`
+    (Hindi really does say "bhaag bhaag bhaag", so three in a row stay)."""
+    out=[];run=0;prev=None
+    for w in words:
+        key=w['text'].lower().strip('.,!?;:')
+        run=run+1 if key==prev else 1
+        prev=key
+        if key and run>limit:continue
+        out.append(w)
+    return out
+
+TURBO_FILES=('model.bin','config.json','tokenizer.json','vocabulary.json')
+def _turbo_spec():
+    """Path of a COMPLETE large-v3-turbo snapshot. A half-finished download (only model.bin) used to fail every job with
+    "Cannot load the vocabulary from the model directory", so an incomplete one is repaired (missing small files only)."""
+    repo='mobiuslabsgmbh/faster-whisper-large-v3-turbo'
+    snaps=Path.home()/('.cache/huggingface/hub/models--'+repo.replace('/','--')+'/snapshots')
+    def complete():
+        return [p for p in snaps.glob('*') if all((p/f).exists() for f in TURBO_FILES)]
+    ok=complete()
+    if not ok:
+        try:
+            from huggingface_hub import snapshot_download
+            snapshot_download(repo)
+            ok=complete()
+        except Exception:pass
+    return str(ok[0]) if ok else 'small'
+
 LOCK=threading.Lock()
 
 def transcribe(source,start,end,data,report=lambda message:None,language=None,model=None):
@@ -50,9 +85,7 @@ def transcribe(source,start,end,data,report=lambda message:None,language=None,mo
     from faster_whisper import WhisperModel
     spec=model or os.environ.get('FACECAM_ASR_MODEL','') or (_best_hindi() if language in ('hi','hinglish') else '')
     if not spec:
-        snapshots=Path.home()/'.cache/huggingface/hub/models--mobiuslabsgmbh--faster-whisper-large-v3-turbo/snapshots'
-        available=[p for p in snapshots.glob('*') if (p/'model.bin').exists()]
-        spec=str(available[0]) if available else 'large-v3-turbo'
+        spec=_turbo_spec()
     model_tag=Path(spec).name[:14]
     key=f'{source.stem}-{start:.2f}-{end:.2f}-{language or "auto"}-{model_tag}-v3'
     cached=data/(key+'.words.json')
@@ -72,8 +105,9 @@ def transcribe(source,start,end,data,report=lambda message:None,language=None,mo
             for segment in segments:
                 for w in segment.words or []:
                     text=w.word.strip()
-                    if language=='hinglish':text=to_hinglish(text)
+                    if language=='hinglish':text=ascii_fold(to_hinglish(text)).strip()
                     if text and w.end>w.start:words.append({'start':round(max(0,w.start),3),'end':round(min(end-start,w.end),3),'text':text})
+            words=collapse_repeats(words)
             result={'words':words,'language':info.language,'duration':end-start,'model':model_tag}
             cached.write_text(json.dumps(result,ensure_ascii=False),encoding='utf-8');return result
         finally:audio.unlink(missing_ok=True)
@@ -105,7 +139,7 @@ def group_words(words,max_words=4,max_chars=24,gap=0.45):
         if stop:groups.append(cur);cur=[]
     # a lone trailing word reads badly: merge it into the previous group when that stays <=4 words
     if len(groups)>1 and len(groups[-1])==1 and len(groups[-2])<max_words and groups[-1][0]['start']-groups[-2][-1]['end']<gap:
-        groups[-2]+=groups.pop()
+        lone=groups.pop();groups[-1]+=lone       # (groups[-2]+=groups.pop() stored into the wrong group after the pop)
     if len(groups)>1 and len(groups[-1])==1 and len(groups[-2])>=max_words:     # 4+1 -> 3+2
         groups[-1].insert(0,groups[-2].pop())
     return groups

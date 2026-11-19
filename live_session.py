@@ -40,6 +40,14 @@ def parse_target(text):
     return 'twitch', channel, f'https://twitch.tv/{channel}'
 
 
+def is_spike(count, history):
+    """Chat spike rule: needs 6+ non-empty buckets of history, then count >= MIN_MSGS, > mean + SIGMA*stdev and >= RATIO x mean."""
+    if len([h for h in history if h]) < 6:
+        return False
+    mu, sd = statistics.mean(history), statistics.pstdev(history) or 1.0
+    return count >= MIN_MSGS and count > mu + SIGMA * sd and count >= RATIO * max(mu, 1.0)
+
+
 class LiveSession:
     def __init__(self, target, data, render, before=24, after=14):
         self.kind, self.ref, self.url = target
@@ -175,9 +183,9 @@ class LiveSession:
                 self._set(baseline=round(statistics.mean(hist), 1) if hist else 0.0)
                 if len([h for h in hist if h]) < 6:
                     continue                                   # not enough chat history yet
-                mu, sd = statistics.mean(hist), statistics.pstdev(hist) or 1.0
+                mu = statistics.mean(hist)
                 at = done_bucket * BUCKET + BUCKET / 2 - self.t0
-                if c >= MIN_MSGS and c > mu + SIGMA * sd and c >= RATIO * max(mu, 1.0) and at - last_clip > COOLDOWN:
+                if is_spike(c, hist) and at - last_clip > COOLDOWN:
                     last_clip = at
                     feature = min(1.0, c / (max(mu, 1.0) * 6.0))
                     self._set(spikes=self.state['spikes'] + 1)
