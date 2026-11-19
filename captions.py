@@ -30,7 +30,13 @@ def _load(WhisperModel,spec,data):
             try:os.add_dll_directory(str(b))
             except (OSError,AttributeError):pass
             os.environ['PATH']=str(b)+os.pathsep+os.environ['PATH']
-    if os.environ.get('NEONCLIPPING_CPU')!='1':
+    big=('large-v3' in spec) and ('turbo' not in spec)
+    if big:                       # large-v3 spilling out of a full 6 GB GPU measured 384 s vs 87 s on the CPU for a 30 s clip
+        try:
+            free=int(subprocess.run(['nvidia-smi','--query-gpu=memory.free','--format=csv,noheader,nounits'],capture_output=True,text=True,timeout=5).stdout.split()[0])
+        except Exception:free=0
+        big=free<3400
+    if os.environ.get('NEONCLIPPING_CPU')!='1' and not big:
         try:
             m=WhisperModel(spec,device='cuda',compute_type='int8_float16',download_root=str(data/'models'))
             list(m.transcribe(__import__('numpy').zeros(16000,dtype='float32'))[0])   # prove cuDNN/cuBLAS really load
@@ -78,10 +84,10 @@ def stamp(t,ass=False):
 
 # style -> (rest colour, active colour, outline/shadow tags, font size, pop scale %). ASS colours are BGR.
 STYLES={
- 'gta':('&H00EFFF43&','&H00A845FF&',r'ord4c&H00560C31&\shad5c&H00FFCC00&lur0.7',72,0),
- 'bold':('&H00FFFFFF&','&H003DF3CB&',r'ord6\shad4',72,0),
- 'hormozi':('&H00FFFFFF&','&H00FFFF00&',r'ord7c&H00000000&\shad4c&H80000000&',84,112),
- 'mrbeast':('&H0000FFFF&','&H000066FF&',r'ord9c&H00000000&\shad5c&H00000000&',90,112),
+ 'gta':('&H00EFFF43&','&H00A845FF&',r'\bord4\3c&H00560C31&\shad5\4c&H00FFCC00&\blur0.7',72,0),
+ 'bold':('&H00FFFFFF&','&H003DF3CB&',r'\bord6\shad4',72,0),
+ 'hormozi':('&H00FFFFFF&','&H00FFFF00&',r'\bord7\3c&H00000000&\shad4\4c&H80000000&',84,112),
+ 'mrbeast':('&H0000FFFF&','&H000066FF&',r'\bord9\3c&H00000000&\shad5\4c&H00000000&',90,112),
 }
 STYLE_NAMES=tuple(STYLES)+('clean',)
 
@@ -138,7 +144,7 @@ def write(words,style,folder,name,hook='',position=1450,hook_y=300):
                     t=safe(w['text']).upper()
                     if k==n and pop:chunks.append('{\c'+active+r'\fscx100\fscy100\t(0,110,\fscx'+str(pop)+r'\fscy'+str(pop)+r')\t(110,230,\fscx100\fscy100)}'+t+r'{\fscx100\fscy100}')
                     else:chunks.append('{\c'+(active if k==n else rest)+'}'+t)
-                text='{\pos(540,'+str(position)+')\fs'+str(size)+extra+'}'+' '.join(chunks)
+                text=r'{\pos(540,'+str(position)+r')\fs'+str(size)+extra+'}'+' '.join(chunks)
                 ass.append(f'Dialogue: 1,{stamp(a,True)},{stamp(b,True)},Main,,0,0,0,,{text}')
     if hook.strip():
         lines=hook_lines(hook);size=82 if len(lines)==1 else 74 if len(lines)==2 else 66
