@@ -111,8 +111,8 @@ async function openSavedClip(file){
  style=s.caption_style||'gta';document.querySelectorAll('[data-style]').forEach(b=>b.classList.toggle('active',b.dataset.style===style));
  $('language').value=s.language||'';$('captions').checked=s.captions!==false;$('caption-y').value=s.caption_y||1450;
  $('hook').value=s.hook||'';$('clip-title').value=s.title||'';$('post-caption').value=s.post_caption||'';
- words=s.words||[];wordRange=signature();renderWords();editingClip=file;$('saved-edit').hidden=false;
- status('Saved clip loaded. Change framing or captions; saved source and words are reused.');
+ words=s.words||[];wordRange=signature();renderWords();editingClip=file;$('saved-edit').hidden=false;const n=Number(saved.video_clips)||1;$('apply-video').textContent=n>1?'Apply to all '+n+' clips of this video':'Apply to this clip';$('apply-one').hidden=n<=1;
+ status(n>1?'Saved clip loaded. Your change will apply to all '+n+' clips of this video (each keeps its own words and title).':'Saved clip loaded. Change framing or captions; saved source and words are reused.');
 }
 async function applySavedEdit(scope){
  if(!editingClip)throw Error('Open Edit clip from My clips first.');

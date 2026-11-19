@@ -59,6 +59,24 @@ def attach(app,data,state,probe,export,save):
         return {'batch_id':settings.get('batch_id') or legacy.get('batch_id') or record.get('source'),
                 'source_url':settings.get('source_url') or legacy.get('source_url','')}
 
+    def video_files(anchor,base,groups=None):
+        """Every finished, not-superseded clip made from the same video as `anchor`."""
+        groups=groups or group_map();meta=metadata(anchor,base,groups);files=[]
+        for path in data.glob('*.json'):
+            if path.name.endswith(('.state.json','.words.json','.request.json')):continue
+            try:
+                record=read_record(data,path.stem)
+                if record.get('superseded_by'):continue
+                candidate=metadata(path.stem,record,groups)
+                same_url=bool(meta['source_url']) and candidate['source_url']==meta['source_url']
+                same_batch=candidate['batch_id']==meta['batch_id']
+                # Uploaded / local videos have no link: the same saved source file is the same video.
+                same_source=not meta['source_url'] and not candidate['source_url'] and record.get('source')==base.get('source')
+                if same_url or same_batch or same_source:files.append(path.stem)
+            except (HTTPException,ValueError,OSError,KeyError):pass
+        if anchor not in files:files.append(anchor)
+        return files
+
     app.reedit_metadata=metadata
     app.reedit_groups=group_map
 
@@ -68,7 +86,7 @@ def attach(app,data,state,probe,export,save):
         if not source.isalnum() or not (data/(source+'.mp4')).exists():
             raise HTTPException(409,'Original source is unavailable. Restore it to edit this clip without downloading again.')
         return {'file':file,'settings':{**settings,'words':saved_words(data,file,record)},
-                'source':{'id':source,**probe(data/(source+'.mp4'))},**metadata(file,record)}
+                'source':{'id':source,**probe(data/(source+'.mp4'))},'video_clips':len(video_files(file,record)),**metadata(file,record)}
 
     @app.post('/clips/reedit')
     def apply(body:dict):
@@ -80,16 +98,7 @@ def attach(app,data,state,probe,export,save):
         files=body.get('files')
         if files is None:
             files=[anchor]
-            if body.get('scope')=='video':
-                files=[]
-                for path in data.glob('*.json'):
-                    if path.name.endswith(('.state.json','.words.json','.request.json')):continue
-                    try:
-                        record=read_record(data,path.stem)
-                        if record.get('superseded_by'):continue
-                        candidate=metadata(path.stem,record,groups)
-                        if (meta['source_url'] and candidate['source_url']==meta['source_url']) or (not meta['source_url'] and candidate['batch_id']==meta['batch_id']):files.append(path.stem)
-                    except (HTTPException,ValueError,OSError,KeyError):pass
+            if body.get('scope')=='video':files=video_files(anchor,base,groups)
         if not isinstance(files,list) or not files or len(files)>100 or any(not isinstance(x,str) for x in files):
             raise HTTPException(400,'Select between 1 and 100 saved clips.')
         files=list(dict.fromkeys(files));prepared=[]
