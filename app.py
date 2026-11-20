@@ -517,7 +517,8 @@ def feedback(b:dict):
  if not f.exists():raise HTTPException(404,'Clip not found.')
  m=json.loads(f.read_text(encoding='utf-8')).get('settings',{})
  if not m.get('features'):raise HTTPException(400,'This clip has no scoring data (made before ratings existed).')
- return learn.record(DATA,file,rating,m['features'],{'layout':m.get('layout'),'style':m.get('caption_style')})
+ try:return learn.record(DATA,file,rating,m['features'],{'layout':m.get('layout'),'style':m.get('caption_style')})
+ except ValueError as error:raise HTTPException(400,str(error))
 
 @app.get('/feedback/summary')
 def feedback_summary():
