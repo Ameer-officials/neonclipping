@@ -1,8 +1,8 @@
 # NeonClipping test report
 
-Generated 2026-11-20 03:24 by tests/make_report.py from tests/report.json.
+Generated 2026-11-20 08:41 by tests/make_report.py from tests/report.json.
 
-**248 of 248 checks pass.**
+**285 of 285 checks pass.**
 
 ## Problems found by the tests and fixed
 
@@ -25,12 +25,16 @@ Generated 2026-11-20 03:24 by tests/make_report.py from tests/report.json.
 | 15 | X-post templates hid the video: the card was drawn by the caption layer on top of the clip. | Card shapes are drawn on the background in a first pass, the clip is overlaid, text goes on top. |
 | 16 | Rounded corners (geq on every frame) made template and background renders 3x slower (17-31 s for an 8 s clip). | A cached mask image and alphamerge: 5-12 s. |
 | 17 | Music bed test failed to show the rise because the voice dominated the level. | Measured on a source without audio (also tests the music-only path): the bed rises from quiet to 9x louder. |
+| 18 | The chat-hype meter stayed at 100% on a very fast chat because the 'usual speed' counted the empty buckets from before the session started. | Baseline uses only buckets since the session began; an absolute scale is used in the first half minute. Unit-tested (busy chat at its normal speed shows about 25%). |
+| 19 | Stream titles came back as mojibake (UTF-8 read as the Windows code page) and emoji would have been burned into the hook. | Title decoded as UTF-8; emoji and symbols removed; verified on a real stream: the hook shows PLAYING GTA 6 FOR THE FIRST TIME in the clip. |
+| 20 | Streamlink 8 prints that --twitch-disable-ads is deprecated and will be removed (it would then break live clipping). | The flag is no longer passed. |
+| 21 | My installer test created two Desktop shortcuts pointing at a scratch folder. | Removed; tests that run the installer now always pass -NoShortcut. |
 
 ## Page, API and input validation  (34/34)
 
 | Result | Check | Evidence |
 |---|---|---|
-| PASS | index.html served | 19450 |
+| PASS | index.html served | 19444 |
 | PASS | every $("id") used by app.js exists in index.html | missing: [] |
 | PASS | app.js syntax (node --check) |  |
 | PASS | GET /assets/app.js |  |
@@ -221,6 +225,45 @@ Generated 2026-11-20 03:24 by tests/make_report.py from tests/report.json.
 | PASS | /live-active is empty after stop |  |
 | PASS | start works again after stop | {'live': 'd93371cbe55d461ab65524861e7f8edb'} |
 
+## Phone remote over the real Wi-Fi address: PIN gate, PC-only routes, live clipping from the phone  (34/34)
+
+| Result | Check | Evidence |
+|---|---|---|
+| PASS | server is reachable on the Wi-Fi address (listens on 0.0.0.0 in phone mode) | 192.168.1.2 |
+| PASS | PC status shows the Wi-Fi URL and a 6-digit PIN | ['http://192.168.1.2:8792/m', 'http://172.22.112.1:8792/m'] |
+| PASS | phone page loads without the PIN |  |
+| PASS | phone without PIN: GET /library -> 401 |  |
+| PASS | phone without PIN: GET /live-active -> 401 |  |
+| PASS | phone without PIN: GET /creators -> 401 |  |
+| PASS | phone without PIN: GET /media/x -> 401 |  |
+| PASS | phone without PIN: GET /make/x -> 401 |  |
+| PASS | phone cannot read /phone/status (PIN stays on the PC) |  |
+| PASS | wrong PIN -> 401 |  |
+| PASS | right PIN -> 200 and a cookie |  |
+| PASS | phone with PIN: GET /library -> 200 |  |
+| PASS | phone with PIN: GET /live-active -> 200 |  |
+| PASS | phone with PIN: GET /creators -> 200 |  |
+| PASS | phone with PIN: POST /upload stays PC-only (403) |  |
+| PASS | phone with PIN: POST /upload-asset stays PC-only (403) |  |
+| PASS | phone with PIN: GET /queue stays PC-only (403) |  |
+| PASS | phone with PIN: POST /facecam/detect stays PC-only (403) |  |
+| PASS | phone with PIN: POST /ai/parts stays PC-only (403) |  |
+| PASS | phone with PIN: POST /export stays PC-only (403) |  |
+| PASS | phone with PIN: GET /layouts stays PC-only (403) |  |
+| PASS | phone with PIN: POST /phone/newpin stays PC-only (403) |  |
+| PASS | the PC itself needs no PIN |  |
+| PASS | start live clipping from the phone (10 s preset, captions off, hook from the stream title) | {'live': 'd46356f34a0942f0b7be1f165b619c12'} |
+| PASS | state carries hype, comments in 30 s, label and the stream title | {'hype': 100, 'msgs30': 193, 'hype_label': 'peak viral hype', 'title': 'PLAYING GTA 6 FOR THE FIRST TIME'} |
+| PASS | stream title has no emoji and no mojibake | PLAYING GTA 6 FOR THE FIRST TIME |
+| PASS | hype meter is a percentage between 0 and 100 | 100 |
+| PASS | Clip now with 10 s accepted | 200 |
+| PASS | phone clip is made without error | {'cut': 2.3, 'captions': 0.0, 'score': 0.1, 'render': 2.8} |
+| PASS | phone can download the clip: 1080x1920 h264/aac and about 10 s | {'w': 1080, 'h': 1920, 'vcodec': 'h264', 'acodec': 'aac', 'dur': 8.677333} |
+| PASS | captions off: no caption words burned in | 0 |
+| PASS | hook text is the stream title | PLAYING GTA 6 FOR THE FIRST TIME |
+| PASS | stop from the phone ends the session |  |
+| PASS | after 5 wrong PINs the address is locked, even for the right PIN |  |
+
 ## Creator list  (21/21)
 
 | Result | Check | Evidence |
@@ -258,7 +301,7 @@ Generated 2026-11-20 03:24 by tests/make_report.py from tests/report.json.
 | PASS | after 10 ratings the weights are fitted | {'ratings': 12, 'fitted': True, 'alpha': 0.2} |
 | PASS | weights sum to 1 and stay positive | 1.0 |
 
-## Browser UI  (17/17)
+## Browser UI  (19/19)
 
 | Result | Check | Evidence |
 |---|---|---|
@@ -279,21 +322,24 @@ Generated 2026-11-20 03:24 by tests/make_report.py from tests/report.json.
 | PASS | Style panel, AI panel, caption animation select, SRT import, Find my facecam button all present (25 in-page assertions) | browser pane, 0 failed; style options off by default leave exports unchanged; Reset turns everything off |
 | PASS | AI answers pasted in the page become tickable moments; SRT file through the real input fills the word editor | browser pane |
 | PASS | Keyboard shortcuts I / O / Space trim and play | browser pane: I set start 12.34, O set end, Space toggled play |
+| PASS | Live panel: clip length, hook source, captions switch, hype bar, phone box; options reach /live/start and Clip now (14 in-page checks) | browser pane, main app and phone-mode app |
+| PASS | Phone page in a 375x812 viewport over the Wi-Fi address: PIN screen, wrong PIN message, auto-login by cookie, start, hype meter, Clip now, clip card, save link | browser pane |
 
-## One-click installer  (3/3)
+## One-click installer  (4/4)
 
 | Result | Check | Evidence |
 |---|---|---|
 | PASS | install.ps1 into an empty folder from local source (-Yes -SkipOptional -NoShortcut -NoStart) | exit 0, 78 s, "imports ok" |
 | PASS | installed copy starts via Start-NeonClipping.bat on port 8791 | /healthz, /library, / (12 KB), /layouts (11) all OK; stopped cleanly |
 | PASS | install.ps1 is ASCII only and parses with the PowerShell parser | 13 KB, 0 parse errors |
+| PASS | installer writes Start-NeonClipping-Phone.bat (sets NEONCLIPPING_LAN=1) and a second shortcut; still ASCII and parses | real install into a scratch folder, exit 0 |
 
 ## Unit tests  (2/2)
 
 | Result | Check | Evidence |
 |---|---|---|
 | PASS | 14 unit tests: chat-spike rule, target parsing, caption grouping (500 random streams), re-edit | python -m unittest tests.test_live tests.test_captions tests.test_reedit -> OK |
-| PASS | 56 unit tests across the project (captions, animations, subtitles, AI parts, facecam, live spike rule, re-edit, queue, bundles, output formats) | python -m unittest discover -s tests -> OK |
+| PASS | 77 unit tests across the project (adds phone gate, hype meter, stream title) | python -m unittest discover -s tests -> OK |
 
 ## Website, links, release, editorsgurukul  (39/39)
 

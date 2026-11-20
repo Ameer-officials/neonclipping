@@ -149,6 +149,18 @@ python tests/e2e_site.py          # website, links, release assets
 python tests/make_report.py       # rebuild tests/REPORT.md
 ```
 
+## Live clipping controls and the phone remote
+
+Inspired by a mobile live-clipper shown in a creator's reel (that app is unreleased, so nothing of it could be studied; only what the video shows was used).
+
+- **Chat hype meter** while a stream is live: 0-100%, from the comments of the last ~30 s against the stream's own usual speed (peak = 4x usual; the first seconds use an absolute scale), with the label *quiet / building momentum / hot / peak viral hype*.
+- **Clip length presets** 10 s / 20 s / 30 s / Auto: the clip starts a few seconds before the chat peak; "Clip now" cuts the same length from the live recording.
+- **Hook text** for live clips from the AI, the **stream title** (emoji removed) or your own text; **captions switch** (off = faster clips).
+- Live clips now also get the style options (template, logo, credit, outro, music, caption animation).
+- **Phone remote:** start NeonClipping with the *NeonClipping (phone access)* shortcut (`Start-NeonClipping-Phone.bat`, or set `NEONCLIPPING_LAN=1`). Under Live clipping it shows a Wi-Fi address and a 6-digit PIN. On a phone on the same Wi-Fi open that address (`/m`), enter the PIN, paste a YouTube Live or Twitch link, pick a length, watch the hype meter, press **Clip now**, and play / save / share the clips. On Android Chrome use "Add to Home screen" to get an app icon. The PC does all the work; the phone is only a remote.
+- **Safety:** phone access is off unless you start it that way (the server then listens on 127.0.0.1 only). Everything that is not the PC needs the PIN (after 5 wrong tries an address is locked for 10 minutes; "New PIN" logs every phone out). Even with the PIN a phone can only use the live, library, make, clips, feedback and creators routes: uploads, file tools, the queue and the PIN itself stay PC-only. Windows will ask once whether to allow NeonClipping on private networks: choose Allow for home Wi-Fi only.
+- Not included: a native Android app (the phone page is a web page that works like one), live clipping that runs on the phone itself.
+
 ## Style & extras
 
 - **Templates:** wrap the clip in an *X post* (light or dark), a *TikTok hook* box or a *Breaking news* broadcast frame. Type the name, handle and hook; the card, avatar letter, check mark and ticker are drawn for you.

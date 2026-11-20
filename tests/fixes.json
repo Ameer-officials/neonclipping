@@ -66,5 +66,21 @@
  {
   "found": "Music bed test failed to show the rise because the voice dominated the level.",
   "fix": "Measured on a source without audio (also tests the music-only path): the bed rises from quiet to 9x louder."
+ },
+ {
+  "found": "The chat-hype meter stayed at 100% on a very fast chat because the 'usual speed' counted the empty buckets from before the session started.",
+  "fix": "Baseline uses only buckets since the session began; an absolute scale is used in the first half minute. Unit-tested (busy chat at its normal speed shows about 25%)."
+ },
+ {
+  "found": "Stream titles came back as mojibake (UTF-8 read as the Windows code page) and emoji would have been burned into the hook.",
+  "fix": "Title decoded as UTF-8; emoji and symbols removed; verified on a real stream: the hook shows PLAYING GTA 6 FOR THE FIRST TIME in the clip."
+ },
+ {
+  "found": "Streamlink 8 prints that --twitch-disable-ads is deprecated and will be removed (it would then break live clipping).",
+  "fix": "The flag is no longer passed."
+ },
+ {
+  "found": "My installer test created two Desktop shortcuts pointing at a scratch folder.",
+  "fix": "Removed; tests that run the installer now always pass -NoShortcut."
  }
 ]

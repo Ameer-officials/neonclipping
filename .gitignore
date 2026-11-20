@@ -41,3 +41,5 @@ __pycache__/
 !models/*.onnx
 
 !extras.js
+
+!mobile.html

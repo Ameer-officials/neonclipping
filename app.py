@@ -339,11 +339,13 @@ def live_render(sess,start,dur,why,chat_feature):
   if r.returncode==0 and out.exists() and out.stat().st_size>10000:break
  else:raise RuntimeError('Could not cut the clip from the recording: '+r.stderr[-150:])
  real=_dur(out);lap('cut')
- lang=o.get('language') or None
- res=transcribe(out,0,real,DATA,lambda m:None,('hinglish' if lang=='hinglish' else lang),'base')
- words=res['words']
- if res.get('language')=='hi' and lang in (None,'hinglish'):
-  words=[dict(w,text=to_hinglish(w['text'])) for w in words]
+ lang=o.get('language') or None;want_caps=o.get('captions',True) is not False
+ if want_caps:
+  res=transcribe(out,0,real,DATA,lambda m:None,('hinglish' if lang=='hinglish' else lang),'base')
+  words=res['words']
+  if res.get('language')=='hi' and lang in (None,'hinglish'):
+   words=[dict(w,text=to_hinglish(w['text'])) for w in words]
+ else:words=[]
  text=' '.join(w['text'] for w in words);lap('captions')
  title,hook,llm='Live clip','',None
  try:
@@ -360,10 +362,15 @@ def live_render(sess,start,dur,why,chat_feature):
   if len(rms)>4:
    base=float(np.median(rms))+1e-4;loud=float(min(1.0,max(0.0,(float(np.percentile(rms,95))/base-1.0)/3.0)))
  except Exception:pass
+ hm=o.get('hook_mode','ai');stream_title=str(sess.state.get('title') or '')
+ if hm=='title' and stream_title:hook=stream_title[:70]
+ elif hm=='custom' and o.get('hook_text'):hook=str(o['hook_text'])[:70]
  feats={'chat':chat_feature,'words':excite.window_score(words,real),'llm':llm,'loud':loud}
  W=learn.load_weights(DATA);viral=min(99,round(100*learn.score(feats,W)))
- body={'id':name,'start':0,'end':real,'layout':o.get('layout','blur'),'captions':True,'caption_style':o.get('caption_style','gta'),'language':None,'hook':hook,
+ body={'id':name,'start':0,'end':real,'layout':o.get('layout','blur'),'captions':want_caps,'caption_style':o.get('caption_style','gta'),'language':None,'hook':hook,
        'aspect':o.get('aspect','vertical'),'resolution':o.get('resolution',1080),'fps':o.get('fps',0),'title':title,'post_caption':title,'cam':o['cam'],'game':o['game'],'top':o.get('top',.32),'words':words,'features':feats,'weights_used':W,'creator':o.get('creator')}
+ for k in styling.KEYS:
+  if o.get(k) not in (None,''):body[k]=o[k]
  lap('score')
  ej=export(body)['job']
  while state.get(ej,{}).get('status')=='running':time.sleep(.3)
@@ -381,7 +388,10 @@ def start_live(target,opts,creator=None,before=24,after=14):
  sess.creator=creator;sess.auto=bool(creator);sess.max_seconds=3*3600 if creator else None
  sess.opts={'layout':opts.get('layout','blur'),'caption_style':opts.get('caption_style','gta'),'language':opts.get('language') or None,
             'cam':opts.get('cam') or {'x':0,'y':0,'w':.25,'h':.3},'game':opts.get('game') or {'x':.25,'y':0,'w':.75,'h':1},
-            'aspect':opts.get('aspect','vertical'),'resolution':opts.get('resolution',1080),'fps':opts.get('fps',0),'top':opts.get('top') if isinstance(opts.get('top'),(int,float)) else .32,'creator':creator}
+            'aspect':opts.get('aspect','vertical'),'resolution':opts.get('resolution',1080),'fps':opts.get('fps',0),'top':opts.get('top') if isinstance(opts.get('top'),(int,float)) else .32,'creator':creator,
+            'captions':opts.get('captions',True) is not False,'hook_mode':opts.get('hook_mode') if opts.get('hook_mode') in ('ai','title','custom') else 'ai','hook_text':str(opts.get('hook_text') or '')[:70]}
+ for k in styling.KEYS:
+  if opts.get(k) not in (None,''):sess.opts[k]=opts[k]
  LIVE[sess.id]=sess;sess.start();return sess.id
 
 @app.post('/live/start')
@@ -389,7 +399,7 @@ def live_start(b:dict):
  import live_session
  try:target=live_session.parse_target(str(b.get('url','')))
  except ValueError as e:raise HTTPException(400,str(e))
- before=max(10,min(60,float(b.get('before',24))));after=max(5,min(40,float(b.get('after',14))))
+ before=max(4,min(60,float(b.get('before',24))));after=max(2,min(40,float(b.get('after',14))))
  try:sid=start_live(target,b,None,before,after)
  except RuntimeError as e:raise HTTPException(400,str(e))
  return {'live':sid}
@@ -407,9 +417,11 @@ def live_state(lid:str):
  return LIVE[lid].state
 
 @app.post('/live/{lid}/clip-now')
-def live_clip_now(lid:str):
+def live_clip_now(lid:str,b:dict=None):
  if lid not in LIVE:raise HTTPException(404,'Live session not found.')
- try:LIVE[lid].clip_now(30)
+ try:secs=max(5,min(60,int((b or {}).get('seconds',30))))
+ except (TypeError,ValueError):raise HTTPException(400,'seconds must be a number.')
+ try:LIVE[lid].clip_now(secs)
  except RuntimeError as e:raise HTTPException(400,str(e))
  return {'ok':True}
 
@@ -465,6 +477,8 @@ import jobs
 jobs.attach(app,DATA,state,{'make':make,'export':export,'transcribe':caption_job})
 
 styling.attach(app,DATA)
+import phone
+phone.attach(app,DATA,ROOT)
 import subtitles,facecam_detect,aiparts
 subtitles.attach(app)
 aiparts.attach(app)
@@ -473,4 +487,8 @@ facecam_detect.attach(app,DATA)
 import creators
 creators.attach(app,DATA,LIVE,lambda target,opts,cid:start_live(target,opts,cid))
 
-if __name__=='__main__':uvicorn.run(app,host='127.0.0.1',port=int(os.environ.get('NEONCLIPPING_PORT','8770')))
+if __name__=='__main__':
+ lan=os.environ.get('NEONCLIPPING_LAN')=='1'      # phone remote: listen on the home network (PIN required, see phone.py); default is this PC only
+ if lan:
+  import phone as _ph;print('Phone access ON. Open one of these on your phone (same Wi-Fi):',', '.join(f"http://{ip}:{os.environ.get('NEONCLIPPING_PORT','8770')}/m" for ip in _ph.lan_ips()) or '(no Wi-Fi address found)')
+ uvicorn.run(app,host='0.0.0.0' if lan else '127.0.0.1',port=int(os.environ.get('NEONCLIPPING_PORT','8770')))

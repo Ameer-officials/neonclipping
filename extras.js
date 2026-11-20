@@ -136,6 +136,8 @@
       body = { ...extra, ...body };
       if (window.__aiMoments) { body.moments = window.__aiMoments; window.__aiMoments = null; }
     }
+    if (path === '/live/start' && body && window.__liveOpts) body = { ...styleFields(), ...window.__liveOpts(), ...body };
+    if (typeof path === 'string' && /^\/live\/[^/]+\/clip-now$/.test(path) && window.__liveOpts) body = { seconds: Number($('lv-len').value) || 38, ...(body || {}) };
     if (path === '/clips/reedit' && body && body.changes) body = { ...body, changes: { ...body.changes, ...styleState() } };
     const p = baseRequest(path, body);
     if (typeof path === 'string' && path.startsWith('/make/')) {
@@ -156,6 +158,55 @@
     await baseOpen(file);
     try { const saved = await baseRequest('/clips/' + file + '/edit'); loadStyleFields(saved.settings); } catch (e) { /* the clip loaded; style fields keep their values */ }
   };
+
+
+  // ---- live clipping: clip length, hook source, captions switch, chat-hype meter, phone access box
+  const liveBox = $('live-box');
+  if (liveBox && !$('lv-len')) {
+    const opts = document.createElement('div');
+    opts.className = 'controls'; opts.id = 'live-opts';
+    opts.innerHTML = '<label>Clip length<select id="lv-len"><option value="10">10 s (short)</option><option value="20" selected>20 s (reel)</option><option value="30">30 s (viral)</option><option value="0">Auto (38 s)</option></select></label>' +
+      '<label>Hook text<select id="lv-hook"><option value="ai">AI writes it</option><option value="title">Stream title</option><option value="custom">My own text</option></select></label>' +
+      '<label id="lv-hook-wrap" hidden>Your hook<input id="lv-hook-text" type="text" maxlength="70" placeholder="Hook text on top"></label>' +
+      '<label class="check"><input id="lv-caps" type="checkbox" checked> Captions on live clips (off = faster)</label>';
+    liveBox.parentNode.insertBefore(opts, liveBox);
+    $('lv-hook').addEventListener('change', () => { $('lv-hook-wrap').hidden = $('lv-hook').value !== 'custom'; });
+    const hype = document.createElement('div');
+    hype.className = 'hype';
+    hype.innerHTML = '<div class="hype-top"><b>🔥 Chat hype</b><span id="lv-hype-label" class="muted">waiting…</span></div><div class="meter"><i id="lv-hype-bar"></i></div><small class="muted" id="lv-hype-info"></small>';
+    liveBox.insertBefore(hype, liveBox.firstChild);
+    const phoneBox = document.createElement('div');
+    phoneBox.className = 'import-note'; phoneBox.id = 'phone-box'; phoneBox.textContent = 'Phone access: checking…';
+    liveBox.parentNode.insertBefore(phoneBox, opts.nextSibling);
+    const PRE = { 10: [7, 3], 20: [12, 8], 30: [20, 10], 0: [24, 14] };
+    window.__liveOpts = () => {
+      const len = Number($('lv-len').value), [before, after] = PRE[len];
+      return { before, after, captions: $('lv-caps').checked, hook_mode: $('lv-hook').value, hook_text: $('lv-hook-text').value.trim() };
+    };
+    setInterval(async () => {
+      if (typeof liveId === 'undefined' || !liveId || document.hidden) return;
+      try {
+        const s = await baseRequest('/live/' + liveId);
+        const h = s.hype || 0;
+        $('lv-hype-bar').style.width = h + '%'; $('lv-hype-label').textContent = h + '% · ' + (s.hype_label || '');
+        $('lv-hype-info').textContent = (s.msgs30 || 0) + ' comments in the last 30 s (usual ' + s.baseline + ' per 10 s)' + (s.title ? ' · ' + s.title.slice(0, 60) : '');
+      } catch (e) { /* the session ended or the app restarted */ }
+    }, 2000);
+    async function loadPhone() {
+      try {
+        const p = await baseRequest('/phone/status');
+        if (!p.enabled) {
+          phoneBox.innerHTML = '📱 <b>Phone access is off.</b> To control live clipping and watch clips on your phone, close NeonClipping and start it with the <b>NeonClipping (phone access)</b> shortcut. Windows may ask once to allow it on private networks: choose Allow.';
+        } else {
+          const urls = p.urls.length ? p.urls.map(u => '<b>' + u + '</b>').join(' or ') : '(no Wi-Fi address found)';
+          phoneBox.innerHTML = '📱 <b>Phone access is on.</b> On a phone connected to the same Wi-Fi open ' + urls + ' and enter the PIN <b style="color:var(--lime);font-size:18px;letter-spacing:.1em">' + p.pin + '</b> <button class="secondary" id="phone-newpin" style="margin-left:8px;padding:4px 10px">New PIN</button>' +
+            '<br><span class="muted">Only people on your Wi-Fi who know the PIN can open it. Uploads and file tools stay on this PC.</span>';
+          $('phone-newpin').onclick = async () => { await baseRequest('/phone/newpin', {}); loadPhone(); };
+        }
+      } catch (e) { phoneBox.textContent = ''; }
+    }
+    loadPhone();
+  }
 
   // ---- keyboard shortcuts for trimming: I = in point, O = out point, Space = play / pause
   document.addEventListener('keydown', e => {

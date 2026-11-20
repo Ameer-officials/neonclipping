@@ -588,244 +588,6 @@
   "sec": 0.4
  },
  {
-  "group": "static",
-  "name": "index.html served",
-  "ok": true,
-  "evidence": "19450",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "every $(\"id\") used by app.js exists in index.html",
-  "ok": true,
-  "evidence": "missing: []",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "app.js syntax (node --check)",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "GET /assets/app.js",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "GET /assets/style.css",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "GET /library",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.1
- },
- {
-  "group": "static",
-  "name": "GET /donate",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "GET /feedback/summary",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "GET /live-active",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "GET /creators",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "GET /layouts",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "/layouts returns 11 layouts with geometry",
-  "ok": true,
-  "evidence": "11",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "/layouts rejects bad speaker size",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "donate links are https only",
-  "ok": true,
-  "evidence": "{'razorpay': 'https://rzp.io/rzp/JN41CpW'}",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "/make without link or id -> 4xx",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "/make with bad count -> 400",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "/export unknown source -> 400",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "/export rejects bad layout",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "/export rejects bad caption style",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.1
- },
- {
-  "group": "static",
-  "name": "/export rejects end before start",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.1
- },
- {
-  "group": "static",
-  "name": "/export rejects clip > 10 min",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "/export rejects caption_y out of range",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.1
- },
- {
-  "group": "static",
-  "name": "/export rejects NaN crop",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.1
- },
- {
-  "group": "static",
-  "name": "/transcribe rejects unknown language",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.1
- },
- {
-  "group": "static",
-  "name": "/upload rejects a file that is not a video",
-  "ok": true,
-  "evidence": "{\"detail\":\"Choose a playable video file.\"}",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "/live/start rejects junk",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "/live/start rejects YouTube link without id",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "/live/<unknown> -> 404",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "/status/<unknown> not 500",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "/make/<unknown> not 500",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "/media path traversal blocked",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "/text path traversal blocked",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "/clips/<bad>/edit -> 4xx",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.0
- },
- {
-  "group": "static",
-  "name": "/clips/reedit rejects unknown change key",
-  "ok": true,
-  "evidence": "",
-  "sec": 0.0
- },
- {
   "group": "export",
   "name": "render layout stack (gta captions)",
   "ok": true,
@@ -1456,13 +1218,6 @@
   "sec": 0
  },
  {
-  "group": "unit",
-  "name": "56 unit tests across the project (captions, animations, subtitles, AI parts, facecam, live spike rule, re-edit, queue, bundles, output formats)",
-  "ok": true,
-  "evidence": "python -m unittest discover -s tests -> OK",
-  "sec": 0
- },
- {
   "group": "site",
   "name": "https://iamajmeena.github.io/neonclipping/ loads",
   "ok": true,
@@ -1734,5 +1489,509 @@
   "ok": true,
   "evidence": "",
   "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "server is reachable on the Wi-Fi address (listens on 0.0.0.0 in phone mode)",
+  "ok": true,
+  "evidence": "192.168.1.2",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "PC status shows the Wi-Fi URL and a 6-digit PIN",
+  "ok": true,
+  "evidence": "['http://192.168.1.2:8792/m', 'http://172.22.112.1:8792/m']",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "phone page loads without the PIN",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "phone without PIN: GET /library -> 401",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "phone without PIN: GET /live-active -> 401",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "phone without PIN: GET /creators -> 401",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "phone without PIN: GET /media/x -> 401",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "phone without PIN: GET /make/x -> 401",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "phone cannot read /phone/status (PIN stays on the PC)",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "wrong PIN -> 401",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "right PIN -> 200 and a cookie",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "phone with PIN: GET /library -> 200",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "phone with PIN: GET /live-active -> 200",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "phone with PIN: GET /creators -> 200",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "phone with PIN: POST /upload stays PC-only (403)",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "phone with PIN: POST /upload-asset stays PC-only (403)",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "phone with PIN: GET /queue stays PC-only (403)",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "phone with PIN: POST /facecam/detect stays PC-only (403)",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "phone with PIN: POST /ai/parts stays PC-only (403)",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "phone with PIN: POST /export stays PC-only (403)",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "phone with PIN: GET /layouts stays PC-only (403)",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "phone with PIN: POST /phone/newpin stays PC-only (403)",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "the PC itself needs no PIN",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "start live clipping from the phone (10 s preset, captions off, hook from the stream title)",
+  "ok": true,
+  "evidence": "{'live': 'd46356f34a0942f0b7be1f165b619c12'}",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "state carries hype, comments in 30 s, label and the stream title",
+  "ok": true,
+  "evidence": "{'hype': 100, 'msgs30': 193, 'hype_label': 'peak viral hype', 'title': 'PLAYING GTA 6 FOR THE FIRST TIME'}",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "stream title has no emoji and no mojibake",
+  "ok": true,
+  "evidence": "PLAYING GTA 6 FOR THE FIRST TIME",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "hype meter is a percentage between 0 and 100",
+  "ok": true,
+  "evidence": "100",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "Clip now with 10 s accepted",
+  "ok": true,
+  "evidence": "200",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "phone clip is made without error",
+  "ok": true,
+  "evidence": "{'cut': 2.3, 'captions': 0.0, 'score': 0.1, 'render': 2.8}",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "phone can download the clip: 1080x1920 h264/aac and about 10 s",
+  "ok": true,
+  "evidence": "{'w': 1080, 'h': 1920, 'vcodec': 'h264', 'acodec': 'aac', 'dur': 8.677333}",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "captions off: no caption words burned in",
+  "ok": true,
+  "evidence": "0",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "hook text is the stream title",
+  "ok": true,
+  "evidence": "PLAYING GTA 6 FOR THE FIRST TIME",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "stop from the phone ends the session",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "phone",
+  "name": "after 5 wrong PINs the address is locked, even for the right PIN",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "index.html served",
+  "ok": true,
+  "evidence": "19444",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "every $(\"id\") used by app.js exists in index.html",
+  "ok": true,
+  "evidence": "missing: []",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "app.js syntax (node --check)",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "GET /assets/app.js",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "GET /assets/style.css",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "GET /library",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.1
+ },
+ {
+  "group": "static",
+  "name": "GET /donate",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "GET /feedback/summary",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "GET /live-active",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "GET /creators",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "GET /layouts",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/layouts returns 11 layouts with geometry",
+  "ok": true,
+  "evidence": "11",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/layouts rejects bad speaker size",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "donate links are https only",
+  "ok": true,
+  "evidence": "{'razorpay': 'https://rzp.io/rzp/JN41CpW'}",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/make without link or id -> 4xx",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/make with bad count -> 400",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/export unknown source -> 400",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/export rejects bad layout",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/export rejects bad caption style",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/export rejects end before start",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/export rejects clip > 10 min",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.1
+ },
+ {
+  "group": "static",
+  "name": "/export rejects caption_y out of range",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.1
+ },
+ {
+  "group": "static",
+  "name": "/export rejects NaN crop",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.1
+ },
+ {
+  "group": "static",
+  "name": "/transcribe rejects unknown language",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/upload rejects a file that is not a video",
+  "ok": true,
+  "evidence": "{\"detail\":\"Choose a playable video file.\"}",
+  "sec": 0.1
+ },
+ {
+  "group": "static",
+  "name": "/live/start rejects junk",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/live/start rejects YouTube link without id",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/live/<unknown> -> 404",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/status/<unknown> not 500",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/make/<unknown> not 500",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/media path traversal blocked",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/text path traversal blocked",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "static",
+  "name": "/clips/<bad>/edit -> 4xx",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.1
+ },
+ {
+  "group": "static",
+  "name": "/clips/reedit rejects unknown change key",
+  "ok": true,
+  "evidence": "",
+  "sec": 0.0
+ },
+ {
+  "group": "unit",
+  "name": "77 unit tests across the project (adds phone gate, hype meter, stream title)",
+  "ok": true,
+  "evidence": "python -m unittest discover -s tests -> OK",
+  "sec": 0
+ },
+ {
+  "group": "ui",
+  "name": "Live panel: clip length, hook source, captions switch, hype bar, phone box; options reach /live/start and Clip now (14 in-page checks)",
+  "ok": true,
+  "evidence": "browser pane, main app and phone-mode app",
+  "sec": 0
+ },
+ {
+  "group": "ui",
+  "name": "Phone page in a 375x812 viewport over the Wi-Fi address: PIN screen, wrong PIN message, auto-login by cookie, start, hype meter, Clip now, clip card, save link",
+  "ok": true,
+  "evidence": "browser pane",
+  "sec": 0
+ },
+ {
+  "group": "installer",
+  "name": "installer writes Start-NeonClipping-Phone.bat (sets NEONCLIPPING_LAN=1) and a second shortcut; still ASCII and parses",
+  "ok": true,
+  "evidence": "real install into a scratch folder, exit 0",
+  "sec": 0
  }
 ]
