@@ -116,3 +116,5 @@ details.panel>summary{cursor:pointer;list-style:none;font-size:16px}details.pane
 #live-opts{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin:10px 0}
 #live-opts>label{display:flex;flex-direction:column;gap:6px;min-width:160px;font-size:13px;color:var(--muted)}
 #live-opts>label.check{flex-direction:row;align-items:center;min-width:0}
+.word-editor.timing{display:block;max-height:360px;overflow:auto}.word-timing{display:grid;grid-template-columns:minmax(100px,2fr) 1fr 1fr auto auto;gap:8px;margin:6px 0}.word-timing input[aria-invalid=true]{border-color:#ff4ba5!important}
+.caption-brand{flex-basis:100%;width:100%;padding:14px;border:1px solid #383047;border-radius:12px}.caption-brand[open]{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}.caption-brand summary,.caption-brand p{grid-column:1/-1}.caption-brand label{display:grid;gap:6px;min-width:0}.caption-brand input{width:100%;box-sizing:border-box}

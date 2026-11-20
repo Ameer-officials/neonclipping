@@ -2,6 +2,64 @@
 and shifted so they are relative to the clip start, ready for the caption editor / export."""
 import math
 import re
+import html
+
+def validate_track(items, duration=None, allow_overlap=False):
+    previous=0.0
+    if not isinstance(items,list) or not items or len(items)>10000:
+        raise ValueError('Provide between 1 and 10000 subtitle cues.')
+    result=[]
+    for index,item in enumerate(items):
+        if not isinstance(item,dict):raise ValueError(f'Cue {index+1} must be an object.')
+        start,end=float(item['start']),float(item['end']);text=str(item['text'])
+        if not math.isfinite(start) or not math.isfinite(end) or start<0 or end<=start:
+            raise ValueError(f'Cue {index+1} has invalid times.')
+        if not allow_overlap and start<previous-.001:raise ValueError(f'Cue {index+1} overlaps the previous cue.')
+        if duration is not None and end>duration+.001:raise ValueError(f'Cue {index+1} exceeds the selected duration.')
+        if not text.strip() or len(text)>10000:raise ValueError(f'Cue {index+1} has invalid text.')
+        result.append({'start':start,'end':end,'text':text});previous=end
+    return result
+
+def parse_track(text, allow_overlap=False):
+    """Strict SRT/WebVTT track import; preserve explicit cue line breaks and Unicode."""
+    text=str(text).lstrip('\ufeff').replace('\r\n','\n').replace('\r','\n')
+    items=[]
+    for block in re.split(r'\n\s*\n',text.strip()):
+        lines=block.splitlines()
+        if lines and lines[0].startswith(('NOTE','STYLE','REGION')):continue
+        for index,line in enumerate(lines):
+            if '-->' not in line:continue
+            left,right=line.split('-->',1)
+            try:start,end=_seconds(left),_seconds(right.strip().split()[0])
+            except (ValueError,IndexError):raise ValueError('Invalid subtitle timestamp.')
+            clean='\n'.join(html.unescape(re.sub(r'<[^>]+>','',line)).strip() for line in lines[index+1:])
+            items.append({'start':start,'end':end,'text':clean});break
+    return validate_track(items,allow_overlap=allow_overlap)
+
+def write_track(items, format='srt', shift=0, duration=None, allow_overlap=False):
+    if format not in ('srt','vtt'):raise ValueError('Choose SRT or WebVTT.')
+    if not math.isfinite(float(shift)):raise ValueError('Invalid subtitle shift.')
+    items=validate_track([dict(item,start=float(item['start'])+float(shift),end=float(item['end'])+float(shift)) for item in items],duration,allow_overlap)
+    def stamp(value):
+        ms=round(value*1000);hours,ms=divmod(ms,3600000);minutes,ms=divmod(ms,60000);seconds,ms=divmod(ms,1000)
+        return f'{hours:02}:{minutes:02}:{seconds:02}'+(',' if format=='srt' else '.')+f'{ms:03}'
+    blocks=[]
+    for index,item in enumerate(items,1):
+        prefix=str(index)+'\n' if format=='srt' else ''
+        blocks.append(prefix+stamp(item['start'])+' --> '+stamp(item['end'])+'\n'+item['text'])
+    return ('WEBVTT\n\n' if format=='vtt' else '')+'\n\n'.join(blocks)+'\n'
+
+def validate_words(words,duration):
+    if not isinstance(words,list) or len(words)>20000:raise ValueError('Provide at most 20000 subtitle words.')
+    out=[]
+    for index,word in enumerate(words):
+        if not isinstance(word,dict):raise ValueError(f'Subtitle word {index+1} must be an object.')
+        start,end=float(word['start']),float(word['end']);text=word['text']
+        if not all(map(math.isfinite,(start,end))) or not 0<=start<end<=duration+.1:
+            raise ValueError(f'Subtitle word {index+1} is outside the clip or has invalid times.')
+        if not isinstance(text,str) or not text.strip() or len(text)>500:raise ValueError(f'Subtitle word {index+1} has invalid text.')
+        out.append({'start':start,'end':end,'text':text})
+    return out
 
 
 def _seconds(value):
@@ -13,7 +71,9 @@ def _seconds(value):
         h, m, s = '0', parts[0], parts[1]
     else:
         raise ValueError('Bad time: ' + value)
-    return int(h) * 3600 + int(m) * 60 + float(s)
+    h,m,s=int(h),int(m),float(s)
+    if h<0 or not 0<=m<60 or not math.isfinite(s) or not 0<=s<60:raise ValueError('Invalid subtitle timestamp.')
+    return h*3600+m*60+s
 
 
 def _clean(text):
@@ -43,19 +103,11 @@ def cues(text):
                 except (ValueError, KeyError):
                     continue
     else:
-        for block in re.split(r'\n\s*\n', text.strip()):
-            lines = [l for l in block.split('\n') if l.strip()]
-            for i, l in enumerate(lines):
-                if '-->' in l:
-                    try:
-                        a, b = l.split('-->')
-                        out.append((_seconds(a), _seconds(b.split()[0] if b.split() else b), _clean(' '.join(lines[i + 1:]))))
-                    except (ValueError, IndexError):
-                        pass
-                    break
+        # Reject malformed timestamps rather than silently losing individual cues.
+        out=[(item['start'],item['end'],_clean(item['text'])) for item in parse_track(text,allow_overlap=True)]
     out = [(a, b, t) for a, b, t in out if t and b > a and math.isfinite(a) and math.isfinite(b)]
     if not out:
-        raise ValueError('No captions found. Use an .srt or .ass file.')
+        raise ValueError('No captions found. Use an .srt, .ass or .vtt file.')
     return sorted(out)
 
 
@@ -86,6 +138,15 @@ def words_from(text, clip_start=0.0, clip_end=None):
 
 def attach(app):
     from fastapi import HTTPException
+
+    @app.post('/captions/convert')
+    def convert(b:dict):
+        try:
+            if len(str(b.get('text','')))>4_000_000:raise ValueError('Subtitle file is too large.')
+            track=b.get('cues') or parse_track(b.get('text',''))
+            format=str(b.get('format','vtt'))
+            return {'text':write_track(track,format,float(b.get('shift',0)),b.get('duration')),'format':format,'cues':len(track)}
+        except (ValueError,KeyError,TypeError,OverflowError) as error:raise HTTPException(400,str(error))
 
     @app.post('/captions/parse')
     def parse_captions(b: dict):

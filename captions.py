@@ -140,7 +140,7 @@ def group_words(words,max_words=4,max_chars=24,gap=0.45):
     # a lone trailing word reads badly: merge it into the previous group when that stays <=4 words
     if len(groups)>1 and len(groups[-1])==1 and len(groups[-2])<max_words and groups[-1][0]['start']-groups[-2][-1]['end']<gap:
         lone=groups.pop();groups[-1]+=lone       # (groups[-2]+=groups.pop() stored into the wrong group after the pop)
-    if len(groups)>1 and len(groups[-1])==1 and len(groups[-2])>=max_words:     # 4+1 -> 3+2
+    if max_words>1 and len(groups)>1 and len(groups[-1])==1 and len(groups[-2])>=max_words:     # 4+1 -> 3+2
         groups[-1].insert(0,groups[-2].pop())
     return groups
 
@@ -157,23 +157,31 @@ def hook_lines(hook,width=17,max_lines=3):
 BS=chr(92)
 ANIMS=('highlight','pop_in','pop_in_line','one_by_one','build_up','full_line')
 
-def write(words,style,folder,name,hook='',position=1450,hook_y=300,width=1080,height=1920,anim='highlight'):
+def write(words,style,folder,name,hook='',position=1450,hook_y=300,width=1080,height=1920,anim='highlight',appearance=None):
+    from brands import appearance as validate_appearance,ass_color
+    custom=validate_appearance(appearance or {})
     scale=min(width/1080,height/1920)
     # Font fallback resolves Hindi through installed Windows Nirmala UI.
     ass=['[Script Info]','ScriptType: v4.00+',f'PlayResX: {width}',f'PlayResY: {height}','WrapStyle: 2',
          '[V4+ Styles]','Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding',
          'Style: Main,Arial,72,&H00FFFFFF,&H0000FFFF,&H00100B18,&H99000000,-1,0,0,0,100,100,0,0,1,5,2,5,50,50,0,1',
          '[Events]','Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text']
-    srt=[];groups=group_words(words,max_chars=int((width-100*width/1080)/(STYLES.get(style,('','','',58,0))[3]*scale*0.62)))
+    if custom.get('caption_font'):ass[7]=ass[7].replace('Main,Arial,','Main,'+custom['caption_font']+',')
+    font_size=custom.get('caption_size',STYLES.get(style,('','','',58,0))[3])
+    srt=[];groups=group_words(words,max_words=custom.get('caption_max_words',4),max_chars=int((width-100*width/1080)/(font_size*scale*0.62)))
     for i,group in enumerate(groups):
         if not group:continue
         begin=group[0]['start'];end=group[-1]['end']
         line=' '.join(safe(w['text']) for w in group)
         srt.append(f'{i+1}\n{stamp(begin)} --> {stamp(end)}\n{line}\n')
-        rest,active,extra,size,pop=(('&H00FFFFFF&','&H00FFFFFF&',BS+'bord3',58,0) if style=='clean' else STYLES[style]);size=round(size*scale)
+        rest,active,extra,size,pop=(('&H00FFFFFF&','&H00FFFFFF&',BS+'bord3',58,0) if style=='clean' else STYLES[style])
+        rest=ass_color(custom['caption_color']) if 'caption_color' in custom else rest
+        active=ass_color(custom['caption_active']) if 'caption_active' in custom else active
+        if 'caption_outline' in custom:extra+=BS+'3c'+ass_color(custom['caption_outline'])
+        size=round(custom.get('caption_size',size)*scale)
         cs=(lambda v:v.lower()) if style=='clean' else (lambda v:v.upper())
         pos=BS+'pos('+str(width//2)+','+str(position)+')'+BS+'fs'+str(size)+extra
-        if anim=='full_line' or (style=='clean' and anim=='highlight'):
+        if anim=='full_line' or (style=='clean' and anim=='highlight' and 'caption_active' not in custom):
             text='{'+pos+BS+'c'+rest+BS+'fad(90,0)}'+' '.join(cs(safe(w['text'])) for w in group)
             ass.append(f'Dialogue: 1,{stamp(begin,True)},{stamp(end,True)},Main,,0,0,0,,{text}')
             continue

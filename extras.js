@@ -4,7 +4,9 @@
   const $ = id => document.getElementById(id);
   const STYLE_KEYS = ['template', 'tpl_name', 'tpl_handle', 'bg_mode', 'bg_color', 'bg_color2', 'bg_image', 'bg_dim', 'bg_blur', 'padding', 'radius',
     'watermark_image', 'watermark_pos', 'watermark_size', 'watermark_opacity', 'credit', 'outro_text', 'outro_seconds',
-    'music', 'music_volume', 'music_peak', 'music_riser', 'caption_anim'];
+    'music', 'music_volume', 'music_peak', 'music_riser', 'caption_anim',
+    'caption_font','caption_size','caption_color','caption_active','caption_outline','caption_max_words'];
+  const BRAND_KEYS=['caption_font','caption_size','caption_color','caption_active','caption_outline','caption_max_words'];
   const assets = { bg_image: '', watermark_image: '', music: '' };
 
   // ---- reading / writing the style fields
@@ -32,6 +34,7 @@
     if (v.outro_text) { o.outro_text = v.outro_text; o.outro_seconds = v.outro_seconds; }
     if (v.music) { o.music = v.music; o.music_volume = v.music_volume; o.music_peak = v.music_peak; o.music_riser = v.music_riser; }
     if (v.caption_anim && v.caption_anim !== 'highlight') o.caption_anim = v.caption_anim;
+    for(const key of BRAND_KEYS){const value=$('brand-'+key)?.value;if(value)o[key]=['caption_size','caption_max_words'].includes(key)?Number(value):value;}
     return o;
   }
   // every key, '' when off: used when editing saved clips so a switched-off option really turns off
@@ -57,6 +60,7 @@
     setRange('st-music-peak', 'st-mp-o', Math.round((s.music_peak === undefined ? .85 : s.music_peak) * 100));
     $('st-music-riser').value = s.music_riser || 4;
     if ($('caption-anim')) $('caption-anim').value = s.caption_anim || 'highlight';
+    for(const key of BRAND_KEYS){if($('brand-'+key))$('brand-'+key).value=s[key]||'';}
   }
 
   // ---- uploads (logo, wallpaper, music)
@@ -80,6 +84,22 @@
 
   // ---- caption animation + SRT/ASS import (added to the "Give it a voice" panel next to the language picker)
   const lang = $('language');
+  if(lang){
+    const panel=document.createElement('details');panel.className='caption-brand';
+    const summary=document.createElement('summary');summary.textContent='Custom caption look & saved profiles';panel.append(summary);
+    const hint=document.createElement('p');hint.className='muted';hint.textContent='Leave a field blank to use the selected style. Fonts must be installed on this PC; unavailable fonts fall back. Apply or export to see the rendered result.';panel.append(hint);
+    const names={caption_font:'Font family',caption_size:'Font size (1080 × 1920 reference)',caption_color:'Text colour (#RRGGBB)',caption_active:'Active word colour (#RRGGBB)',caption_outline:'Outline colour (#RRGGBB)',caption_max_words:'Maximum words per caption'};
+    for(const key of BRAND_KEYS){const label=document.createElement('label');label.textContent=names[key];const input=document.createElement('input');input.id='brand-'+key;input.placeholder='Style default';if(['caption_size','caption_max_words'].includes(key)){input.type='number';input.min=key==='caption_size'?'24':'1';input.max=key==='caption_size'?'140':'12';input.step='1';}label.append(input);panel.append(label);}
+    const label=document.createElement('label');label.textContent='Saved caption profile';const profiles=document.createElement('select');profiles.id='brand-profiles';label.append(profiles);panel.append(label);
+    const name=document.createElement('input');name.placeholder='New profile name';name.setAttribute('aria-label','Caption profile name');panel.append(name);
+    const save=document.createElement('button');save.textContent='Save caption profile';panel.append(save);
+    const reset=document.createElement('button');reset.textContent='Use style defaults';reset.onclick=()=>{for(const key of BRAND_KEYS)$('brand-'+key).value='';status('Caption appearance reset. Apply or export to update the video.');};panel.append(reset);
+    (lang.closest('label')||lang).parentNode.append(panel);
+    let stored={};async function refresh(){const data=await request('/brands');stored=data.profiles;profiles.replaceChildren(new Option('Choose a profile',''));for(const key of Object.keys(stored))profiles.add(new Option(key,key));}
+    profiles.onchange=()=>{const config=stored[profiles.value];if(config){for(const key of BRAND_KEYS)$('brand-'+key).value=config[key]||'';name.value=profiles.value;status('Caption profile loaded. Apply or export to update the video.');}};
+    save.onclick=async()=>{try{const settings={};for(const key of BRAND_KEYS){const value=$('brand-'+key).value;if(value)settings[key]=value;}await request('/brands',{name:name.value,settings});await refresh();profiles.value=name.value;status('Caption profile saved on this computer.');}catch(error){status(error.message);}};
+    refresh().catch(error=>status(error.message));
+  }
   if (lang && !$('caption-anim')) {
     const anchor = lang.closest('label') || lang;
     const sel = document.createElement('label');
@@ -87,16 +107,21 @@
       '<option value="pop_in_line">Pop-in line</option><option value="one_by_one">One by one</option><option value="build_up">Build up</option><option value="full_line">Full line</option></select>';
     anchor.parentNode.insertBefore(sel, anchor.nextSibling);
     const up = document.createElement('label');
-    up.className = 'upload'; up.innerHTML = '↑ Import .srt / .ass<input id="srt-file" type="file" accept=".srt,.ass,.ssa" hidden>';
-    sel.parentNode.insertBefore(up, sel.nextSibling);
+    up.className = 'upload'; up.innerHTML = '↑ Import .srt / .ass / .vtt<input id="srt-file" type="file" accept=".srt,.ass,.ssa,.vtt" hidden>';
+    sel.parentNode.insertBefore(up, sel.nextSibling);const basis=document.createElement('label');basis.textContent='Imported subtitle timing';const basisSelect=document.createElement('select');basisSelect.id='caption-basis';basisSelect.innerHTML='<option value=clip>Relative to this clip</option><option value=source>Full-source timestamps</option>';basis.append(basisSelect);up.after(basis);
+    async function importText(text,name){
+      const absolute=$('caption-basis')?.value==='source';const j=await request('/captions/parse',{text,start:absolute?(Number($('start').value)||0):0,end:absolute?Number($('end').value):(Number($('end').value)-Number($('start').value))});
+      words=j.words;wordRange=signature();renderWords();$('captions').checked=true;
+      status('Imported '+j.words.length+' caption words from '+name+' ('+j.cues+' lines). Within-cue word timings are estimated; review before applying.');
+    }
+    const paste=document.createElement('details');paste.className='caption-brand';const title=document.createElement('summary');title.textContent='Paste subtitle text';paste.append(title);
+    const text=document.createElement('textarea');text.rows=6;text.setAttribute('aria-label','Subtitle file contents');text.placeholder='Paste SRT, ASS or WebVTT contents here';paste.append(text);
+    const importButton=document.createElement('button');importButton.textContent='Import pasted subtitles';importButton.onclick=async()=>{try{await importText(text.value,'pasted text');}catch(error){status(error.message);}};paste.append(importButton);basis.after(paste);
     $('srt-file').addEventListener('change', async e => {
       const f = e.target.files[0]; e.target.value = '';
       if (!f) return;
       try {
-        const text = await f.text();
-        const j = await request('/captions/parse', { text, start: Number($('start').value) || 0, end: Number($('end').value) || null });
-        words = j.words; wordRange = signature(); renderWords(); if ($('captions')) $('captions').checked = true;
-        status('Imported ' + j.words.length + ' caption words from ' + f.name + ' (' + j.cues + ' lines). Check and edit them below.');
+        await importText(await f.text(),f.name);
       } catch (err) { status(err.message); }
     });
   }

@@ -10,8 +10,9 @@ from fastapi.responses import HTMLResponse, FileResponse
 import uvicorn
 import math
 from layouts import CATALOG, geometry, render_graph, text_positions, output_settings
-from captions import transcribe, large_v3, write as write_captions, ANIMS
+from captions import transcribe, large_v3, write as write_captions, ANIMS, ascii_fold, collapse_repeats
 import styling
+import brands
 import facecam_detect
 ROOT=Path(__file__).resolve().parent
 DATA=Path(os.environ.get('NEONCLIPPING_DATA_DIR',str(ROOT/'data'))).resolve();DATA.mkdir(parents=True,exist_ok=True)
@@ -52,7 +53,7 @@ def assets(name:str):
  return FileResponse(ROOT/name)
 @app.get('/text/{id}/{kind}')
 def text_file(id:str,kind:str):
- if not id.isalnum() or kind not in ('srt','ass'):raise HTTPException(404)
+ if not id.isalnum() or kind not in ('srt','ass','vtt'):raise HTTPException(404)
  p=DATA/(id+'.'+kind)
  if not p.exists():raise HTTPException(404)
  return FileResponse(p,filename='neonclipping-'+id+'.'+kind)
@@ -113,7 +114,12 @@ def export(b:dict):
  except (KeyError,ValueError,TypeError,OverflowError):raise HTTPException(400,'Check crop regions, face height and caption position.')
  try:width,height,fps=output_settings(b)
  except (ValueError,TypeError,OverflowError) as e:raise HTTPException(400,str(e))
+ if b.get('captions') and 'words' in b:
+  try:b={**b,'words':subtitles.validate_words(b['words'],end-start)}
+  except (ValueError,KeyError,TypeError,OverflowError) as e:raise HTTPException(400,str(e))
  graph=render_graph(layout,rects,top,width,height)
+ try:brands.appearance(b)
+ except (ValueError,TypeError,OverflowError) as e:raise HTTPException(400,str(e))
  try:plan=styling.plan(b,DATA)
  except ValueError as e:raise HTTPException(400,str(e))
  job=uuid.uuid4().hex;out=DATA/(job+'.mp4');state[job]={'status':'running','message':'Preparing export'}
@@ -122,7 +128,7 @@ def export(b:dict):
    words=[]
    if b.get('captions',False):
     if isinstance(b.get('words'),list):
-     for word in b['words'][:2000]:
+     for word in b['words']:
       a=float(word['start']);z=float(word['end']);text=str(word['text'])[:100]
       if math.isfinite(a) and math.isfinite(z) and 0<=a<z<=end-start+.1:words.append({'start':a,'end':z,'text':text})
     else:words=transcribe(src,start,end,DATA,lambda msg:state[job].update(message=msg),b.get('language') or None)['words']
@@ -130,7 +136,9 @@ def export(b:dict):
    if plan:plan.data=DATA;plan.job=job;g2=plan.graph(graph,src,width,height,dur)
    placement=text_positions(layout,top,position,width,height);hook_y=placement['hook_y'];caption_pos=placement['caption_y'];hook_text=str(b.get('hook',''))
    if plan and plan.template!='none':caption_pos=plan.template_caption_y;hook_text=''
-   ass,srt=write_captions(words,style,DATA,job,hook_text,caption_pos,hook_y,width,height,b.get('caption_anim') or 'highlight')
+   ass,srt=write_captions(words,style,DATA,job,hook_text,caption_pos,hook_y,width,height,b.get('caption_anim') or 'highlight',b)
+   if words:
+    (DATA/(job+'.vtt')).write_text(subtitles.write_track(subtitles.parse_track((DATA/srt).read_text(encoding='utf-8'),allow_overlap=True),'vtt',allow_overlap=True),encoding='utf-8')
    if plan:styling.append_ass(DATA/ass,plan,dur)
    fc=g2+f';[base]ass={ass}[v]'
    af,amap=plan.audio(dur) if plan else (None,None)
@@ -309,13 +317,20 @@ def make(b:dict):
     lang=language or ('hinglish' if (video_lang.startswith('hi') or c.get('language')=='hi') else None)
     body={'id':sid2,'start':start,'end':end,'layout':layout,'top':(top_h if isinstance(top_h,(int,float)) and .2<=top_h<=.5 else .32),'captions':True,'caption_style':style,'language':language,'hook':(' '.join(to_hinglish(w) for w in c.get('hook','').split()) if lang=='hinglish' else c.get('hook','')),
           'aspect':b.get('aspect','vertical'),'resolution':b.get('resolution',1080),'fps':b.get('fps',0),'title':c.get('title',''),'post_caption':c.get('title',''),'batch_id':job,'source_url':url,'cam':cam_use,'game':game_use,'features':c.get('features'),'weights_used':W}
-    for k in styling.KEYS:
+    for k in styling.KEYS+brands.KEYS:
      if b.get(k) not in (None,''):body[k]=b[k]
     if b.get('credit_auto') and uploader and not body.get('credit'):body['credit']='Clip: '+uploader[:40]
-    if acc!='fast' or lang in ('hinglish','hi') or not c.get('words'):
+    if acc!='fast' or not c.get('words'):
+     # local speech model: only when you ask for Accurate / Best, or the video has no YouTube captions (local files, Twitch)
      save(job,{'stage':f'Accurate captions {i+1}/{len(found)}'})
      body['words']=transcribe(DATA/(sid2+'.mp4'),start,end,DATA,lambda m:None,lang,(large_v3() if acc=='best' else None))['words']
-    else:body['words']=c['words']
+    else:
+     ws=c['words']       # YouTube's own captions: better than a local model on game audio, and no waiting
+     if lang=='hinglish':
+      ws=collapse_repeats([dict(w,text=ascii_fold(to_hinglish(w['text'])).strip()) for w in ws if str(w.get('text','')).strip()])
+      ws=[w for w in ws if w['text']]
+     body['words']=ws
+     save(job,{'caption_source':'YouTube captions'})
     ej=export(body)['job']
     while state.get(ej,{}).get('status')=='running':time.sleep(.7)
     r=state[ej]
@@ -483,6 +498,7 @@ import subtitles,facecam_detect,aiparts
 subtitles.attach(app)
 aiparts.attach(app)
 facecam_detect.attach(app,DATA)
+brands.attach(app,DATA)
 
 import creators
 creators.attach(app,DATA,LIVE,lambda target,opts,cid:start_live(target,opts,cid))

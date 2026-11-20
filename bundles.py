@@ -28,7 +28,7 @@ def build_bundle(data, files, folder):
                 settings=record['settings'];title=str(settings.get('title') or 'Clip')
                 safe=re.sub(r'[^\w .-]','',title,flags=re.UNICODE).strip(' .')[:70] or 'clip'
                 stem=f'{index:02d}-{safe}'
-                for extension in ('.mp4','.srt','.ass'):
+                for extension in ('.mp4','.srt','.ass','.vtt'):
                     source=data/(file+extension)
                     if source.exists() and (extension=='.mp4' or record['result'].get('caption_words',0)):
                         archive.write(source,stem+extension)
