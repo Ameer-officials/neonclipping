@@ -51,7 +51,7 @@ def media(id:str):
  return FileResponse(p,media_type='video/mp4')
 @app.get('/assets/{name}')
 def assets(name:str):
- if name not in ('app.js','style.css','extras.js','transcripts.js'):raise HTTPException(404)
+ if name not in ('app.js','style.css','extras.js','transcripts.js','vision.js'):raise HTTPException(404)
  return FileResponse(ROOT/name)
 @app.get('/text/{id}/{kind}')
 def text_file(id:str,kind:str):
@@ -250,6 +250,7 @@ def make(b:dict):
     except (OSError,ValueError):pass
    save(job,{'fast_path':fast,'title':title})
    import learn, action
+   import vision
    from concurrent.futures import ThreadPoolExecutor as _TP
    W=curation.profile_weights(learn.load_weights(DATA),profile)
    def lowres_section(u,c):
@@ -270,6 +271,9 @@ def make(b:dict):
       f,off=locate(c)
       tmp=f if str(f).startswith(str(DATA)) and Path(f).name.startswith('lr_') else None
       c['_act']=action.analyze(f,off,c['end']-c['start'])
+      if b.get('vision_review'):
+       try:c['visual_review']=vision.review(f,off,c['end']-c['start'],DATA,lambda message:save(job,{'stage':message}))
+       except Exception as error:c['visual_error']=str(error)[-160:]
      except Exception as e:c['_act']=None;c['reason']=c.get('reason','')+' (no action check)'
      finally:
       if tmp:Path(tmp).unlink(missing_ok=True)
@@ -282,9 +286,19 @@ def make(b:dict):
       if c.get('_act'):
        v=c['_act'][key];c['features'][key]=round(.5*v+.5*((v-lo)/(hi-lo) if hi>lo else v),3)
     for c in top:
+     if c.get('visual_review'):
+      try:
+       import smart
+       observations='\n'.join(frame['description'] for frame in c['visual_review']['frames'])
+       judged=smart._judge(c['visual_review']['model'],(c.get('transcript') or '[No speech]')+'\n[Sampled visual observations; uncertain, do not infer unseen events]\n'+observations,focus_brief)
+       old=c['features'].get('llm');c['features']['llm']=judged['score']/10 if old is None else .7*old+.3*judged['score']/10
+       if focus_brief:c['focus_match']=judged['focus_match']
+      except Exception as error:c['visual_error']=str(error)[-160:]
      c['rank']=curation.focus_rank(learn.score(c['features'],W),c.get('focus_match'));c['score']=round(c['rank']*100)
      cues=[n for n,k,t in (('shouting','shout',.6),('loud jump','loud',.6),('exclamations','words',.5),('fast motion','motion',.7),('explosion/flash','flash',.5),('police-light flicker','strobe',.5)) if (c['features'].get(k) or 0)>=t]
      c['reason']=(('Cues: '+', '.join(cues)) if cues else 'Steady energy')+(f" · AI {c['llm']:g}/10" if c.get('llm') else '')
+     if c.get('visual_review'):c['reason']+=' · 3 visual frames reviewed'
+     elif c.get('visual_error'):c['reason']+=' · visual review unavailable; using transcript/activity'
      c.pop('_act',None)
     top.sort(key=lambda c:-c['rank'])
     return top[:count] if moments else curation.select(top,count,profile)
@@ -342,7 +356,7 @@ def make(b:dict):
      except Exception as e:save(job,{'facecam':{'found':False,'reason':'detection failed: '+str(e)[:80]}})
     lang=language or ('hinglish' if (video_lang.startswith('hi') or c.get('language')=='hi') else None)
     body={'id':sid2,'start':start,'end':end,'layout':layout,'top':(top_h if isinstance(top_h,(int,float)) and .2<=top_h<=.5 else .32),'captions':True,'caption_style':style,'language':language,'hook':(' '.join(to_hinglish(w) for w in c.get('hook','').split()) if lang=='hinglish' else c.get('hook','')),
-          'aspect':b.get('aspect','vertical'),'resolution':b.get('resolution',1080),'fps':b.get('fps',0),'title':c.get('title',''),'post_caption':c.get('title',''),'batch_id':job,'source_url':url,'cam':cam_use,'game':game_use,'features':c.get('features'),'weights_used':W,'moment_profile':profile,'focus_brief':focus_brief,'focus_match':c.get('focus_match')}
+          'aspect':b.get('aspect','vertical'),'resolution':b.get('resolution',1080),'fps':b.get('fps',0),'title':c.get('title',''),'post_caption':c.get('title',''),'batch_id':job,'source_url':url,'cam':cam_use,'game':game_use,'features':c.get('features'),'weights_used':W,'moment_profile':profile,'focus_brief':focus_brief,'focus_match':c.get('focus_match'),'visual_review':c.get('visual_review')}
     for k in styling.KEYS+brands.KEYS+hooks.KEYS:
      if b.get(k) not in (None,''):body[k]=b[k]
     if b.get('credit_auto') and uploader and not body.get('credit'):body['credit']='Clip: '+uploader[:40]
@@ -361,7 +375,7 @@ def make(b:dict):
     while state.get(ej,{}).get('status')=='running':time.sleep(.7)
     r=state[ej]
     done.append({'viral':min(99,c['score']),'axes':axes(c.get('features') or {}),'file':ej,'start':c['start'],'end':c['end'],'title':c.get('title') or 'Clip %d'%(i+1),'hook':c.get('hook',''),'score':c['score'],'reason':c.get('reason',''),
-                 'error':r.get('error'),'srt':r.get('srt')})
+                 'error':r.get('error'),'srt':r.get('srt'),'visual_review':c.get('visual_review')})
     save(job,{'clips':list(done),'stage':f'Rendered {i+1}/{len(found)}','progress':.6+.4*(i+1)/len(found)})
    save(job,{'status':'done','stage':'Clips ready','progress':1,'elapsed_seconds':round(time.monotonic()-began,1)})
   except Exception as e:save(job,{'status':'error','error':str(e)[-600:]})
@@ -531,6 +545,8 @@ brands.attach(app,DATA)
 hooks.attach(app)
 import transcripts
 transcripts.attach(app,DATA,state,probe,transcribe)
+import vision
+vision.attach(app,DATA,state,probe)
 
 import creators
 creators.attach(app,DATA,LIVE,lambda target,opts,cid:start_live(target,opts,cid))

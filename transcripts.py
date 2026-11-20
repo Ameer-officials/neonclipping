@@ -63,10 +63,10 @@ def attach(app,data,state,probe,transcribe):
         try:
             text=str(body.get('text',''))
             if len(text)>4_000_000:raise ValueError('Transcript is too large.')
-            # Full-source import; unlike clip import, no offset is subtracted.
-            words=validate_words(words_from(text,0,duration),duration,200000)
+            # Existing word-timed sources can retain exact timings through the API.
+            words=validate_words(body['words'] if 'words' in body else words_from(text,0,duration),duration,200000)
             if not words:raise ValueError('No words fall within the source video.')
-            with lock:write(key,{'key':key,'source_id':name,'duration':duration,'language':language,'words':words,'origin':'Imported subtitles (estimated within-cue word timings)'})
+            with lock:write(key,{'key':key,'source_id':name,'duration':duration,'language':language,'words':words,'origin':'Imported word-timed transcript' if 'words' in body else 'Imported subtitles (estimated within-cue word timings)'})
             return read(key)
         except (ValueError,TypeError,KeyError,OverflowError) as error:raise HTTPException(400,str(error))
     @app.post('/transcripts/load')

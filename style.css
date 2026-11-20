@@ -120,3 +120,5 @@ details.panel>summary{cursor:pointer;list-style:none;font-size:16px}details.pane
 .caption-brand{flex-basis:100%;width:100%;padding:14px;border:1px solid #383047;border-radius:12px}.caption-brand[open]{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}.caption-brand summary,.caption-brand p{grid-column:1/-1}.caption-brand label{display:grid;gap:6px;min-width:0}.caption-brand input{width:100%;box-sizing:border-box}
 
 .transcript-passage{padding:16px;margin:12px 0;border:1px solid var(--line);border-radius:12px}.transcript-passage .chip{margin:5px}.transcript-passage .chip.active{border-color:var(--pink)}#tr-results{max-height:600px;overflow:auto}#tr-text{width:100%;box-sizing:border-box}
+
+.vision-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.vision-grid figure{margin:10px 0;padding:8px;background:#100d18;border-radius:10px}.vision-grid img{width:100%;height:auto;display:block}.vision-grid figcaption{font-size:12px;line-height:1.45;color:var(--muted);margin-top:8px}
