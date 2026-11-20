@@ -350,7 +350,7 @@ def make(b:dict):
       ws=collapse_repeats([dict(w,text=ascii_fold(to_hinglish(w['text'])).strip()) for w in ws if str(w.get('text','')).strip()])
       ws=[w for w in ws if w['text']]
      body['words']=ws
-     save(job,{'caption_source':'YouTube captions'})
+     save(job,{'caption_source':'YouTube captions' if url else 'Saved full-source transcript'})
     ej=export(body)['job']
     while state.get(ej,{}).get('status')=='running':time.sleep(.7)
     r=state[ej]
@@ -502,6 +502,9 @@ def make_status(job:str):
  return state[job]
 @app.get('/status/{id}')
 def status(id:str):return state.get(id,{'status':'error','error':'Server restarted. Paste the link again to retry.'})
+@app.get('/runtime')
+def runtime():
+ return {'active':[{'id':job,'status':row.get('status'),'stage':row.get('stage') or row.get('message','')} for job,row in list(state.items()) if row.get('status') in ('running','queued','starting','recording')]}
 from reedit import attach as attach_reedit
 attach_reedit(app,DATA,state,probe,export,app.neon['save'])
 
