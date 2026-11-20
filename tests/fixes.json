@@ -90,5 +90,9 @@
  {
   "found": "YouTube writes nukta letters as one precomposed character, which the Hinglish converter dropped (kapde became kapn, padega became paga).",
   "fix": "Split into letter + nukta first; unit-tested."
+ },
+ {
+  "found": "The local Accurate (turbo) captions were bad (you saw it too).",
+  "fix": "The option is gone. YouTube captions are the default for everything; Best Hindi (large-v3) is the only local model left, and only when chosen. Old API values 'accurate' map to YouTube captions."
  }
 ]

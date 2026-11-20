@@ -2000,5 +2000,12 @@
   "ok": true,
   "evidence": "3 clips, 1080x1920 h264/aac, no Devanagari left, caption_source=YouTube captions",
   "sec": 197
+ },
+ {
+  "group": "make",
+  "name": "old \"accurate\" value maps to YouTube captions: 132 s video in 36 s, same words as Fast",
+  "ok": true,
+  "evidence": "caption_source=YouTube captions for accurate and fast",
+  "sec": 36
  }
 ]

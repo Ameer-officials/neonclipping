@@ -161,9 +161,9 @@ Inspired by a mobile live-clipper shown in a creator's reel (that app is unrelea
 - **Safety:** phone access is off unless you start it that way (the server then listens on 127.0.0.1 only). Everything that is not the PC needs the PIN (after 5 wrong tries an address is locked for 10 minutes; "New PIN" logs every phone out). Even with the PIN a phone can only use the live, library, make, clips, feedback and creators routes: uploads, file tools, the queue and the PIN itself stay PC-only. Windows will ask once whether to allow NeonClipping on private networks: choose Allow for home Wi-Fi only.
 - Not included: a native Android app (the phone page is a web page that works like one), live clipping that runs on the phone itself.
 
-## Captions: YouTube's own first
+## Captions: YouTube's own, always
 
-For YouTube links the default **Fast** mode uses YouTube's own word-timed captions for every clip, in every language. Hindi comes as Devanagari and is turned into Hinglish (nukta letters included: kapde, padega, thoda), repeated-word loops are trimmed. This is faster than a local speech model (no per-clip transcription) and, on game audio, clearly more accurate: on a 2-hour Hindi stream a Make run took 197 s with correct lines like "poori mod di yaar, kya bhai? arre pulis". The local model is used only when you pick **Accurate** or **Best Hindi (large-v3)**, or when the video has no YouTube captions (local files, Twitch VODs).
+For YouTube links every clip uses YouTube's own word-timed captions, in every language. Hindi comes as Devanagari and is turned into Hinglish (nukta letters included: kapde, padega, thoda); repeated-word loops are trimmed. It is faster than a local speech model and, on game audio, clearly more accurate: on a 2-hour Hindi stream a Make run took 197 s with correct lines like "poori mod di yaar, kya bhai? arre pulis". The local "Accurate (turbo)" model was removed because its captions were worse. The only local model left on purpose is **Best Hindi (large-v3, slow)**. Videos without YouTube captions (local files, Twitch VODs) still need a local model as the only option; expect rougher captions there, or import an .srt.
 
 ## Style & extras
 

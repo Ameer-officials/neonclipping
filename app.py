@@ -213,7 +213,7 @@ def make(b:dict):
   if not isinstance(moments,list) or not 1<=len(moments)<=40 or not all(isinstance(m,dict) for m in moments):raise HTTPException(400,'Moments must be a list of 1 to 40 items with start and end.')
   count=min(24,len(moments))
  mode='deep' if b.get('mode')=='deep' else 'fast'
- acc=b.get('accurate','fast');acc='best' if acc=='best' else 'accurate' if acc in (True,'accurate') else 'fast'
+ acc='best' if b.get('accurate')=='best' else 'fast'     # the turbo/"accurate" local model was removed: its captions were worse than YouTube's. Only Best Hindi (large-v3) uses a local model on purpose.
  layout=b.get('layout','blur');style=b.get('caption_style','gta');language=b.get('language') or None
  from translit import to_hinglish
  top_h=b.get('top');cam=b.get('cam') or {'x':0,'y':0,'w':.25,'h':.3};game=b.get('game') or {'x':.25,'y':0,'w':.75,'h':1}

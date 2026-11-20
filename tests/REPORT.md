@@ -1,8 +1,8 @@
 # NeonClipping test report
 
-Generated 2026-11-20 08:51 by tests/make_report.py from tests/report.json.
+Generated 2026-11-20 08:56 by tests/make_report.py from tests/report.json.
 
-**286 of 286 checks pass.**
+**287 of 287 checks pass.**
 
 ## Problems found by the tests and fixed
 
@@ -31,6 +31,7 @@ Generated 2026-11-20 08:51 by tests/make_report.py from tests/report.json.
 | 21 | My installer test created two Desktop shortcuts pointing at a scratch folder. | Removed; tests that run the installer now always pass -NoShortcut. |
 | 22 | Fast mode still ran the local speech model on every Hindi clip (slow, and wrong on loud game audio) although YouTube's own captions were already downloaded. | Fast uses YouTube captions for every language (Hindi transliterated to Hinglish); the local model only runs for Accurate / Best or when no captions exist. 2-hour Hindi video Make: 197 s, captions checked by eye. |
 | 23 | YouTube writes nukta letters as one precomposed character, which the Hinglish converter dropped (kapde became kapn, padega became paga). | Split into letter + nukta first; unit-tested. |
+| 24 | The local Accurate (turbo) captions were bad (you saw it too). | The option is gone. YouTube captions are the default for everything; Best Hindi (large-v3) is the only local model left, and only when chosen. Old API values 'accurate' map to YouTube captions. |
 
 ## Page, API and input validation  (34/34)
 
@@ -115,7 +116,7 @@ Generated 2026-11-20 08:51 by tests/make_report.py from tests/report.json.
 | PASS | reedit rejects invalid caption style |  |
 | PASS | library shows exactly 3 live clips of the batch (no duplicates) | 3 |
 
-## Make clips: sources, modes, languages, errors  (19/19)
+## Make clips: sources, modes, languages, errors  (20/20)
 
 | Result | Check | Evidence |
 |---|---|---|
@@ -138,6 +139,7 @@ Generated 2026-11-20 08:51 by tests/make_report.py from tests/report.json.
 | PASS | Make count=1 short range 10-20 s | full run, tests/out/run_make.log (every clip checked: 1080x1920 h264/aac, duration range, titles, scores, caption style, no Devanagari in Hi |
 | PASS | Make count=6 on a short video returns what exists | full run, tests/out/run_make.log (every clip checked: 1080x1920 h264/aac, duration range, titles, scores, caption style, no Devanagari in Hi |
 | PASS | Make 2-hour Hindi video, Fast: YouTube captions, Hinglish, 197 s (was 237 s with the local model) | 3 clips, 1080x1920 h264/aac, no Devanagari left, caption_source=YouTube captions |
+| PASS | old "accurate" value maps to YouTube captions: 132 s video in 36 s, same words as Fast | caption_source=YouTube captions for accurate and fast |
 
 ## Style extras: templates, background card, watermark, credit, outro, music  (26/26)
 
