@@ -49,7 +49,7 @@ def media(id:str):
  return FileResponse(p,media_type='video/mp4')
 @app.get('/assets/{name}')
 def assets(name:str):
- if name not in ('app.js','style.css','extras.js'):raise HTTPException(404)
+ if name not in ('app.js','style.css','extras.js','transcripts.js'):raise HTTPException(404)
  return FileResponse(ROOT/name)
 @app.get('/text/{id}/{kind}')
 def text_file(id:str,kind:str):
@@ -499,6 +499,8 @@ subtitles.attach(app)
 aiparts.attach(app)
 facecam_detect.attach(app,DATA)
 brands.attach(app,DATA)
+import transcripts
+transcripts.attach(app,DATA,state,probe,transcribe)
 
 import creators
 creators.attach(app,DATA,LIVE,lambda target,opts,cid:start_live(target,opts,cid))

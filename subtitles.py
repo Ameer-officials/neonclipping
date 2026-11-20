@@ -49,8 +49,8 @@ def write_track(items, format='srt', shift=0, duration=None, allow_overlap=False
         blocks.append(prefix+stamp(item['start'])+' --> '+stamp(item['end'])+'\n'+item['text'])
     return ('WEBVTT\n\n' if format=='vtt' else '')+'\n\n'.join(blocks)+'\n'
 
-def validate_words(words,duration):
-    if not isinstance(words,list) or len(words)>20000:raise ValueError('Provide at most 20000 subtitle words.')
+def validate_words(words,duration,max_words=20000):
+    if not isinstance(words,list) or len(words)>max_words:raise ValueError(f'Provide at most {max_words} subtitle words.')
     out=[]
     for index,word in enumerate(words):
         if not isinstance(word,dict):raise ValueError(f'Subtitle word {index+1} must be an object.')
