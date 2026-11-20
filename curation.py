@@ -6,6 +6,28 @@ import math
 import re
 PROFILES=('balanced','action','dialogue')
 KINDS=('action','reaction','humour','story','opinion','insight','other')
+def focus_settings(body):
+    brief=str(body.get('focus_brief') or '').strip()
+    if len(brief)>800:raise ValueError('Keep the transcript focus under 800 characters.')
+    def phrases(key):
+        value=body.get(key) or []
+        if isinstance(value,str):value=value.split(',')
+        if not isinstance(value,list) or len(value)>20 or any(not isinstance(p,str) or len(p)>80 for p in value):raise ValueError('Use at most 20 phrases of 80 characters each.')
+        return [p.strip().casefold() for p in value if p.strip()]
+    return brief,phrases('include_phrases'),phrases('exclude_phrases')
+
+def passes_filters(text,includes=(),excludes=()):
+    text=' '.join(text.casefold().split())
+    def contains(phrase):return bool(re.search(r'(?<!\w)'+re.escape(' '.join(phrase.casefold().split()))+r'(?!\w)',text))
+    return (not includes or any(contains(p) for p in includes)) and not any(contains(p) for p in excludes)
+
+def focus_match(brief,text):
+    query=set(re.findall(r'\w+',brief.casefold()))-{'a','an','the','and','or','of','in','to','about','moments','clips','find','me'}
+    source=set(re.findall(r'\w+',text.casefold()))
+    return len(query&source)/max(1,len(query))
+
+def focus_rank(score,relevance):
+    return score if relevance is None else .65*score+.35*max(0,min(1,relevance))
 def filler(text):
     phrases=('like and subscribe','hit the bell','follow me','we will start soon','give me a minute','welcome back everyone','thanks for watching')
     lower=text.casefold()
@@ -42,7 +64,7 @@ def profile_weights(weights,profile='balanced'):
     for key,value in factors.items():out[key]=out.get(key,0)*value
     return out
 
-def transcript_candidates(words,duration,length,count):
+def transcript_candidates(words,duration,length,count,focus=''):
     if not words or count<1:return []
     count=max(1,min(30,count));length=min(length,duration);out=[]
     markers=re.compile(r'\b(but|actually|instead|why|how|because|wait|wrong|mistake|never|finally|imagine|secret|lekin|kyun|kaise|galti|pata|achanak)\b',re.I)
@@ -51,7 +73,7 @@ def transcript_candidates(words,duration,length,count):
         positions=[i for i,word in enumerate(words) if a<=word['start']<b]
         if not positions:continue
         def merit(index):
-            text=' '.join(w['text'] for w in words[index:index+30]);return len(markers.findall(text))+.7*text.count('?')+.3*text.count('!')
+            text=' '.join(w['text'] for w in words[index:index+30]);return len(markers.findall(text))+.7*text.count('?')+.3*text.count('!')+8*focus_match(focus,text)
         index=max(positions,key=merit);start=max(0,min(words[index]['start']-.3,duration-length));end=min(duration,start+length)
         visible=[w for w in words if start<=w['start']<end]
         if len(visible)<8:continue

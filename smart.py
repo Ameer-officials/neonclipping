@@ -52,8 +52,9 @@ def _payload(model,prompt,budget=250,temperature=.25):
         if free<5000:payload['options']['num_gpu']=0
     return payload
 
-def _judge(model,text):
-    payload=_payload(model,PROMPT.format(t=text[:3500]))
+def _judge(model,text,brief=''):
+    focus=('\nTRANSCRIPT FOCUS: '+brief+'\nAlso return focus_match from 0 to 1 for relevance to this focus. Judge what is actually stated, not visual events you cannot see.') if brief else ''
+    payload=_payload(model,PROMPT.format(t=text[:3500])+focus)
     body=json.dumps(payload).encode()
     req=urllib.request.Request(OLLAMA+'/api/generate',body,{'Content-Type':'application/json'})
     out=json.loads(json.load(urllib.request.urlopen(req,timeout=90))['response'])
@@ -67,7 +68,11 @@ def _judge(model,text):
         # Use a real line instead of publishing an unsupported generated claim.
         hook=curation.extract_hook(clip_text)
     if curation.filler(clip_text):score=min(score,2)
-    return {'score':score,'title':str(out.get('title',''))[:70],'hook':hook,'kind':out.get('kind') if out.get('kind') in curation.KINDS else 'other','evidence':evidence if supported else ''}
+    relevance=out.get('focus_match',curation.focus_match(brief,clip_text)) if brief else None
+    if relevance is not None:
+        try:relevance=float(relevance);relevance=max(0,min(1,relevance)) if np.isfinite(relevance) else 0
+        except (ValueError,TypeError):relevance=curation.focus_match(brief,clip_text)
+    return {'score':score,'title':str(out.get('title',''))[:70],'hook':hook,'kind':out.get('kind') if out.get('kind') in curation.KINDS else 'other','evidence':evidence if supported else '', 'focus_match':relevance}
 
 def _ask(model,text):
     judged=_judge(model,text)
@@ -104,7 +109,7 @@ def snap(c,words,min_len,max_len):
     duration=c['end']-c['start']
     words[:]=[dict(word,end=min(word['end'],duration)) for word in words if 0<=word['start']<duration and word['end']>word['start']]
 
-def find(src,duration,count,length,report,language=None,data=None,min_len=None,motion=True,words=None,deep=False,weights=None,select=True,profile='balanced'):
+def find(src,duration,count,length,report,language=None,data=None,min_len=None,motion=True,words=None,deep=False,weights=None,select=True,profile='balanced',brief='',includes=(),excludes=()):
     """Return up to `count` clips, best first. Always returns `count` when the source is long enough."""
     pool=(count*4+2) if deep else (count*2+1 if count<6 else count+4)
     if not words:pool=count+2 if not deep else min(pool,count*2+2)      # no free transcript: every candidate costs a speech-model pass, so read fewer
@@ -115,7 +120,7 @@ def find(src,duration,count,length,report,language=None,data=None,min_len=None,m
         if len(clips)>=min(pool,count) or duration<length*count*.6 and length<=15:break
         length=max(10,length*.7)   # short source: shrink windows until enough clips fit
     if words and profile!='action':
-        dialogue=curation.transcript_candidates(words,duration,length,max(2,pool//2))
+        dialogue=curation.transcript_candidates(words,duration,length,max(2,pool//2),brief)
         clips=clips[:max(count,pool-len(dialogue))]+dialogue
     model=_model(deep or profile!='action');engine='mixed activity + transcript'
     for i,c in enumerate(clips):
@@ -128,6 +133,8 @@ def find(src,duration,count,length,report,language=None,data=None,min_len=None,m
             text=' '.join(w['text'] for w in r['words'])
             c['transcript']=text;c['language']=r.get('language');c['words']=r['words'];snap(c,c['words'],min_len or length*.5,length)
             text=' '.join(w['text'] for w in c['words']);c['transcript']=text
+            if not curation.passes_filters(text,includes,excludes):c['excluded']=True;continue
+            c['focus_match']=curation.focus_match(brief,text) if brief else None
             c.setdefault('features',{})['words']=excite.window_score(c['words'],c['end']-c['start'])
             if len(text.split())<4:c['reason']='Mostly gameplay audio';c['llm']=2;c['features']['llm']=.2;continue
             if model:
@@ -135,12 +142,13 @@ def find(src,duration,count,length,report,language=None,data=None,min_len=None,m
                 if deep and words:
                     from captions_yt import window
                     ctx='[before] '+' '.join(w['text'] for w in window(words,max(0,c['start']-15),c['start']))+' [CLIP] '+text+' [after] '+' '.join(w['text'] for w in window(words,c['end'],c['end']+15))
-                judged=_judge(model,ctx);s=judged['score'];c.update(llm=s,title=judged['title'] or c['title'],hook=judged['hook'],kind=judged['kind'],hook_evidence=judged['evidence'],reason=f'AI {s:g}/10 · {model}');c['features']['llm']=s/10;engine='mixed transcript/activity+'+model
+                judged=_judge(model,ctx,brief);s=judged['score'];c.update(llm=s,title=judged['title'] or c['title'],hook=judged['hook'],kind=judged['kind'],hook_evidence=judged['evidence'],focus_match=judged['focus_match'],reason=f'AI {s:g}/10 · {model}');c['features']['llm']=s/10;engine='mixed transcript/activity+'+model
         except Exception as e:
             c['reason']+=f' (skipped reading: {str(e)[:60]})'
+    clips=[c for c in clips if not c.get('excluded') and (not (includes or excludes) or (c.get('transcript') and curation.passes_filters(c['transcript'],includes,excludes)))]
     for c in clips:
         c.setdefault('features',{}).setdefault('words',None)
-        c['rank']=learn.score(c['features'],weights)
+        c['rank']=curation.focus_rank(learn.score(c['features'],weights),c.get('focus_match'))
         c['score']=round(c['rank']*100)
     clips=sorted(clips,key=lambda c:-c['rank'])
     if select:clips=curation.select(clips,count,profile)

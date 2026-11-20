@@ -219,6 +219,8 @@ def make(b:dict):
  mode='deep' if b.get('mode')=='deep' else 'fast'
  profile=b.get('moment_profile','balanced')
  if profile not in curation.PROFILES:raise HTTPException(400,'Choose Balanced, Action or Dialogue moments.')
+ try:focus_brief,include_phrases,exclude_phrases=curation.focus_settings(b)
+ except ValueError as error:raise HTTPException(400,str(error))
  acc='best' if b.get('accurate')=='best' else 'fast'     # the turbo/"accurate" local model was removed: its captions were worse than YouTube's. Only Best Hindi (large-v3) uses a local model on purpose.
  layout=b.get('layout','blur');style=b.get('caption_style','gta');language=b.get('language') or None
  from translit import to_hinglish
@@ -280,7 +282,7 @@ def make(b:dict):
       if c.get('_act'):
        v=c['_act'][key];c['features'][key]=round(.5*v+.5*((v-lo)/(hi-lo) if hi>lo else v),3)
     for c in top:
-     c['rank']=learn.score(c['features'],W);c['score']=round(c['rank']*100)
+     c['rank']=curation.focus_rank(learn.score(c['features'],W),c.get('focus_match'));c['score']=round(c['rank']*100)
      cues=[n for n,k,t in (('shouting','shout',.6),('loud jump','loud',.6),('exclamations','words',.5),('fast motion','motion',.7),('explosion/flash','flash',.5),('police-light flicker','strobe',.5)) if (c['features'].get(k) or 0)>=t]
      c['reason']=(('Cues: '+', '.join(cues)) if cues else 'Steady energy')+(f" · AI {c['llm']:g}/10" if c.get('llm') else '')
      c.pop('_act',None)
@@ -294,8 +296,10 @@ def make(b:dict):
     with _yt({'format':'ba[ext=m4a]/ba/worst','outtmpl':str(DATA/(job+'.audio.%(ext)s')),'progress_hooks':[hook]}) as y:y.download([url])
     p=next(f for f in DATA.glob(job+'.audio.*') if f.suffix not in ('.part','.ytdl'));duration=_dur(p);sid=job
     save(job,{'meta':{'duration':duration},'stage':'Finding moments in audio','progress':.12})
-    found,engine=ai_found(moments,yt_words,duration) if moments else find(p,duration,count,max_len,lambda f,m:save(job,{'stage':m,'progress':.12+.4*f}),language,DATA,min_len,False,yt_words,False,W,False,profile)
+    found,engine=ai_found(moments,yt_words,duration) if moments else find(p,duration,count,max_len,lambda f,m:save(job,{'stage':m,'progress':.12+.4*f}),language,DATA,min_len,False,yt_words,False,W,False,profile,focus_brief,include_phrases,exclude_phrases)
     found=choose(found,lambda c:lowres_section(url,c))
+    if not found:
+     save(job,{'status':'done','stage':'No moments matched the transcript filters. Broaden the focus or required phrases.','progress':1,'clips':[],'elapsed_seconds':round(time.monotonic()-began,2)});return
     save(job,{'engine':engine+' (audio-first)','stage':'Fetching only the chosen sections','progress':.58,'candidates':len(found)})
     from concurrent.futures import ThreadPoolExecutor
     from yt_dlp.utils import download_range_func
@@ -310,8 +314,10 @@ def make(b:dict):
      save(job,{'stage':'Downloading source','progress':.02});sid,p=app.neon['download'](url,job)
     else:sid,p=src0.stem,src0
     meta=probe(p);duration=meta['duration'];save(job,{'source_id':sid,'meta':meta,'stage':'Finding moments','progress':.1})
-    found,engine=ai_found(moments,yt_words,duration) if moments else find(p,duration,count,max_len,lambda f,m:save(job,{'stage':m,'progress':.1+.5*f}),language,DATA,min_len,True,yt_words,mode=='deep',W,False,profile)
+    found,engine=ai_found(moments,yt_words,duration) if moments else find(p,duration,count,max_len,lambda f,m:save(job,{'stage':m,'progress':.1+.5*f}),language,DATA,min_len,True,yt_words,mode=='deep',W,False,profile,focus_brief,include_phrases,exclude_phrases)
     found=choose(found,lambda c:(p,c['start']))
+    if not found:
+     save(job,{'status':'done','stage':'No moments matched the transcript filters. Broaden the focus or required phrases.','progress':1,'clips':[],'elapsed_seconds':round(time.monotonic()-began,2)});return
     save(job,{'engine':engine,'stage':'Rendering clips','progress':.6,'candidates':len(found)})
    done=[];cam_use,game_use,cam_checked=cam,game,not b.get('cam_auto')
    uploader=str((info.get('channel') or info.get('uploader') or '')) if url else ''
@@ -336,7 +342,7 @@ def make(b:dict):
      except Exception as e:save(job,{'facecam':{'found':False,'reason':'detection failed: '+str(e)[:80]}})
     lang=language or ('hinglish' if (video_lang.startswith('hi') or c.get('language')=='hi') else None)
     body={'id':sid2,'start':start,'end':end,'layout':layout,'top':(top_h if isinstance(top_h,(int,float)) and .2<=top_h<=.5 else .32),'captions':True,'caption_style':style,'language':language,'hook':(' '.join(to_hinglish(w) for w in c.get('hook','').split()) if lang=='hinglish' else c.get('hook','')),
-          'aspect':b.get('aspect','vertical'),'resolution':b.get('resolution',1080),'fps':b.get('fps',0),'title':c.get('title',''),'post_caption':c.get('title',''),'batch_id':job,'source_url':url,'cam':cam_use,'game':game_use,'features':c.get('features'),'weights_used':W}
+          'aspect':b.get('aspect','vertical'),'resolution':b.get('resolution',1080),'fps':b.get('fps',0),'title':c.get('title',''),'post_caption':c.get('title',''),'batch_id':job,'source_url':url,'cam':cam_use,'game':game_use,'features':c.get('features'),'weights_used':W,'moment_profile':profile,'focus_brief':focus_brief,'focus_match':c.get('focus_match')}
     for k in styling.KEYS+brands.KEYS+hooks.KEYS:
      if b.get(k) not in (None,''):body[k]=b[k]
     if b.get('credit_auto') and uploader and not body.get('credit'):body['credit']='Clip: '+uploader[:40]
