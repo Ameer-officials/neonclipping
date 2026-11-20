@@ -1993,5 +1993,12 @@
   "ok": true,
   "evidence": "real install into a scratch folder, exit 0",
   "sec": 0
+ },
+ {
+  "group": "make",
+  "name": "Make 2-hour Hindi video, Fast: YouTube captions, Hinglish, 197 s (was 237 s with the local model)",
+  "ok": true,
+  "evidence": "3 clips, 1080x1920 h264/aac, no Devanagari left, caption_source=YouTube captions",
+  "sec": 197
  }
 ]

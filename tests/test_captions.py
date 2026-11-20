@@ -87,6 +87,12 @@ class Anims(unittest.TestCase):
         ev, _ = self.render('highlight')
         self.assertEqual(len(ev), 8)
 
+class Nukta(unittest.TestCase):
+    def test_youtube_precomposed_nukta_letters(self):
+        import translit
+        got = [translit.to_hinglish(w) for w in ('कपड़े', 'पड़ेगा', 'थोड़ा', 'थोड़ा')]
+        self.assertEqual(got, ['kapde', 'padega', 'thoda', 'thoda'])
+
 
 if __name__ == '__main__':
     unittest.main()

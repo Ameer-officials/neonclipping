@@ -82,5 +82,13 @@
  {
   "found": "My installer test created two Desktop shortcuts pointing at a scratch folder.",
   "fix": "Removed; tests that run the installer now always pass -NoShortcut."
+ },
+ {
+  "found": "Fast mode still ran the local speech model on every Hindi clip (slow, and wrong on loud game audio) although YouTube's own captions were already downloaded.",
+  "fix": "Fast uses YouTube captions for every language (Hindi transliterated to Hinglish); the local model only runs for Accurate / Best or when no captions exist. 2-hour Hindi video Make: 197 s, captions checked by eye."
+ },
+ {
+  "found": "YouTube writes nukta letters as one precomposed character, which the Hinglish converter dropped (kapde became kapn, padega became paga).",
+  "fix": "Split into letter + nukta first; unit-tested."
  }
 ]
