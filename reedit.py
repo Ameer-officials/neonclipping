@@ -10,8 +10,10 @@ from fastapi import HTTPException
 CHANGE_KEYS = {'aspect','resolution','fps','layout','top','cam','game','caption_style','caption_y','captions','hook','title','post_caption'}
 from styling import KEYS as STYLE_KEYS
 from brands import KEYS as BRAND_KEYS,appearance
+from hooks import KEYS as HOOK_KEYS,settings as hook_settings
 CHANGE_KEYS = CHANGE_KEYS | set(STYLE_KEYS)
 CHANGE_KEYS = CHANGE_KEYS | set(BRAND_KEYS)
+CHANGE_KEYS = CHANGE_KEYS | set(HOOK_KEYS)
 
 def latest_file(data, file):
     """If a clip was re-edited, its newer version is the one to work on (stale cards still point at the old file)."""
@@ -152,6 +154,7 @@ def attach(app,data,state,probe,export,save):
             try:
                 width,height,_=output_settings(settings)
                 appearance(settings)
+                hook_settings(settings)
                 geometry(settings.get('layout','stack'),settings.get('top',.32),width,height)
                 if settings.get('caption_style','gta') not in ('gta','bold','clean','hormozi','mrbeast'):raise ValueError()
                 if not 400<=int(settings.get('caption_y',1450))<=1750:raise ValueError()

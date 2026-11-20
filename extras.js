@@ -5,7 +5,7 @@
   const STYLE_KEYS = ['template', 'tpl_name', 'tpl_handle', 'bg_mode', 'bg_color', 'bg_color2', 'bg_image', 'bg_dim', 'bg_blur', 'padding', 'radius',
     'watermark_image', 'watermark_pos', 'watermark_size', 'watermark_opacity', 'credit', 'outro_text', 'outro_seconds',
     'music', 'music_volume', 'music_peak', 'music_riser', 'caption_anim',
-    'caption_font','caption_size','caption_color','caption_active','caption_outline','caption_max_words'];
+    'caption_font','caption_size','caption_color','caption_active','caption_outline','caption_max_words','hook_duration','hook_background'];
   const BRAND_KEYS=['caption_font','caption_size','caption_color','caption_active','caption_outline','caption_max_words'];
   const assets = { bg_image: '', watermark_image: '', music: '' };
 
@@ -35,6 +35,7 @@
     if (v.music) { o.music = v.music; o.music_volume = v.music_volume; o.music_peak = v.music_peak; o.music_riser = v.music_riser; }
     if (v.caption_anim && v.caption_anim !== 'highlight') o.caption_anim = v.caption_anim;
     for(const key of BRAND_KEYS){const value=$('brand-'+key)?.value;if(value)o[key]=['caption_size','caption_max_words'].includes(key)?Number(value):value;}
+    o.hook_duration=Number($('hook-duration')?.value||8);o.hook_background=$('hook-background')?.checked!==false;
     return o;
   }
   // every key, '' when off: used when editing saved clips so a switched-off option really turns off
@@ -61,6 +62,8 @@
     $('st-music-riser').value = s.music_riser || 4;
     if ($('caption-anim')) $('caption-anim').value = s.caption_anim || 'highlight';
     for(const key of BRAND_KEYS){if($('brand-'+key))$('brand-'+key).value=s[key]||'';}
+    if($('hook-duration'))$('hook-duration').value=s.hook_duration||8;
+    if($('hook-background'))$('hook-background').checked=s.hook_background!==false;
   }
 
   // ---- uploads (logo, wallpaper, music)
@@ -84,6 +87,8 @@
 
   // ---- caption animation + SRT/ASS import (added to the "Give it a voice" panel next to the language picker)
   const lang = $('language');
+  if($('mode')){const label=document.createElement('label');label.textContent='Moment mix';const select=document.createElement('select');select.id='moment-profile';select.innerHTML='<option value="balanced">Balanced: action + dialogue + story</option><option value="action">Action / high energy</option><option value="dialogue">Dialogue, humour & insights</option>';label.append(select);$('mode').closest('label').after(label);}
+  if($('hook')){const duration=document.createElement('label');duration.textContent='Opening heading duration (seconds)';const input=document.createElement('input');input.id='hook-duration';input.type='number';input.min='2';input.max='60';input.value='8';duration.append(input);$('hook').closest('label').after(duration);const backing=document.createElement('label');backing.className='check';backing.innerHTML='<input id="hook-background" type="checkbox" checked> Black backing behind opening heading';duration.after(backing);const improve=document.createElement('button');improve.textContent='Improve opening heading';improve.onclick=async()=>{try{const selected=collectWords();if(!selected?.length)throw Error('Generate or import this clip subtitles first.');improve.disabled=true;status('Writing a grounded heading with the local model…');const result=await request('/hooks/suggest',{text:selected.map(w=>w.text).join(' ')});$('hook').value=result.hook;status('Heading ready. Review the wording, then apply or export.');}catch(error){status(error.message);}finally{improve.disabled=false;}};backing.after(improve);}
   if(lang){
     const panel=document.createElement('details');panel.className='caption-brand';
     const summary=document.createElement('summary');summary.textContent='Custom caption look & saved profiles';panel.append(summary);
@@ -156,9 +161,10 @@
   // ---- wrap the app.js helpers
   const baseRequest = window.request;
   window.request = function (path, body) {
+    if(body&&(path==='/live/start'||path==='/creators'||/^\/creators\/[^/]+\/layout$/.test(path)))body={...styleFields(),...body};
     if (path === '/make' && body) {
       const extra = { ...styleFields(), cam_auto: !!($('cam-auto') && $('cam-auto').checked), credit_auto: !!$('st-credit-auto').checked };
-      body = { ...extra, ...body };
+      body = { ...extra, ...body, moment_profile:$('moment-profile')?.value||'balanced' };
       if (window.__aiMoments) { body.moments = window.__aiMoments; window.__aiMoments = null; }
     }
     if (path === '/live/start' && body && window.__liveOpts) body = { ...styleFields(), ...window.__liveOpts(), ...body };

@@ -202,10 +202,9 @@ def write(words,style,folder,name,hook='',position=1450,hook_y=300,width=1080,he
             text='{'+pos+lead+'}'+' '.join(chunks)
             ass.append(f'Dialogue: 1,{stamp(a,True)},{stamp(b,True)},Main,,0,0,0,,{text}')
     if hook.strip():
-        lines=hook_lines(hook,width=max(12,int(width/(82*scale*.6))));size=round((82 if len(lines)==1 else 74 if len(lines)==2 else 66)*scale)
-        text=r'\N'.join(lines).upper()
-        tags=r'{\an8\pos(%d,%d)\fs%d\b1\c&H00FFFFFF&\3c&H00A845FF&\bord10\shad0\blur1\fad(150,200)}' % (width//2,hook_y,size)
-        ass.append('Dialogue: 2,0:00:00.00,0:00:03.20,Main,,0,0,0,,'+tags+text)
+        import hooks
+        lines=hook_lines(hook,width=max(12,int(width/(82*scale*.6))))
+        ass.extend(hooks.events(lines,width,height,hook_y,scale,appearance or {}))
     (folder/(name+'.ass')).write_text('\n'.join(ass),encoding='utf-8')
     (folder/(name+'.srt')).write_text('\n'.join(srt),encoding='utf-8')
     return name+'.ass',name+'.srt'

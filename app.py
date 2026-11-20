@@ -13,6 +13,8 @@ from layouts import CATALOG, geometry, render_graph, text_positions, output_sett
 from captions import transcribe, large_v3, write as write_captions, ANIMS, ascii_fold, collapse_repeats
 import styling
 import brands
+import hooks
+import curation
 import facecam_detect
 ROOT=Path(__file__).resolve().parent
 DATA=Path(os.environ.get('NEONCLIPPING_DATA_DIR',str(ROOT/'data'))).resolve();DATA.mkdir(parents=True,exist_ok=True)
@@ -120,6 +122,8 @@ def export(b:dict):
  graph=render_graph(layout,rects,top,width,height)
  try:brands.appearance(b)
  except (ValueError,TypeError,OverflowError) as e:raise HTTPException(400,str(e))
+ try:hooks.settings(b)
+ except (ValueError,TypeError,OverflowError) as e:raise HTTPException(400,str(e))
  try:plan=styling.plan(b,DATA)
  except ValueError as e:raise HTTPException(400,str(e))
  job=uuid.uuid4().hex;out=DATA/(job+'.mp4');state[job]={'status':'running','message':'Preparing export'}
@@ -213,6 +217,8 @@ def make(b:dict):
   if not isinstance(moments,list) or not 1<=len(moments)<=40 or not all(isinstance(m,dict) for m in moments):raise HTTPException(400,'Moments must be a list of 1 to 40 items with start and end.')
   count=min(24,len(moments))
  mode='deep' if b.get('mode')=='deep' else 'fast'
+ profile=b.get('moment_profile','balanced')
+ if profile not in curation.PROFILES:raise HTTPException(400,'Choose Balanced, Action or Dialogue moments.')
  acc='best' if b.get('accurate')=='best' else 'fast'     # the turbo/"accurate" local model was removed: its captions were worse than YouTube's. Only Best Hindi (large-v3) uses a local model on purpose.
  layout=b.get('layout','blur');style=b.get('caption_style','gta');language=b.get('language') or None
  from translit import to_hinglish
@@ -234,10 +240,16 @@ def make(b:dict):
      from captions_yt import from_info
      yt_words=from_info(info);save(job,{'transcript_source':'YouTube captions' if yt_words else 'speech model'})
     except Exception:yt_words=None
+   if not url and src0:
+    try:
+     import transcripts
+     yt_words=transcripts.cached_source(DATA,src0,language)
+     if yt_words:save(job,{'transcript_source':'Saved full-source transcript'})
+    except (OSError,ValueError):pass
    save(job,{'fast_path':fast,'title':title})
    import learn, action
    from concurrent.futures import ThreadPoolExecutor as _TP
-   W=learn.load_weights(DATA)
+   W=curation.profile_weights(learn.load_weights(DATA),profile)
    def lowres_section(u,c):
     """A tiny 144p copy of just this candidate, only for looking at the action (motion, flashes, light strobes)."""
     from yt_dlp.utils import download_range_func
@@ -273,7 +285,7 @@ def make(b:dict):
      c['reason']=(('Cues: '+', '.join(cues)) if cues else 'Steady energy')+(f" · AI {c['llm']:g}/10" if c.get('llm') else '')
      c.pop('_act',None)
     top.sort(key=lambda c:-c['rank'])
-    return top[:count]
+    return top[:count] if moments else curation.select(top,count,profile)
    sections=None
    if fast:
     def hook(d):
@@ -282,7 +294,7 @@ def make(b:dict):
     with _yt({'format':'ba[ext=m4a]/ba/worst','outtmpl':str(DATA/(job+'.audio.%(ext)s')),'progress_hooks':[hook]}) as y:y.download([url])
     p=next(f for f in DATA.glob(job+'.audio.*') if f.suffix not in ('.part','.ytdl'));duration=_dur(p);sid=job
     save(job,{'meta':{'duration':duration},'stage':'Finding moments in audio','progress':.12})
-    found,engine=ai_found(moments,yt_words,duration) if moments else find(p,duration,count,max_len,lambda f,m:save(job,{'stage':m,'progress':.12+.4*f}),language,DATA,min_len,False,yt_words,False,W,False)
+    found,engine=ai_found(moments,yt_words,duration) if moments else find(p,duration,count,max_len,lambda f,m:save(job,{'stage':m,'progress':.12+.4*f}),language,DATA,min_len,False,yt_words,False,W,False,profile)
     found=choose(found,lambda c:lowres_section(url,c))
     save(job,{'engine':engine+' (audio-first)','stage':'Fetching only the chosen sections','progress':.58,'candidates':len(found)})
     from concurrent.futures import ThreadPoolExecutor
@@ -298,12 +310,20 @@ def make(b:dict):
      save(job,{'stage':'Downloading source','progress':.02});sid,p=app.neon['download'](url,job)
     else:sid,p=src0.stem,src0
     meta=probe(p);duration=meta['duration'];save(job,{'source_id':sid,'meta':meta,'stage':'Finding moments','progress':.1})
-    found,engine=ai_found(moments,yt_words,duration) if moments else find(p,duration,count,max_len,lambda f,m:save(job,{'stage':m,'progress':.1+.5*f}),language,DATA,min_len,True,yt_words,mode=='deep',W,False)
+    found,engine=ai_found(moments,yt_words,duration) if moments else find(p,duration,count,max_len,lambda f,m:save(job,{'stage':m,'progress':.1+.5*f}),language,DATA,min_len,True,yt_words,mode=='deep',W,False,profile)
     found=choose(found,lambda c:(p,c['start']))
     save(job,{'engine':engine,'stage':'Rendering clips','progress':.6,'candidates':len(found)})
    done=[];cam_use,game_use,cam_checked=cam,game,not b.get('cam_auto')
    uploader=str((info.get('channel') or info.get('uploader') or '')) if url else ''
    for i,c in enumerate(found):
+    if not moments and c.get('transcript'):
+     try:
+      import smart
+      model=smart._model(profile!='action' or mode=='deep')
+      if model:
+       save(job,{'stage':f'Writing opening heading {i+1}/{len(found)}'})
+       c['hook']=smart._heading(model,c['transcript'])
+     except Exception:pass
     if sections:
      sid2=sections[i].result();real=section_start(p,DATA/(sid2+'.mp4'),max(0,c['start']-PAD));start=max(0,c['start']-real);end=min(_dur(DATA/(sid2+'.mp4')),start+c['end']-c['start']);words=c.get('words')
     else:sid2=sid;start=c['start'];end=c['end'];words=c.get('words')
@@ -317,7 +337,7 @@ def make(b:dict):
     lang=language or ('hinglish' if (video_lang.startswith('hi') or c.get('language')=='hi') else None)
     body={'id':sid2,'start':start,'end':end,'layout':layout,'top':(top_h if isinstance(top_h,(int,float)) and .2<=top_h<=.5 else .32),'captions':True,'caption_style':style,'language':language,'hook':(' '.join(to_hinglish(w) for w in c.get('hook','').split()) if lang=='hinglish' else c.get('hook','')),
           'aspect':b.get('aspect','vertical'),'resolution':b.get('resolution',1080),'fps':b.get('fps',0),'title':c.get('title',''),'post_caption':c.get('title',''),'batch_id':job,'source_url':url,'cam':cam_use,'game':game_use,'features':c.get('features'),'weights_used':W}
-    for k in styling.KEYS+brands.KEYS:
+    for k in styling.KEYS+brands.KEYS+hooks.KEYS:
      if b.get(k) not in (None,''):body[k]=b[k]
     if b.get('credit_auto') and uploader and not body.get('credit'):body['credit']='Clip: '+uploader[:40]
     if acc!='fast' or not c.get('words'):
@@ -384,7 +404,7 @@ def live_render(sess,start,dur,why,chat_feature):
  W=learn.load_weights(DATA);viral=min(99,round(100*learn.score(feats,W)))
  body={'id':name,'start':0,'end':real,'layout':o.get('layout','blur'),'captions':want_caps,'caption_style':o.get('caption_style','gta'),'language':None,'hook':hook,
        'aspect':o.get('aspect','vertical'),'resolution':o.get('resolution',1080),'fps':o.get('fps',0),'title':title,'post_caption':title,'cam':o['cam'],'game':o['game'],'top':o.get('top',.32),'words':words,'features':feats,'weights_used':W,'creator':o.get('creator')}
- for k in styling.KEYS:
+ for k in styling.KEYS+brands.KEYS+hooks.KEYS:
   if o.get(k) not in (None,''):body[k]=o[k]
  lap('score')
  ej=export(body)['job']
@@ -405,7 +425,7 @@ def start_live(target,opts,creator=None,before=24,after=14):
             'cam':opts.get('cam') or {'x':0,'y':0,'w':.25,'h':.3},'game':opts.get('game') or {'x':.25,'y':0,'w':.75,'h':1},
             'aspect':opts.get('aspect','vertical'),'resolution':opts.get('resolution',1080),'fps':opts.get('fps',0),'top':opts.get('top') if isinstance(opts.get('top'),(int,float)) else .32,'creator':creator,
             'captions':opts.get('captions',True) is not False,'hook_mode':opts.get('hook_mode') if opts.get('hook_mode') in ('ai','title','custom') else 'ai','hook_text':str(opts.get('hook_text') or '')[:70]}
- for k in styling.KEYS:
+ for k in styling.KEYS+brands.KEYS+hooks.KEYS:
   if opts.get(k) not in (None,''):sess.opts[k]=opts[k]
  LIVE[sess.id]=sess;sess.start();return sess.id
 
@@ -499,6 +519,7 @@ subtitles.attach(app)
 aiparts.attach(app)
 facecam_detect.attach(app,DATA)
 brands.attach(app,DATA)
+hooks.attach(app)
 import transcripts
 transcripts.attach(app,DATA,state,probe,transcribe)
 

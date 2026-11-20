@@ -6,6 +6,12 @@ import threading
 import unicodedata
 import uuid
 
+def cached_source(data,path,language=None):
+    st=path.stat();key=hashlib.sha256(f'{path.stem}:{st.st_size}:{st.st_mtime_ns}:{language}'.encode()).hexdigest()
+    cache=data/'transcripts'/(key+'.json')
+    if cache.exists():return json.loads(cache.read_text(encoding='utf-8')).get('words')
+    return None
+
 def search(words,query='',limit=100,offset=0):
     """Phrase search across word/cue boundaries, with real source timestamps."""
     norm=lambda value:unicodedata.normalize('NFKC',str(value)).casefold()
