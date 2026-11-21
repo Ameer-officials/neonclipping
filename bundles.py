@@ -32,6 +32,11 @@ def build_bundle(data, files, folder):
                     source=data/(file+extension)
                     if source.exists() and (extension=='.mp4' or record['result'].get('caption_words',0)):
                         archive.write(source,stem+extension)
+                try:
+                    import cover
+                    archive.write(cover.make(data,file,title,str(settings.get('hook') or ''),cover.hook_until(settings)),stem+'-cover.jpg')
+                except Exception:
+                    pass          # a missing cover never blocks the clips themselves
                 item={'file':file,'download':stem+'.mp4','title':title,'hook':settings.get('hook',''),
                       'post_caption':settings.get('post_caption',''),'source_url':settings.get('source_url',''),
                       'saved_source_range':{'start':settings.get('start'),'end':settings.get('end')},

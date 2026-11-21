@@ -42,7 +42,11 @@ def extract_hook(text):
         cues=('but','instead','wrong','stuck','finally','silence','impact','whole time','mistake','lekin','isliye','galti','actually','police','car','gaadi','keys')
         return sum(2 if cue in ('stuck','whole time','silence','impact','lekin','isliye') else 1 for cue in cues if cue in tokens)-max(0,len(sentence.split())-12)*.05
     line=max(sentences,key=merit);tokens=line.split()
-    return ' '.join(tokens if len(tokens)<=10 else tokens[-10:])[:80]
+    tokens=tokens if len(tokens)<=9 else tokens[-9:]
+    hook=' '.join(tokens)
+    if len(tokens)<=6 and not hook.endswith(('?','!')):
+        hook=('Wait for it: ','This is the part: ','Listen to this: ')[sum(map(ord,hook))%3]+hook
+    return hook[:80]
 
 def hook_supported(hook,text):
     if len(hook.split())<4:return False
@@ -56,7 +60,8 @@ def hook_supported(hook,text):
             result.add(token)
         return result
     proposed,source=words(hook),words(text)
-    return len(proposed&source)>=min(2,len(proposed)) and len(proposed&source)/max(1,len(proposed))>=.5
+    shared=len(proposed&source)      # a punchy hook only has to name something that is really in the clip (numbers are checked separately)
+    return shared>=1 and shared/max(1,len(proposed))>=.25
 def profile_weights(weights,profile='balanced'):
     if profile not in PROFILES:raise ValueError('Choose Balanced, Action or Dialogue moments.')
     out=dict(weights)

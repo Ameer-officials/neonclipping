@@ -11,13 +11,19 @@ from captions import transcribe
 SCOUT_MODEL='base'     # deep mode overrides with a stronger model
 _=0   # fast reading of candidates; final captions use a better model
 OLLAMA='http://127.0.0.1:11434'
+HOOK_RULES=('Write the opening hook like a top short-form creator: it must stop the scroll in one second. '
+            'Pick the formula that fits THIS moment: (1) curiosity gap ("He did THIS and nobody saw it coming"), '
+            '(2) hot take: frame the speaker\'s real opinion as a bold claim ("This is why X is overrated"), (3) mistake warning ("Stop doing X"), '
+            '(4) secret ("Nobody tells you this about X"), (5) shocked reaction ("He could NOT believe this"), (6) before vs after or comparison, '
+            '(7) challenge question. 4 to 9 words, a concrete noun from the clip, power words, ONE key word in CAPS, end with ?! or ... when it fits. '
+            'Strong opinion and controversy are welcome ONLY as framing of what is actually said or shown in the clip; never invent events, numbers, money, people or accusations. '
+            'Never use bland lines like "Watch this", "You wont believe this", "Epic moment", "Interesting clip".')
+
 PROMPT=('You are selecting complete, interesting short video moments. Loudness and fast movement are NOT quality by themselves. '
         'Quiet funny dialogue, a specific insight, an unexpected reversal, a revealing opinion and a complete story can score as highly as action. '
         'Score the actual CLIP, not surrounding context. Prefer a clear setup, meaningful stakes and an actual payoff. '
         'Penalize repetition, filler, sponsor reads, generic shouting and incomplete thoughts.\n'
-        'Write a specific 5–9 word opening heading about THIS moment: expose the surprising mistake, contradiction, stakes, or unanswered question. '
-        'Avoid generic headings such as "You wont believe this", "Watch till the end", "Epic gaming moment". '
-        'Do not manufacture controversy, winners, money, numbers, danger, or events absent from the transcript. '
+        'Write the opening heading for THIS moment. '+HOOK_RULES+' '
         'Use the clip language (English, Hindi or Hinglish), keep named entities faithful. Include a short verbatim evidence quote supporting the heading. '
         'The heading is an EDITORIAL QUESTION or sharp contrast, not a bland description or a transcript fragment. '
         'Replace vague they/this/it with a specific noun actually stated in the clip. Remove filler like actually, like, just. '
@@ -79,10 +85,8 @@ def _ask(model,text):
     return judged['score'],judged['title'],judged['hook']
 
 def _heading(model,text):
-    prompt=('Write ONE strong on-screen opening heading for this exact clip. Do not summarize it. '
-            'Use a short curiosity question or a surprising contrast with concrete nouns. 5–9 words, same language as the clip. '
-            'Never invent events, money, winners, controversy, danger or numbers. No vague they/it/this without a clear noun. '
-            'Remove filler such as actually, like, just. Examples of TONE only: "Wait, this jet has an ejection seat?!", '
+    prompt=('Write ONE strong on-screen opening heading for this exact clip. Do not summarize it. '+HOOK_RULES+' Same language as the clip. '
+            'No vague they/it/this without a clear noun. Remove filler such as actually, like, just. Examples of TONE only: "Wait, this jet has an ejection seat?!", '
             '"The keys were in his pocket?!", "Why removing sound made the cut stronger". '
             'Return JSON with hook and evidence (an exact quote from this clip).\nCLIP:\n'+text[:3500])
     payload=_payload(model,prompt,180,.4)

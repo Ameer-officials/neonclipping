@@ -295,3 +295,7 @@ MIT. See [LICENSE](LICENSE).
 NeonClipping now updates itself. When a new version is on GitHub, a green banner appears at the top of the page; press **Update now**, or leave it and it updates automatically after a short countdown when nothing is running. Your clips, settings and downloaded models are kept, one backup of the replaced files stays in `.update-backup/`, and the app restarts by itself.
 
 If you installed an older version, run `NeonClipping-Setup.bat` once more to get this feature. After that no re-install is needed. A git checkout is never touched by the updater (use `git pull`).
+
+## Look and feel of the opening heading
+
+Pick **Heading look** in step 04: *Impact* (default: big bold text, one accent word, pop-in, pink underline), *Neon glow*, *Banner bar* or the classic rounded box. Every finished clip also has a **Cover image** (a sharp frame with the title) and the clips ZIP includes it. See [CHANGELOG.md](CHANGELOG.md) for everything that changed.

@@ -166,3 +166,10 @@ details.panel>summary{cursor:pointer;list-style:none;font-size:16px}details.pane
 details.lite{margin:10px 0;padding:8px 12px;border:1px solid #3c314b;border-radius:10px;background:#120e19}
 details.lite summary{cursor:pointer}
 details.lite summary small{color:var(--muted);margin-left:6px}
+
+.readiness{display:flex;flex-wrap:wrap;gap:8px 14px;margin:0 0 12px;padding:8px 14px;border:1px solid #30263e;border-radius:10px;background:#0f0b17;font-size:12px;color:var(--muted)}
+.readiness .rd{display:inline-flex;gap:5px;align-items:center;cursor:default}
+.readiness .rd b{font-weight:700}
+.readiness .ok b{color:#d4fb58}
+.readiness .bad b{color:#ff6b8b}
+.readiness .bad{cursor:pointer;color:#ffd0da}

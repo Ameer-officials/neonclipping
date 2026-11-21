@@ -292,3 +292,13 @@ const camReset=document.getElementById('cam-reset');if(camReset)camReset.onclick
  const watch=new MutationObserver(()=>{const t=($('link-status').textContent||'')+' '+($('status')?.textContent||'');if(/bot check|not a bot/i.test(t)&&$('yt-login'))$('yt-login').open=true;});
  if($('link-status'))watch.observe($('link-status'),{childList:true,characterData:true,subtree:true});
 })();
+
+// "Cover image" link next to every MP4 download link (cards, library, live clips).
+(()=>{const add=a=>{try{const m=(a.getAttribute('href')||'').match(/^\/media\/([A-Za-z0-9]+)$/);if(!m||!/MP4/.test(a.textContent||'')||a.dataset.cover)return;a.dataset.cover='1';const c=document.createElement('a');c.href='/cover/'+m[1];c.download='neonclipping-cover-'+m[1]+'.jpg';c.textContent='Cover image';c.className=a.className;c.style.marginLeft='10px';a.after(c);}catch(e){}};
+ const scan=r=>{if(r.nodeType!==1)return;if(r.tagName==='A')add(r);r.querySelectorAll&&r.querySelectorAll('a[href^="/media/"]').forEach(add);};
+ new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(scan))).observe(document.body,{childList:true,subtree:true});scan(document.body);})();
+
+// System check line: FFmpeg, encoder, YouTube runtime, AI model, disk. A red item explains the fix when clicked.
+(async()=>{try{const r=await request('/readiness');const box=$('readiness');if(!box)return;box.replaceChildren();
+ r.items.forEach(i=>{const s=document.createElement('span');s.className='rd '+(i.ok?'ok':'bad');const l=document.createElement('span');l.textContent=i.label;const b=document.createElement('b');b.textContent=(i.ok?'\u2713 ':'\u26A0 ')+i.detail;s.append(l,b);s.title=i.ok?i.detail:i.fix;if(!i.ok)s.onclick=()=>{status(i.label+': '+i.fix);};box.append(s);});
+}catch(e){}})();

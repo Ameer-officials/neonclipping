@@ -55,6 +55,18 @@ def media(id:str):
  p=DATA/(id+'.mp4')
  if not p.exists():raise HTTPException(404)
  return FileResponse(p,media_type='video/mp4')
+@app.get('/cover/{id}')
+def cover_image(id:str):
+ """JPEG cover (a frame plus the clip title) for a finished clip."""
+ if not id.isalnum():raise HTTPException(404)
+ import cover
+ from reedit import latest_file,read_record
+ try:
+  file=latest_file(DATA,id);settings=read_record(DATA,file)['settings']
+  path=cover.make(DATA,file,str(settings.get('title') or ''),str(settings.get('hook') or ''),cover.hook_until(settings))
+ except HTTPException:raise
+ except Exception as e:raise HTTPException(404,'No cover for this clip: '+str(e)[-120:])
+ return FileResponse(path,media_type='image/jpeg')
 @app.get('/assets/{name}')
 def assets(name:str):
  if name not in ('app.js','style.css','extras.js','transcripts.js','vision.js','report.js'):raise HTTPException(404)
@@ -590,6 +602,25 @@ def report_send(b:dict):
 def report_log(b:dict):
  """The page reports errors it caught itself (a request that failed)."""
  report.log_error(str(b.get('stage') or 'page')[:80],str(b.get('error') or '')[:700]);return {'ok':True}
+@app.get('/readiness')
+def readiness():
+ """One-line health of everything NeonClipping needs, each with a plain fix, shown at the top of the page."""
+ import compat,ytdl,encoders,smart
+ items=[]
+ def add(key,label,ok,detail,fix=''):items.append({'key':key,'label':label,'ok':bool(ok),'detail':detail,'fix':fix})
+ add('ffmpeg','FFmpeg',compat.ffmpeg_ready(),'found' if compat.ffmpeg_ready() else 'not found','Run NeonClipping-Setup.bat again, or install it with: winget install Gyan.FFmpeg')
+ try:enc=encoders.describe()
+ except Exception:enc='libx264'
+ add('encoder','Encoder',True,{'h264_nvenc':'NVIDIA GPU','h264_amf':'AMD GPU','h264_qsv':'Intel GPU','h264_videotoolbox':'Apple GPU'}.get(enc,'CPU'))
+ runtimes=sorted(ytdl.js_runtimes())
+ add('youtube','YouTube',bool(runtimes),'JS runtime: '+', '.join(runtimes) if runtimes else 'no JS runtime','Install Deno (winget install DenoLand.Deno) so YouTube shows every quality, then restart NeonClipping.')
+ model=smart._model(False)
+ add('ai','AI model',bool(model),model or 'Ollama not running (optional)','Optional: install Ollama and run: ollama pull llama3.2:3b for smarter titles and moment picking.')
+ try:free=shutil.disk_usage(DATA).free/1024**3
+ except Exception:free=0
+ add('disk','Disk',free>=5,f'{free:.0f} GB free','Free some disk space (clips and downloads need several GB).')
+ return {'items':items,'ok':all(i['ok'] for i in items if i['key'] in ('ffmpeg','disk'))}
+
 @app.get('/ytdl/settings')
 def ytdl_settings_get():
  import ytdl

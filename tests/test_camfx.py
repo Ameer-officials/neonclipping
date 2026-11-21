@@ -88,3 +88,37 @@ class Round3Tests(unittest.TestCase):
         text = (Path(__file__).resolve().parents[1] / 'app.py').read_text(encoding='utf-8')
         self.assertIn('ass=filename={ass}', text)
         self.assertNotIn('ass={ass}', text)
+
+
+class CoverTests(unittest.TestCase):
+    def test_frame_time_stays_inside_the_clip(self):
+        import cover
+        self.assertEqual(cover.frame_time(0.2), 0.0)
+        self.assertAlmostEqual(cover.frame_time(10), 4.0)
+        self.assertLess(cover.frame_time(1.0), 1.0)
+
+    def test_ass_text_has_box_and_title(self):
+        import cover
+        text = cover.ass_text(['HELLO WORLD'], 1080, 1920)
+        self.assertIn('PlayResX: 1080', text)
+        self.assertIn('HELLO', text)
+        self.assertIn('WORLD', text)          # the accent word is wrapped in its own colour tag
+        self.assertGreaterEqual(text.count('Dialogue:'), 2)       # text + accent bar
+
+
+class CoverHookTests(unittest.TestCase):
+    def test_hook_until(self):
+        import cover
+        self.assertEqual(cover.hook_until({}), 0.0)
+        self.assertEqual(cover.hook_until({'hook': 'X'}), 8.0)
+        self.assertEqual(cover.hook_until({'hook': 'X', 'hook_duration': 5}), 5.0)
+        self.assertEqual(cover.hook_until({'hook': 'X', 'hook_enabled': False}), 0.0)
+        self.assertEqual(cover.hook_until({'hook': 'X', 'template': 'x_dark'}), 0.0)
+
+
+class CoverTimingTests(unittest.TestCase):
+    def test_title_overlay_lasts_the_whole_clip(self):
+        import cover
+        text = cover.ass_text(['TITLE'], 1080, 1920)
+        self.assertIn('9:59:59.00', text)
+        self.assertNotIn('0:01:00.00', text)
