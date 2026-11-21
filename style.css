@@ -148,3 +148,8 @@ details.panel>summary{cursor:pointer;list-style:none;font-size:16px}details.pane
 @keyframes donpulse{0%{box-shadow:0 0 0 0 #ec489988}70%{box-shadow:0 0 0 12px #ec489900}100%{box-shadow:0 0 0 0 #ec489900}}
 @media (prefers-reduced-motion:reduce){.don-big{animation:none}}
 #donate-dialog p{line-height:1.55}
+
+.side-supporters{margin:14px 0 0}
+.supporters-list{display:flex;flex-direction:column;gap:6px;margin-top:6px;max-height:34vh;overflow:auto}
+.supporter{display:flex;justify-content:space-between;gap:8px;padding:6px 10px;border-radius:8px;background:#ffffff0d;border:1px solid #ffffff1f;color:#fbf6ff;font-size:12px}
+.supporter em{font-style:normal;color:#d4fb58;white-space:nowrap}

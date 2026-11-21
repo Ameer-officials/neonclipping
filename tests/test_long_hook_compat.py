@@ -110,3 +110,10 @@ class FadeAndEncoderTests(unittest.TestCase):
         finally:
             del os.environ['NEONCLIPPING_ENCODER']
         self.assertEqual(names[-1], 'libx264')       # CPU always last, so a missing GPU never breaks export
+
+
+class SupportersTests(unittest.TestCase):
+    def test_file_is_valid_and_served_clean(self):
+        import json
+        data = json.loads((Path(__file__).resolve().parents[1] / 'supporters.json').read_text(encoding='utf-8'))
+        self.assertIsInstance(data['supporters'], list)

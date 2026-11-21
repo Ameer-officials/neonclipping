@@ -256,3 +256,5 @@ $('shift-captions').onclick=()=>{try{const current=collectWords();if(!current?.l
 fetch('/healthz').then(r=>r.json()).then(h=>{if(h&&h.ffmpeg===false){const m='FFmpeg is not installed on this computer, so clips cannot be made. Re-run NeonClipping-Setup.bat (it installs FFmpeg), or install it with: winget install Gyan.FFmpeg';status(m);const n=document.getElementById("link-status");if(n)n.textContent=m;}}).catch(()=>{});
 
 ['report-side'].forEach(i=>{const b=document.getElementById(i);if(b)b.onclick=()=>{const r=document.getElementById('rp-btn');if(r)r.click();else status('Report tool is still loading, try again in a moment.');};});
+
+(async()=>{try{const d=await request('/supporters');const list=(d&&d.supporters)||[];if(!list.length)return;const box=$('supporters-list');list.forEach(s=>{const chip=document.createElement('span');chip.className='supporter';const n=document.createElement('span');n.textContent=s.name;chip.append(n);if(s.amount){const a=document.createElement('em');a.textContent=s.amount;chip.append(a);}box.append(chip);});$('supporters').hidden=false;}catch(e){}})();

@@ -510,6 +510,20 @@ def live_stop(lid:str):
  if lid not in LIVE:raise HTTPException(404,'Live session not found.')
  LIVE[lid].stop();return {'ok':True}
 
+@app.get('/supporters')
+def supporters():
+ """Names shown under 'Our supporters' (supporters.json). Only plain short text is served; add a person only with their OK."""
+ try:raw=json.loads((ROOT/'supporters.json').read_text(encoding='utf-8')).get('supporters',[])
+ except (OSError,ValueError,AttributeError):raw=[]
+ out=[]
+ for r in raw if isinstance(raw,list) else []:
+  if not isinstance(r,dict):continue
+  name=' '.join(str(r.get('name') or '').split())[:40]
+  if not name:continue
+  amount=' '.join(str(r.get('amount') or '').split())[:14]
+  out.append({'name':name,'amount':amount})
+ return {'supporters':out[:300]}
+
 @app.get('/donate')
 def donate():
  """Optional donate links (donate.json or NEONCLIPPING_DONATE_RAZORPAY / NEONCLIPPING_DONATE_PAYPAL). Only https links are served; nothing is unlocked by donating."""
