@@ -153,7 +153,7 @@ $('edit-top').addEventListener('input',()=>{$('top').value=$('edit-top').value;l
 
 // Optional donate button: only shown when donate.json (or env vars) has https links.
 (async()=>{try{const d=await request('/donate');if(!d.razorpay&&!d.paypal)return;if(d.razorpay){$('don-rzp').href=d.razorpay;$('don-rzp').hidden=false;}if(d.paypal){$('don-pp').href=d.paypal;$('don-pp').hidden=false;}
- $('donate').hidden=false;$('donate').onclick=()=>$('donate-dialog').showModal();$('don-close').onclick=()=>$('donate-dialog').close();}catch(e){}})();
+ $('donate').hidden=false;$('support-bar').hidden=false;$('donate').onclick=$('donate-bar').onclick=()=>$('donate-dialog').showModal();$('don-close').onclick=()=>$('donate-dialog').close();}catch(e){}})();
 
 // ---- Live clipping (record + chat spikes + backdated clips)
 let liveId=null,liveTimer=null;const liveShown=new Set();
@@ -255,4 +255,4 @@ $('shift-captions').onclick=()=>{try{const current=collectWords();if(!current?.l
 
 fetch('/healthz').then(r=>r.json()).then(h=>{if(h&&h.ffmpeg===false){const m='FFmpeg is not installed on this computer, so clips cannot be made. Re-run NeonClipping-Setup.bat (it installs FFmpeg), or install it with: winget install Gyan.FFmpeg';status(m);const n=document.getElementById("link-status");if(n)n.textContent=m;}}).catch(()=>{});
 
-['report-side','report-top'].forEach(i=>{const b=document.getElementById(i);if(b)b.onclick=()=>{const r=document.getElementById('rp-btn');if(r)r.click();else status('Report tool is still loading, try again in a moment.');};});
+['report-side'].forEach(i=>{const b=document.getElementById(i);if(b)b.onclick=()=>{const r=document.getElementById('rp-btn');if(r)r.click();else status('Report tool is still loading, try again in a moment.');};});
