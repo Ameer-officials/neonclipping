@@ -78,3 +78,35 @@ class PyAvShimTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class QuietCaptionTests(unittest.TestCase):
+    def test_line_hides_during_long_pause_inside_group(self):
+        import tempfile, captions
+        words = [{'start': 0.0, 'end': 0.4, 'text': 'hello'}, {'start': 6.0, 'end': 6.4, 'text': 'again'}]
+        with tempfile.TemporaryDirectory() as d:
+            ass, _ = captions.write(words, 'clean', Path(d), 'x') if False else (None, None)
+            captions.write(words, 'clean', Path(d), 'x', anim='one_by_one')
+            text = (Path(d) / 'x.ass').read_text(encoding='utf-8')
+        lines = [l for l in text.splitlines() if l.startswith('Dialogue')]
+        ends = []
+        for l in lines:
+            h, m, s = l.split(',')[2].split(':'); ends.append(int(h) * 3600 + int(m) * 60 + float(s))
+        self.assertTrue(any(e < 2.0 for e in ends), 'first word must disappear long before the next word at 6 s')
+
+
+class FadeAndEncoderTests(unittest.TestCase):
+    def test_fade_validation(self):
+        self.assertFalse(hooks.fade_on({}))
+        self.assertTrue(hooks.fade_on({'fade_inout': True}))
+        with self.assertRaises(ValueError):
+            hooks.settings({'fade_inout': 'yes'})
+
+    def test_encoder_order_lists_amd_and_intel(self):
+        import encoders, os
+        os.environ['NEONCLIPPING_ENCODER'] = 'amf'
+        try:
+            names = [e[1] for e in encoders.h264()]
+        finally:
+            del os.environ['NEONCLIPPING_ENCODER']
+        self.assertEqual(names[-1], 'libx264')       # CPU always last, so a missing GPU never breaks export

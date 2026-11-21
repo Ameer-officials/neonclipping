@@ -99,7 +99,23 @@ def attach(app,DATA,state,probe):
         if window:
             from yt_dlp.utils import download_range_func
             options['download_ranges']=download_range_func(None,[tuple(window)])
-        with ytdl.YDL(options) as downloader:downloader.download([url])
+        beat={'t':time.monotonic(),'on':True,'pause':bool(window)}      # a ranged download is done by ffmpeg and reports no progress
+        _progress=progress
+        def progress(event):
+            beat['t']=time.monotonic()
+            if not window:beat['pause']=event.get('status')=='finished'      # merging a finished stream is not a stall
+            _progress(event)
+        options['progress_hooks']=[progress]
+        def watchdog():
+            while beat['on']:
+                time.sleep(5);idle=time.monotonic()-beat['t']
+                if beat['on'] and not beat['pause'] and idle>=45 and job in state:
+                    msg=f'No data received for {int(idle)} s. The network or YouTube may be blocking this download. Wait, try again, or upload the MP4 instead.'
+                    state[job].update(message=msg,stage=msg)
+        threading.Thread(target=watchdog,daemon=True).start()
+        try:
+            with ytdl.YDL(options) as downloader:downloader.download([url])
+        finally:beat['on']=False
         src=next((p for p in directory.iterdir() if p.suffix in ('.mp4','.mkv','.webm')),None)
         if src is None:raise RuntimeError('Download produced no playable file. Upload the original MP4 instead.')
         if src.suffix=='.mp4':shutil.move(str(src),str(target))

@@ -1,6 +1,12 @@
 """Readable opening headings on bright gameplay, blur and facecam layouts."""
 import math
-KEYS=('hook_duration','hook_background','hook_enabled')
+KEYS=('hook_duration','hook_background','hook_enabled','fade_inout')
+def fade_on(body):
+    """Optional 0.3 s fade in/out of picture and sound."""
+    value=body.get('fade_inout',False)
+    if value is None:return False
+    if not isinstance(value,bool):raise ValueError('Fade in/out must be on or off.')
+    return value
 def enabled(body):
     """Opening heading on (default) or off. Off means no heading text, no backing box and no local-model call."""
     value=body.get('hook_enabled',True)
@@ -10,7 +16,7 @@ def enabled(body):
 def settings(body):
     value=body.get('hook_duration',8);duration=float(8 if value in (None,'') else value)
     if not math.isfinite(duration) or not 2<=duration<=60:raise ValueError('Hook duration must be 2–60 seconds.')
-    enabled(body)
+    enabled(body);fade_on(body)
     background=body.get('hook_background',True)
     if not isinstance(background,bool):raise ValueError('Hook background must be on or off.')
     return duration,background
