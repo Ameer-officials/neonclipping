@@ -10,6 +10,22 @@ NeonClipping turns long YouTube / Twitch / Kick videos (or your own MP4) into ve
 
 **Made by [Ajay K Meena](https://www.instagram.com/iamajmeena/)** (Director, DOP, colorist, DaVinci Resolve educator, Jaipur). If NeonClipping saves you time, please ⭐ star the repo and follow [@iamajmeena](https://www.instagram.com/iamajmeena/) on Instagram.
 
+**Clip an 85-minute stream in 97 seconds, 100% locally, with zero API cost.** (measured, see [How it finds good moments](#how-it-finds-good-moments))
+
+### NeonClipping compared with other clippers
+
+| | **NeonClipping** | OpusClip (cloud) | Docker-based self-hosted clippers (SupoClip, OpenShorts, Reelsaw) |
+|---|---|---|---|
+| Where it runs | Your PC, nothing uploaded | Their servers | Your machine or server |
+| Cost | Free, no account, no credits | Subscription / credits | Free (some need an LLM API key or Docker setup) |
+| Install | One `.bat` on Windows, `install.sh` on Mac/Linux, no Docker | None (web) | Docker |
+| YouTube + Twitch + Kick links | Yes | Yes | Mostly YouTube |
+| Very long streams | Audio-first (79 MB for 85 min); 24 h video: pick the part, never downloads all | Upload limits apply | Often limited by length or disk |
+| Gaming layouts (facecam + gameplay) | 11 layouts, automatic facecam finder | Limited | Varies |
+| Live stream clipping | Yes, chat-spike based, phone remote | No | Rarely |
+| Download quality | 1080p default, 4K option beside Get preview | n/a | Varies |
+| Captions | 5 styles, 52 languages, Hinglish, on/off, quiet-part aware | Templates | Varies |
+
 ![demo](docs/demo.gif)
 
 ![UI](docs/neonclipping-ui.jpg)
