@@ -94,7 +94,7 @@ Run the portable regression tests with `python -m unittest discover -s tests -v`
 
 **Easiest (Windows):** download [`NeonClipping-Setup.bat`](https://github.com/iamajmeena/neonclipping/releases/latest/download/NeonClipping-Setup.bat) from the [website](https://iamajmeena.github.io/neonclipping/) or the Releases page and double-click it. It checks your PC, installs Python and FFmpeg if missing, installs NeonClipping into `%LOCALAPPDATA%\NeonClipping`, creates a Desktop shortcut and opens the app. Mac/Linux: `install.sh` (new, not yet tested on a real Mac). Or follow the steps below.
 
-Requirements: Python 3.10+, FFmpeg on PATH. Optional but recommended: [Ollama](https://ollama.com) with `ollama pull llama3.2:3b` for AI titles, hooks and scores (without it clips are picked by the audio/motion score), and an NVIDIA GPU for NVENC and faster-whisper.
+Requirements: Python 3.10 to 3.13 (the newest Python often has no wheels for the speech/vision packages yet; the Mac/Linux installer picks a supported one for you), FFmpeg on PATH. Optional but recommended: [Ollama](https://ollama.com) with `ollama pull llama3.2:3b` for AI titles, hooks and scores (without it clips are picked by the audio/motion score), and an NVIDIA GPU for NVENC and faster-whisper.
 
 ```bash
 git clone https://github.com/iamajmeena/neonclipping
