@@ -119,6 +119,14 @@ try {
         $ffbin = $ownFf; Ok "FFmpeg install ho gaya."
     }
 
+    # ---- 2b. a JavaScript runtime: YouTube hides some video qualities and can block downloads without one (best effort)
+    if (-not (Get-Command deno -ErrorAction SilentlyContinue) -and -not (Get-Command node -ErrorAction SilentlyContinue)) {
+        if (Get-Command winget -ErrorAction SilentlyContinue) {
+            Say "Deno (YouTube ke liye chhota JavaScript runtime) install kar raha hoon..."
+            try { & winget install -e --id DenoLand.Deno --scope user --silent --accept-package-agreements --accept-source-agreements | Out-Null; Refresh-Path } catch { Warn "Deno install nahi hua (koi baat nahi, kuch videos ki quality kam mil sakti hai)." }
+        } else { Warn "winget nahi hai: agar YouTube quality kam aaye to deno.com se Deno install karo." }
+    }
+
     # ---- 3. the app
     Step "Step 4/6 - NeonClipping app laa raha hoon"
     $app = Join-Path $InstallDir 'app'

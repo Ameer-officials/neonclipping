@@ -41,3 +41,16 @@ class LivenessTests(unittest.TestCase):
         self.assertFalse(fd.is_live(0.0))
         self.assertFalse(fd.is_live(0.2))
         self.assertTrue(fd.is_live(1.5))
+
+
+class JsRuntimeTests(unittest.TestCase):
+    def test_node_and_deno_are_allowed_when_installed(self):
+        import ytdl
+        from unittest import mock
+        with mock.patch('shutil.which', lambda n: '/x/' + n if n == 'node' else None):
+            self.assertEqual(ytdl.js_runtimes(), {'node': {}})
+            opts = [o for o, d in ytdl.variants({'quiet': True})]
+            self.assertTrue(all(o.get('js_runtimes') == {'node': {}} for o in opts))
+        with mock.patch('shutil.which', lambda n: None):
+            self.assertEqual(ytdl.js_runtimes(), {})
+            self.assertTrue(all('js_runtimes' not in o for o, d in ytdl.variants({'quiet': True})))
