@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# NeonClipping installer for macOS and Linux (NEW, not yet tested on a real Mac).
+# NeonClipping installer for macOS and Linux.
+# Checked automatically on macOS and Ubuntu machines (GitHub Actions: Actions tab). The maintainer has not run it on his own Mac yet.
 # Needs: python3 (3.10+), ffmpeg, curl, unzip. It does not install system packages for you: it tells you what is missing.
 # Everything goes into ~/NeonClipping. Delete that folder to uninstall.
 set -e
@@ -51,5 +52,6 @@ echo "SETUP COMPLETE."
 echo "Start NeonClipping:  $DIR/start.sh    (then open http://127.0.0.1:8770)"
 echo "Use: 1) paste a video link  2) press 'Make clips'  3) preview and 'Download MP4'."
 echo "Optional: install Ollama (ollama.com) and run 'ollama pull llama3.2:3b' for AI titles."
+[ "${NEONCLIPPING_NO_START:-0}" = "1" ] && exit 0    # used by the automatic check: install only
 echo "Starting now..."
 exec "$DIR/start.sh"

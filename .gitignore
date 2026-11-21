@@ -53,3 +53,7 @@ __pycache__/
 !tools/
 !tools/report-worker/
 !tools/report-worker/*
+
+!.gitattributes
+!.github/workflows/
+!.github/workflows/*

@@ -5,6 +5,8 @@ import time
 import os
 import ytdl      # first: keeps yt-dlp fresh before it is imported, and handles YouTube's bot check
 import report    # local error log + "Report a problem"
+import encoders  # picks NVENC / VideoToolbox / x264 by what works on this computer
+import languages
 import yt_dlp
 from standalone import attach, source_height, source_format, quality_label
 from fastapi import FastAPI, UploadFile, File, HTTPException
@@ -89,7 +91,7 @@ def caption_job(b:dict):
  id,src,m,start,end=source_range(b);job=uuid.uuid4().hex
  state[job]={'status':'running','message':'Starting local captions'}
  language=b.get('language') or None
- if language not in (None,'hi','en','hinglish'):raise HTTPException(400,'Choose Auto, Hinglish, Hindi or English.')
+ if not languages.valid(language):raise HTTPException(400,'Choose Auto, Hinglish or a language from the list.')
  def work():
   try:
    result=transcribe(src,start,end,DATA,lambda msg:state[job].update(message=msg),language)
@@ -152,7 +154,7 @@ def export(b:dict):
    state[job].update(message='Rendering vertical clip with '+style+' captions' if words else 'Rendering vertical clip')
    base=['ffmpeg','-y','-v','error','-ss',str(start),'-t',str(end-start),'-i',str(src),*(plan.inputs if plan else []),'-filter_complex',fc,'-map','[v]','-map',amap or '0:a?','-t',str(dur),'-c:a','aac','-b:a','160k','-movflags','+faststart']
    if fps:base+=['-r',str(fps),'-fps_mode','cfr']
-   for encoder in [['-c:v','h264_nvenc','-preset','p5','-cq','20'],['-c:v','libx264','-crf','20','-preset','fast']]:
+   for encoder in encoders.h264(cq=20,x264_preset='fast',nv_preset='p5'):
     r=subprocess.run(base+encoder+['-pix_fmt','yuv420p',str(out)],capture_output=True,text=True,cwd=str(DATA))
     if r.returncode==0:break
    if r.returncode:raise RuntimeError(r.stderr[-900:])
@@ -161,6 +163,8 @@ def export(b:dict):
    state[job]=finished
   except Exception as e:state[job]={'status':'error','error':str(e)}
  threading.Thread(target=work,daemon=True).start();return {'job':job}
+try:LIVE_AUTO_HOURS=max(.25,float(os.environ.get('NEONCLIPPING_LIVE_AUTO_HOURS','3')))   # unattended creator-watch sessions stop after this many hours
+except ValueError:LIVE_AUTO_HOURS=3.0
 PAD=4.0         # seconds fetched before a section: yt-dlp cuts on a keyframe, export trims exactly
 FAST_OVER=600   # seconds: longer videos go audio-first, short ones are downloaded whole
 def _yt(opts):
@@ -226,6 +230,7 @@ def make(b:dict):
  except ValueError as error:raise HTTPException(400,str(error))
  acc='best' if b.get('accurate')=='best' else 'fast'     # the turbo/"accurate" local model was removed: its captions were worse than YouTube's. Only Best Hindi (large-v3) uses a local model on purpose.
  layout=b.get('layout','blur');style=b.get('caption_style','gta');language=b.get('language') or None
+ if not languages.valid(language):raise HTTPException(400,'Choose Auto, Hinglish or a language from the list.')
  from translit import to_hinglish
  top_h=b.get('top');cam=b.get('cam') or {'x':0,'y':0,'w':.25,'h':.3};game=b.get('game') or {'x':.25,'y':0,'w':.75,'h':1}
  job=uuid.uuid4().hex;save(job,{'id':job,'status':'running','stage':'Starting','progress':0,'clips':[],'source':{'url':url}})
@@ -392,7 +397,7 @@ def live_render(sess,start,dur,why,chat_feature):
  o=sess.opts;name=uuid.uuid4().hex;out=DATA/(name+'.mp4');T={};_t=time.time()
  def lap(k):
   nonlocal _t;T[k]=round(time.time()-_t,1);_t=time.time()
- for enc in (['-c:v','h264_nvenc','-preset','p4','-cq','21'],['-c:v','libx264','-preset','veryfast','-crf','21']):
+ for enc in encoders.h264(cq=21,x264_preset='veryfast',nv_preset='p4'):
   r=subprocess.run(['ffmpeg','-y','-v','error','-ss',f'{start:.2f}','-i',str(sess.rec),'-t',f'{dur:.2f}',*enc,'-c:a','aac','-b:a','160k',str(out)],capture_output=True,text=True)
   if r.returncode==0 and out.exists() and out.stat().st_size>10000:break
  else:raise RuntimeError('Could not cut the clip from the recording: '+r.stderr[-150:])
@@ -443,7 +448,7 @@ def start_live(target,opts,creator=None,before=24,after=14):
  for s_ in LIVE.values():
   if s_.state['status'] in ('starting','recording'):raise RuntimeError('A live session is already running. Stop it first.')
  sess=live_session.LiveSession(target,DATA,live_render,before,after)
- sess.creator=creator;sess.auto=bool(creator);sess.max_seconds=3*3600 if creator else None
+ sess.creator=creator;sess.auto=bool(creator);sess.max_seconds=LIVE_AUTO_HOURS*3600 if creator else None
  sess.opts={'layout':opts.get('layout','blur'),'caption_style':opts.get('caption_style','gta'),'language':opts.get('language') or None,
             'cam':opts.get('cam') or {'x':0,'y':0,'w':.25,'h':.3},'game':opts.get('game') or {'x':.25,'y':0,'w':.75,'h':1},
             'aspect':opts.get('aspect','vertical'),'resolution':opts.get('resolution',1080),'fps':opts.get('fps',0),'top':opts.get('top') if isinstance(opts.get('top'),(int,float)) else .32,'creator':creator,

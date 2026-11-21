@@ -67,6 +67,8 @@ Every candidate moment is scored from several signals, then the best ones are ke
 - **Moment mix:** Balanced combines activity and transcript-led proposals; Action favours energy; Dialogue favours story, humour and insights. Final selection reduces overlapping and repetitive moments. Balanced/Dialogue prefer an already-installed Gemma 4 local judge; other local models remain a fallback. This changes curation rules and prompts, not foundation-model weights.
 - **Custom captions:** installed font family, size, text/active/outline colours, words per caption and local saved profiles. Import SRT/ASS/WebVTT or paste subtitle text, adjust word timings, split/merge and shift captions. Within-cue word timings from imported files are estimated. Download WebVTT alongside SRT.
 - **Transcript explorer:** explicitly generate or import a full-source transcript, search phrases across cues, browse pages, and click the first/last word to export that passage. Cached transcripts are reused by Make clips and invalidated when the source changes.
+- **Trim a saved clip:** in *Edit saved clips*, change Start / End and press *Only this clip*; the clip is cut again from the saved video and the subtitles move with the cut (3 to 180 s, within the saved video).
+- **52 caption languages** in the Language menu, see Honest limits for caveats.
 - **Hinglish captions**: Hindi speech is written in English letters ("kya haal hai bhai") by default. Pick Hinglish / हिंदी / English explicitly if you like. Fast uses available source captions; Best Hindi explicitly uses local large-v3 recognition and can be slower on small GPUs. Missing source captions require local recognition.
 - **Make clips uses your own setup**: facecam preset or the boxes you draw in step 03.
 - Optical-flow motion + audio highlight ranking, frame-accurate NVENC export (falls back to x264).
@@ -112,6 +114,10 @@ Optional GPU speech model support (only used when a video has no YouTube caption
 ```
 
 Set `NEONCLIPPING_CPU=1` to force CPU. Set `NEONCLIPPING_PORT=9000` to use another port.
+
+**Mac / Linux / no NVIDIA GPU:** the video encoder is chosen by what works on your computer: NVIDIA NVENC, then Apple VideoToolbox, then the CPU encoder (x264). Force one with `NEONCLIPPING_ENCODER=nvenc|videotoolbox|x264`. The speech model skips the GPU attempt when no CUDA GPU exists and runs on the CPU. `install.sh` and the unit tests run automatically on macOS, Ubuntu and Windows machines for every change (see the *Actions* tab); the maintainer has not yet tried the Mac installer on his own Mac, so tell us if it misbehaves (Report a problem).
+
+**Settings (environment variables):** `NEONCLIPPING_LIVE_AUTO_HOURS` (default 3) and `NEONCLIPPING_MIN_FREE_GB` (default 8) control the unattended creator-watch live sessions; a manual Live clipping session has no time cap and no disk guard.
 
 ## How it is built
 
@@ -241,6 +247,9 @@ Cookies are only read when you set one of the options above; NeonClipping never 
 - Without YouTube captions (Twitch VODs, uploaded files) a speech model must transcribe each candidate, which is slow on CPU.
 - Auto-caption accuracy follows the source: YouTube's auto captions are imperfect, especially Hinglish.
 - Deep mode was verified on a short video only; on multi-hour videos it downloads the whole file first and is slow by design.
+- **Live clipping:** one live session at a time, and the computer must stay awake and online while it records. Unattended creator-watch sessions stop after 3 hours or when less than 8 GB of disk is free (both configurable above); a manual session does not.
+- **No auto-posting or scheduling.** NeonClipping exports the MP4 and SRT to your computer and stops there on purpose: posting to Instagram/YouTube/TikTok needs your accounts and approved API access, which would break "no account, nothing leaves your computer". Upload with the platform's own app or a scheduler you trust.
+- **Caption languages:** Hinglish, Hindi, English and 50 more (Whisper). Accuracy is best for widely spoken languages. Captions are drawn with fonts installed on your computer, so scripts without a font may show empty boxes, and right-to-left languages (Arabic, Persian, Hebrew, Urdu) have basic support only. When YouTube provides captions in the spoken language they are used instead of the speech model.
 - Facecam presets are starting points, not detection: if you pick Bottom-right but the cam is bottom-left, the top half of the clip will show the wrong area. Pick the right corner or draw your own boxes.
 
 ## Support

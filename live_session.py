@@ -5,6 +5,7 @@ Pattern used by the live clippers (heistclips, Claude Clipper, stream-clipper): 
 Chat is read anonymously (Twitch IRC, no login; YouTube Live via pytchat). Recording uses Streamlink.
 """
 import collections
+import os
 import re
 import shutil
 import socket
@@ -22,7 +23,8 @@ SIGMA = 2.5        # spike = mean + SIGMA * stdev ...
 RATIO = 2.5        # ... and at least RATIO x the baseline mean
 MIN_MSGS = 8       # ... and at least this many messages in the bucket
 COOLDOWN = 60      # seconds between two automatic clips
-MIN_FREE_GB = 8    # an unattended (auto) session stops when the disk has less free space than this
+try:MIN_FREE_GB = float(os.environ.get('NEONCLIPPING_MIN_FREE_GB', '8'))   # an unattended (auto) session stops below this much free disk space
+except ValueError:MIN_FREE_GB = 8.0
 
 
 def parse_target(text):
