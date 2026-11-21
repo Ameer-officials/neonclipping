@@ -580,6 +580,18 @@ def report_send(b:dict):
 def report_log(b:dict):
  """The page reports errors it caught itself (a request that failed)."""
  report.log_error(str(b.get('stage') or 'page')[:80],str(b.get('error') or '')[:700]);return {'ok':True}
+@app.get('/update/status')
+def update_status():
+ import updater
+ busy=any(row.get('status') in ('running','queued','starting','recording') for row in list(state.values()))
+ return updater.status(ROOT,busy)
+@app.post('/update/apply')
+def update_apply():
+ import updater
+ ok,msg=updater.apply(ROOT,lambda:any(row.get('status') in ('running','queued','starting','recording') for row in list(state.values())))
+ if not ok:raise HTTPException(409,msg)
+ return {'ok':True,'message':msg}
+
 @app.get('/runtime')
 def runtime():
  return {'active':[{'id':job,'status':row.get('status'),'stage':row.get('stage') or row.get('message','')} for job,row in list(state.items()) if row.get('status') in ('running','queued','starting','recording')]}

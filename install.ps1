@@ -136,6 +136,12 @@ try {
         Remove-Item $zip, $tmp -Recurse -Force -ErrorAction SilentlyContinue
     }
     if (-not (Test-Path (Join-Path $app 'app.py'))) { throw "App files nahi mile (app.py missing). Internet check karo." }
+    try {
+        $sha = (Invoke-WebRequest -UseBasicParsing -Uri 'https://api.github.com/repos/iamajmeena/neonclipping/commits/main' -Headers @{ Accept = 'application/vnd.github.sha'; 'User-Agent' = 'NeonClipping-installer' } -TimeoutSec 10).Content
+        if ($sha -is [byte[]]) { $sha = [Text.Encoding]::ASCII.GetString($sha) }
+        $sha = ([string]$sha).Trim()
+        if ($sha.Length -eq 40) { Set-Content -Path (Join-Path $app '.neon_version') -Value $sha -Encoding ASCII -NoNewline }
+    } catch {}
     Ok "App files: $app"
 
     # ---- 4. private python environment
