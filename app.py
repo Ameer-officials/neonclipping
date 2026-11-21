@@ -3,7 +3,8 @@ import json, subprocess, uuid, threading, shutil
 import sys
 import time
 import os
-import ytdl      # first: keeps yt-dlp fresh before it is imported, and handles YouTube's bot check
+import compat    # first: PyAV 19 shim and a portable FFmpeg when none is installed
+import ytdl      # then: keeps yt-dlp fresh before it is imported, and handles YouTube's bot check
 import report    # local error log + "Report a problem"
 import encoders  # picks NVENC / VideoToolbox / x264 by what works on this computer
 import languages
@@ -155,7 +156,10 @@ def export(b:dict):
    base=['ffmpeg','-y','-v','error','-ss',str(start),'-t',str(end-start),'-i',str(src),*(plan.inputs if plan else []),'-filter_complex',fc,'-map','[v]','-map',amap or '0:a?','-t',str(dur),'-c:a','aac','-b:a','160k','-movflags','+faststart']
    if fps:base+=['-r',str(fps),'-fps_mode','cfr']
    for encoder in encoders.h264(cq=20,x264_preset='fast',nv_preset='p5'):
-    r=subprocess.run(base+encoder+['-pix_fmt','yuv420p',str(out)],capture_output=True,text=True,cwd=str(DATA))
+    # NVIDIA: also decode the source on the GPU (4K VP9/AV1 on the CPU is what pinned it at 100%); retry on the CPU if that fails.
+    for hw in ((['-hwaccel','auto'],[]) if encoder[1]=='h264_nvenc' else ([],)):
+     r=subprocess.run(base[:4]+hw+base[4:]+encoder+['-pix_fmt','yuv420p',str(out)],capture_output=True,text=True,cwd=str(DATA))
+     if r.returncode==0:break
     if r.returncode==0:break
    if r.returncode:raise RuntimeError(r.stderr[-900:])
    finished={'status':'done','file':job,'meta':probe(out),'encoder':encoder[1],'caption_words':len(words),'srt':f'/text/{job}/srt' if words else None}
@@ -318,7 +322,16 @@ def make(b:dict):
     with _yt({'format':'ba[ext=m4a]/ba/worst','outtmpl':str(DATA/(job+'.audio.%(ext)s')),'progress_hooks':[hook]}) as y:y.download([url])
     p=next(f for f in DATA.glob(job+'.audio.*') if f.suffix not in ('.part','.ytdl'));duration=_dur(p);sid=job
     save(job,{'meta':{'duration':duration},'stage':'Finding moments in audio','progress':.12})
-    found,engine=ai_found(moments,yt_words,duration) if moments else find(p,duration,count,max_len,lambda f,m:save(job,{'stage':m,'progress':.12+.4*f}),language,DATA,min_len,False,yt_words,False,W,False,profile,focus_brief,include_phrases,exclude_phrases)
+    beat={'live':True,'seen':time.monotonic()}
+    def scan_report(f,m):beat['seen']=time.monotonic();save(job,{'stage':m,'progress':.12+.4*f})
+    def heartbeat():
+     t0=time.monotonic()
+     while beat['live']:
+      time.sleep(4)
+      if beat['live'] and time.monotonic()-beat['seen']>=4:save(job,{'stage':f'Finding moments in audio · working {int(time.monotonic()-t0)}s (long videos take a few minutes)'})
+    threading.Thread(target=heartbeat,daemon=True).start()
+    try:found,engine=ai_found(moments,yt_words,duration) if moments else find(p,duration,count,max_len,scan_report,language,DATA,min_len,False,yt_words,False,W,False,profile,focus_brief,include_phrases,exclude_phrases)
+    finally:beat['live']=False
     found=choose(found,lambda c:lowres_section(url,c))
     if not found:
      save(job,{'status':'done','stage':'No moments matched the transcript filters. Broaden the focus or required phrases.','progress':1,'clips':[],'elapsed_seconds':round(time.monotonic()-began,2)});return
@@ -344,7 +357,7 @@ def make(b:dict):
    done=[];cam_use,game_use,cam_checked=cam,game,not b.get('cam_auto')
    uploader=str((info.get('channel') or info.get('uploader') or '')) if url else ''
    for i,c in enumerate(found):
-    if not moments and c.get('transcript'):
+    if not moments and c.get('transcript') and b.get('hook_enabled') is not False:
      try:
       import smart
       model=smart._model(profile!='action' or mode=='deep')

@@ -1,0 +1,80 @@
+"""Long-video range import, 1080p selector, opening-heading toggle, PyAV 19 shim."""
+import sys, types, unittest
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import standalone, hooks
+
+
+class RangeTests(unittest.TestCase):
+    def test_no_range(self):
+        self.assertIsNone(standalone.parse_range({}))
+        self.assertIsNone(standalone.parse_range({'start': '', 'end': None}))
+
+    def test_valid_range(self):
+        self.assertEqual(standalone.parse_range({'start': 60, 'end': '120'}), (60.0, 120.0))
+        self.assertEqual(standalone.parse_range({'end': 30}), (0.0, 30.0))
+
+    def test_bad_ranges(self):
+        for body in ({'start': 10, 'end': 5}, {'start': -1, 'end': 5}, {'start': 0, 'end': standalone.MAX_RANGE + 1},
+                     {'start': 'x', 'end': 4}, {'start': 0, 'end': float('nan')}):
+            with self.assertRaises(ValueError):
+                standalone.parse_range(body)
+
+    def test_toolong_message(self):
+        e = standalone.TooLong(86400, 'x')
+        self.assertIn('24.0 hours', str(e))
+        self.assertGreater(86400, standalone.LONG_SECONDS)
+
+
+class FormatTests(unittest.TestCase):
+    def test_no_early_progressive_fallback(self):
+        # A ready-made mp4 (progressive) tops out at 720p, so it must never be chosen before video+audio.
+        for h in (720, 1080, 1440, 2160):
+            f = standalone.source_format(h)
+            self.assertNotIn('[ext=mp4]/', f.replace('ba[ext=m4a]', ''))
+            self.assertTrue(f.split('/')[0].startswith('bv*'))
+            self.assertIn(f'height<={h}', f)
+
+
+class HookToggleTests(unittest.TestCase):
+    LINES = ['HELLO WORLD']
+
+    def test_default_on(self):
+        self.assertTrue(hooks.enabled({}))
+        self.assertTrue(hooks.events(self.LINES, 1080, 1920, 300, 1, {}))
+
+    def test_off_gives_no_events(self):
+        self.assertEqual(hooks.events(self.LINES, 1080, 1920, 300, 1, {'hook_enabled': False}), [])
+
+    def test_validation(self):
+        self.assertIn('hook_enabled', hooks.KEYS)
+        with self.assertRaises(ValueError):
+            hooks.settings({'hook_enabled': 'no'})
+        self.assertEqual(hooks.settings({'hook_enabled': False})[0], 8.0)
+
+
+class PyAvShimTests(unittest.TestCase):
+    def test_metadata_errors_is_dropped(self):
+        import compat
+        fake = types.ModuleType('av')
+        calls = []
+        def old_open(file, mode='r', **kw):
+            if 'metadata_errors' in kw:
+                raise TypeError("open() got an unexpected keyword argument 'metadata_errors'")
+            calls.append(kw); return 'container'
+        fake.open = old_open
+        saved = sys.modules.get('av'); sys.modules['av'] = fake
+        try:
+            self.assertTrue(compat.patch_pyav())
+            self.assertEqual(fake.open('a.mp3', metadata_errors='ignore', timeout=3), 'container')
+            self.assertEqual(calls, [{'timeout': 3}])
+            self.assertFalse(compat.patch_pyav())      # idempotent
+            with self.assertRaises(TypeError):         # other TypeErrors are not hidden
+                fake.open('a', bogus=1) if False else (_ for _ in ()).throw(TypeError('other'))
+        finally:
+            if saved is None: del sys.modules['av']
+            else: sys.modules['av'] = saved
+
+
+if __name__ == '__main__':
+    unittest.main()

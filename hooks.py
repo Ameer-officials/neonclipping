@@ -1,9 +1,16 @@
 """Readable opening headings on bright gameplay, blur and facecam layouts."""
 import math
-KEYS=('hook_duration','hook_background')
+KEYS=('hook_duration','hook_background','hook_enabled')
+def enabled(body):
+    """Opening heading on (default) or off. Off means no heading text, no backing box and no local-model call."""
+    value=body.get('hook_enabled',True)
+    if value is None:return True
+    if not isinstance(value,bool):raise ValueError('Opening heading must be on or off.')
+    return value
 def settings(body):
     value=body.get('hook_duration',8);duration=float(8 if value in (None,'') else value)
     if not math.isfinite(duration) or not 2<=duration<=60:raise ValueError('Hook duration must be 2–60 seconds.')
+    enabled(body)
     background=body.get('hook_background',True)
     if not isinstance(background,bool):raise ValueError('Hook background must be on or off.')
     return duration,background
@@ -11,6 +18,7 @@ def settings(body):
 def events(lines,width,height,y,scale,body):
     """ASS background + text, separate layers; no alteration of the source footage."""
     from captions import BS,stamp,safe
+    if not enabled(body):return []
     duration,background=settings(body)
     size=round((78 if len(lines)==1 else 72 if len(lines)==2 else 66)*scale)
     pad=max(8,round(26*scale));line_height=round(size*1.22)

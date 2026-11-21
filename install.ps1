@@ -31,7 +31,7 @@ function Refresh-Path {
     $env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User')
 }
 function Real-Python {
-    # a working python 3.10+ that is NOT the Microsoft Store stub
+    # a working python 3.10 to 3.13 (3.14+ has no wheels for some packages yet) that is NOT the Microsoft Store stub
     $cands = @()
     foreach ($n in @('python', 'python3')) {
         $c = Get-Command $n -ErrorAction SilentlyContinue
@@ -42,7 +42,7 @@ function Real-Python {
     foreach ($p in $cands) {
         try {
             $v = & $p -c "import sys;print('%d.%d' % sys.version_info[:2])" 2>$null
-            if ($LASTEXITCODE -eq 0 -and [version]$v -ge [version]'3.10') { return $p }
+            if ($LASTEXITCODE -eq 0 -and [version]$v -ge [version]'3.10' -and [version]$v -lt [version]'3.14') { return $p }
         } catch {}
     }
     return $null
@@ -146,7 +146,14 @@ try {
     & $venvPy -m pip install -r (Join-Path $app 'requirements.txt') --quiet
     if ($LASTEXITCODE -ne 0) { throw "Packages install fail hue. Internet check karo aur dobara chalao (ye file safe hai, dobara chalane se bas jo bacha hai wahi hoga)." }
     & $venvPy -c "import fastapi, uvicorn, yt_dlp, numpy, cv2, faster_whisper, PIL; print('imports ok')"
-    if ($LASTEXITCODE -ne 0) { throw "Packages import nahi ho rahe." }
+    if ($LASTEXITCODE -ne 0) {
+        # most common cause: the Microsoft Visual C++ runtime is missing (ctranslate2.dll could not be loaded)
+        Warn "Packages import nahi hue. Microsoft Visual C++ runtime install karke dobara try kar raha hoon..."
+        if (Get-Command winget -ErrorAction SilentlyContinue) { & winget install -e --id Microsoft.VCRedist.2015+.x64 --silent --accept-package-agreements --accept-source-agreements | Out-Null }
+        else { $vc = Join-Path $env:TEMP 'vc_redist.x64.exe'; Download 'https://aka.ms/vs/17/release/vc_redist.x64.exe' $vc; Start-Process $vc -ArgumentList '/install','/quiet','/norestart' -Wait }
+        & $venvPy -c "import fastapi, uvicorn, yt_dlp, numpy, cv2, faster_whisper, PIL; print('imports ok')"
+        if ($LASTEXITCODE -ne 0) { throw "Packages import nahi ho rahe. Windows restart karke setup dobara chalao; phir bhi na chale to install.log GitHub issue me daalo." }
+    }
     Ok "Packages ready."
 
     # ---- optional extras
