@@ -289,3 +289,9 @@ MIT. See [LICENSE](LICENSE).
 - **Fixes for reported install problems:** PyAV 19 (`metadata_errors`) shim and `av<19` pin, portable FFmpeg fallback and an on-screen warning when FFmpeg is missing, Windows installer uses Python 3.10 to 3.13 and installs the Visual C++ runtime when `ctranslate2.dll` cannot load, a live "working…" line while long audio is scanned.
 - **Report a problem** is now also in the sidebar and header.
 - On NVIDIA PCs the source is also decoded on the GPU (NVDEC), with automatic fallback to the CPU. Task Manager shows this under *Video Encode / Video Decode*, not under *3D*.
+
+## Updating
+
+NeonClipping now updates itself. When a new version is on GitHub, a green banner appears at the top of the page; press **Update now**, or leave it and it updates automatically after a short countdown when nothing is running. Your clips, settings and downloaded models are kept, one backup of the replaced files stays in `.update-backup/`, and the app restarts by itself.
+
+If you installed an older version, run `NeonClipping-Setup.bat` once more to get this feature. After that no re-install is needed. A git checkout is never touched by the updater (use `git pull`).
