@@ -11,6 +11,7 @@ from captions import transcribe
 SCOUT_MODEL='base'     # deep mode overrides with a stronger model
 _=0   # fast reading of candidates; final captions use a better model
 OLLAMA='http://127.0.0.1:11434'
+import llm      # optional cloud model (OpenAI-compatible); Ollama stays the default
 HOOK_RULES=('Write the opening hook like a top short-form creator: it must stop the scroll in one second. '
             'Pick the formula that fits THIS moment: (1) curiosity gap ("He did THIS and nobody saw it coming"), '
             '(2) hot take: frame the speaker\'s real opinion as a bold claim ("This is why X is overrated"), (3) mistake warning ("Stop doing X"), '
@@ -36,6 +37,8 @@ PROMPT=('You are selecting complete, interesting short video moments. Loudness a
         'Reply ONLY with JSON: {{"score":1-10,"kind":"action|reaction|humour|story|opinion|insight|other","title":"specific max 7 words","hook":"specific 5–9 words","evidence":"short verbatim quote"}}')
 
 def _model(quality=False):
+    cloud=llm.model_name()
+    if cloud:return cloud          # the user switched Cloud AI on: it replaces Ollama
     try:
         tags=json.load(urllib.request.urlopen(OLLAMA+'/api/tags',timeout=3))['models']
         names=[m['name'] for m in tags]
@@ -61,9 +64,7 @@ def _payload(model,prompt,budget=250,temperature=.25):
 def _judge(model,text,brief=''):
     focus=('\nTRANSCRIPT FOCUS: '+brief+'\nAlso return focus_match from 0 to 1 for relevance to this focus. Judge what is actually stated, not visual events you cannot see.') if brief else ''
     payload=_payload(model,PROMPT.format(t=text[:3500])+focus)
-    body=json.dumps(payload).encode()
-    req=urllib.request.Request(OLLAMA+'/api/generate',body,{'Content-Type':'application/json'})
-    out=json.loads(json.load(urllib.request.urlopen(req,timeout=90))['response'])
+    out=llm.parse_json(llm.complete(model,payload))
     score=float(out.get('score',5));score=max(1,min(10,score)) if np.isfinite(score) else 5
     hook=str(out.get('hook','')).strip()[:80];evidence=str(out.get('evidence','')).strip()
     clip_text=text.split('[CLIP]',1)[-1].split('[after]',1)[0].strip()
@@ -90,8 +91,7 @@ def _heading(model,text):
             '"The keys were in his pocket?!", "Why removing sound made the cut stronger". '
             'Return JSON with hook and evidence (an exact quote from this clip).\nCLIP:\n'+text[:3500])
     payload=_payload(model,prompt,180,.4)
-    req=urllib.request.Request(OLLAMA+'/api/generate',json.dumps(payload).encode(),{'Content-Type':'application/json'})
-    result=json.loads(json.load(urllib.request.urlopen(req,timeout=90))['response'])
+    result=llm.parse_json(llm.complete(model,payload))
     hook=str(result.get('hook','')).strip()[:80];evidence=str(result.get('evidence','')).strip()
     normalize=lambda value:' '.join(value.casefold().split())
     numbers=set(__import__('re').findall(r'\d+(?:[.,]\d+)?',hook))

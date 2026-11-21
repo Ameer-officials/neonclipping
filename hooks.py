@@ -124,4 +124,4 @@ def attach(app):
         model=smart._model(True)
         if not model:return {'hook':curation.extract_hook(text),'model':None,'evidence':'Extracted from the supplied transcript'}
         try:return {'hook':smart._heading(model,text),'model':model}
-        except Exception as error:raise HTTPException(503,'Local heading model failed. '+str(error)[-160:])
+        except Exception as error:raise HTTPException(503,'The AI model failed. '+str(error)[-160:])

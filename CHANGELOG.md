@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-11-22
+- **Cloud AI (optional, off by default):** use Groq, OpenRouter, Gemini, OpenAI or LM Studio for moment scoring, titles and hooks on a slow PC. Only clip text is sent; the key stays in `data/llm.json`. Test connection button included.
 - **Heading looks:** new default **Impact** (big bold text, one accent word, pop-in, pink underline), plus **Neon glow**, **Banner bar** and the classic box. Boxes now have rounded corners.
 - **Sharper hooks and titles:** the local model is asked for scroll-stopping formulas (curiosity gap, hot take, mistake warning, secret, reaction), still grounded in what is really said in the clip; the no-model fallback is punchier.
 - **Cover image** for every clip (`Cover image` link, also inside the clips ZIP).

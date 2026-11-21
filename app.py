@@ -615,11 +615,30 @@ def readiness():
  runtimes=sorted(ytdl.js_runtimes())
  add('youtube','YouTube',bool(runtimes),'JS runtime: '+', '.join(runtimes) if runtimes else 'no JS runtime','Install Deno (winget install DenoLand.Deno) so YouTube shows every quality, then restart NeonClipping.')
  model=smart._model(False)
- add('ai','AI model',bool(model),model or 'Ollama not running (optional)','Optional: install Ollama and run: ollama pull llama3.2:3b for smarter titles and moment picking.')
+ add('ai','AI model',bool(model),(model[6:]+' (cloud)') if model and model.startswith('cloud:') else (model or 'Ollama not running (optional)'),'Optional: install Ollama and run: ollama pull llama3.2:3b for smarter titles and moment picking.')
  try:free=shutil.disk_usage(DATA).free/1024**3
  except Exception:free=0
  add('disk','Disk',free>=5,f'{free:.0f} GB free','Free some disk space (clips and downloads need several GB).')
  return {'items':items,'ok':all(i['ok'] for i in items if i['key'] in ('ffmpeg','disk'))}
+
+@app.get('/llm/settings')
+def llm_settings_get():
+ import llm
+ return llm.public()
+@app.post('/llm/settings')
+def llm_settings_set(b:dict):
+ """Cloud AI on/off, provider address, model and key. The key is stored in data/llm.json and never sent back to the page."""
+ import llm
+ try:return llm.save(bool(b.get('enabled')),b.get('base_url'),b.get('model'),b.get('api_key'))
+ except ValueError as e:raise HTTPException(400,str(e))
+@app.post('/llm/forget-key')
+def llm_forget_key():
+ import llm
+ llm.clear_key();return llm.public()
+@app.post('/llm/test')
+def llm_test():
+ import llm
+ return llm.test()
 
 @app.get('/ytdl/settings')
 def ytdl_settings_get():

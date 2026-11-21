@@ -299,3 +299,7 @@ If you installed an older version, run `NeonClipping-Setup.bat` once more to get
 ## Look and feel of the opening heading
 
 Pick **Heading look** in step 04: *Impact* (default: big bold text, one accent word, pop-in, pink underline), *Neon glow*, *Banner bar* or the classic rounded box. Every finished clip also has a **Cover image** (a sharp frame with the title) and the clips ZIP includes it. See [CHANGELOG.md](CHANGELOG.md) for everything that changed.
+
+## Cloud AI (optional)
+
+A slow PC without a GPU can use a cloud model instead of Ollama for scoring moments and writing titles and hooks. Open **Cloud AI (optional)** on the page, pick a provider (Groq, OpenRouter, Gemini, OpenAI or LM Studio), paste your key, press **Test connection**, tick **Use Cloud AI** and Save. Only the *text* of candidate clips is sent to your provider; videos, audio and frames never leave your PC. The key is stored in `data/llm.json` on your computer and is never shown again. Speech-to-text still uses YouTube's captions or the local model. Environment variables `NEONCLIPPING_LLM_BASE_URL`, `NEONCLIPPING_LLM_MODEL` and `NEONCLIPPING_LLM_KEY` also work.

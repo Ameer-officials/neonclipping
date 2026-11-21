@@ -302,3 +302,15 @@ const camReset=document.getElementById('cam-reset');if(camReset)camReset.onclick
 (async()=>{try{const r=await request('/readiness');const box=$('readiness');if(!box)return;box.replaceChildren();
  r.items.forEach(i=>{const s=document.createElement('span');s.className='rd '+(i.ok?'ok':'bad');const l=document.createElement('span');l.textContent=i.label;const b=document.createElement('b');b.textContent=(i.ok?'\u2713 ':'\u26A0 ')+i.detail;s.append(l,b);s.title=i.ok?i.detail:i.fix;if(!i.ok)s.onclick=()=>{status(i.label+': '+i.fix);};box.append(s);});
 }catch(e){}})();
+
+// Cloud AI panel (optional OpenAI-compatible provider)
+(async()=>{const q=id=>document.getElementById(id);if(!q('llm-panel'))return;let presets={};
+ const note=t=>{q('llm-note').textContent=t;};
+ const load=async()=>{try{const s=await request('/llm/settings');presets=s.presets||{};const sel=q('llm-preset');if(sel.options.length<=1)Object.entries(presets).forEach(([k,v])=>{const o=document.createElement('option');o.value=k;o.textContent=v.label;sel.append(o);});
+  q('llm-url').value=s.base_url||'';q('llm-model').value=s.model||'';q('llm-on').checked=!!s.enabled;q('llm-key').placeholder=s.has_key?'key saved (leave empty to keep it)':'paste key (kept hidden)';
+  if(s.enabled)q('llm-panel').open=true;note(s.ready?'Ready: '+s.model:(s.enabled?'Not complete: address, model and key are needed.':'Off'));}catch(e){}};
+ q('llm-preset').onchange=()=>{const p=presets[q('llm-preset').value];if(p){q('llm-url').value=p.base_url;q('llm-model').value=p.model;}};
+ q('llm-save').onclick=async()=>{try{await request('/llm/settings',{enabled:q('llm-on').checked,base_url:q('llm-url').value,model:q('llm-model').value,api_key:q('llm-key').value});q('llm-key').value='';await load();}catch(e){note(e.message);}};
+ q('llm-test').onclick=async()=>{note('Testing...');try{await request('/llm/settings',{enabled:q('llm-on').checked,base_url:q('llm-url').value,model:q('llm-model').value,api_key:q('llm-key').value});q('llm-key').value='';const r=await request('/llm/test',{});await load();note(r.ok?('Works: '+r.model+' answered in '+r.ms+' ms'):('Failed: '+r.error));}catch(e){note(e.message);}};
+ q('llm-forget').onclick=async()=>{try{await request('/llm/forget-key',{});await load();note('Key removed from this computer.');}catch(e){note(e.message);}};
+ load();})();
