@@ -3,8 +3,9 @@ import json, subprocess, uuid, threading, shutil
 import sys
 import time
 import os
+import ytdl      # first: keeps yt-dlp fresh before it is imported, and handles YouTube's bot check
 import yt_dlp
-from standalone import attach
+from standalone import attach, source_height, source_format, quality_label
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse
 import uvicorn
@@ -162,7 +163,7 @@ def export(b:dict):
 PAD=4.0         # seconds fetched before a section: yt-dlp cuts on a keyframe, export trims exactly
 FAST_OVER=600   # seconds: longer videos go audio-first, short ones are downloaded whole
 def _yt(opts):
- return yt_dlp.YoutubeDL({'noplaylist':True,'quiet':True,'no_warnings':True,'socket_timeout':20,'retries':3,'fragment_retries':3,'concurrent_fragment_downloads':6,**opts})
+ return ytdl.YDL({'noplaylist':True,'quiet':True,'no_warnings':True,'socket_timeout':20,'retries':3,'fragment_retries':3,'concurrent_fragment_downloads':6,**opts})
 def _dur(p):
  r=subprocess.run(['ffprobe','-v','error','-show_entries','format=duration','-of','csv=p=0',str(p)],capture_output=True,text=True,check=True);return float(r.stdout.strip())
 
@@ -217,6 +218,7 @@ def make(b:dict):
   if not isinstance(moments,list) or not 1<=len(moments)<=40 or not all(isinstance(m,dict) for m in moments):raise HTTPException(400,'Moments must be a list of 1 to 40 items with start and end.')
   count=min(24,len(moments))
  mode='deep' if b.get('mode')=='deep' else 'fast'
+ src_h=source_height(b.get('source_height'))     # how sharp the downloaded source is: 1080p by default, 4K or 720p on request
  profile=b.get('moment_profile','balanced')
  if profile not in curation.PROFILES:raise HTTPException(400,'Choose Balanced, Action or Dialogue moments.')
  try:focus_brief,include_phrases,exclude_phrases=curation.focus_settings(b)
@@ -319,13 +321,13 @@ def make(b:dict):
     from yt_dlp.utils import download_range_func
     def section(i,c):
      name=uuid.uuid4().hex
-     with _yt({'format':'bv*[height<=720][vcodec^=avc1]+ba[ext=m4a]/bv*[height<=720]+ba/b[height<=720]/b','merge_output_format':'mp4','outtmpl':str(DATA/(name+'.%(ext)s')),
+     with _yt({'format':source_format(src_h),'merge_output_format':'mp4','outtmpl':str(DATA/(name+'.%(ext)s')),
                'download_ranges':download_range_func(None,[(max(0,c['start']-PAD),c['end']+1)])}) as y:y.download([url])
      return name
     pool=ThreadPoolExecutor(max_workers=3);sections=[pool.submit(section,i,c) for i,c in enumerate(found)]
    else:
     if url:
-     save(job,{'stage':'Downloading source','progress':.02});sid,p=app.neon['download'](url,job)
+     save(job,{'stage':'Downloading source ('+quality_label(src_h)+')','progress':.02});sid,p=app.neon['download'](url,job,src_h)
     else:sid,p=src0.stem,src0
     meta=probe(p);duration=meta['duration'];save(job,{'source_id':sid,'meta':meta,'stage':'Finding moments','progress':.1})
     found,engine=ai_found(moments,yt_words,duration) if moments else find(p,duration,count,max_len,lambda f,m:save(job,{'stage':m,'progress':.1+.5*f}),language,DATA,min_len,True,yt_words,mode=='deep',W,False,profile,focus_brief,include_phrases,exclude_phrases)

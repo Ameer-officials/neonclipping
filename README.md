@@ -187,6 +187,38 @@ The **Find my facecam** chip (or "find it automatically when I press Make clips"
 
 **AI parts** (below step 01): paste a YouTube link, NeonClipping splits the video's captions into ~25-minute parts and gives a copy-ready prompt per part. Paste each into any free chatbot, paste all answers back (JSON or lines like `12:30-13:10 title`), tick the moments and press Make clips: only those sections are downloaded and rendered. A chatbot given a 9-hour transcript in one go only reads the start; small parts fix that. Nothing is sent anywhere by NeonClipping; the chatbot step is manual.
 
+## Source quality (1080p default, 4K optional)
+
+Under **Resolution** there is a **Source quality** menu: how sharp the video is that gets downloaded from YouTube. It used to be fixed at 720p, which made 1080p/4K exports upscaled and soft. Now:
+
+| Choice | What you get | Measured (20 s section of a 4K video) |
+|---|---|---|
+| **1080p (default)** | H.264 1920x1080 | 10 MB |
+| 4K | AV1/VP9 3840x2160, much larger, slower to decode | 70 MB |
+| 1440p | in between | |
+| 720p | fastest, smallest | 6 MB |
+
+If a video only exists at 720p on YouTube (some new uploads and low-quality sources), you get 720p whatever you choose. **Resolution** (export size) is a separate setting: for a sharp 4K export pick Source quality 4K and Resolution 2160. Imports are cached per link and re-downloaded if you later ask for a higher quality.
+
+## "Sign in to confirm you're not a bot" (YouTube bot check)
+
+Some connections get this from YouTube: shared or mobile-data internet, VPNs, office/hostel Wi-Fi, or an old downloader. NeonClipping handles it for you in this order, with no setup:
+
+1. **Keeps yt-dlp fresh.** Once a day at start-up it upgrades `yt-dlp[default]` (offline-safe). Turn off with `NEONCLIPPING_NO_AUTOUPDATE=1`.
+2. **Retries in other YouTube modes** (TV, Safari, iOS, mobile web clients) instead of failing on the first block.
+3. **Shows one short message** with the fixes below instead of a long English error.
+
+If YouTube still blocks you, pick one:
+
+| Fix | How |
+|---|---|
+| **Upload the MP4** | Use **Upload video** next to the link box. Always works. |
+| **Use your browser login** | Sign in to YouTube in Chrome (or Edge / Firefox / Brave), then start NeonClipping with `NEONCLIPPING_COOKIES_BROWSER=chrome`. PowerShell: `$env:NEONCLIPPING_COOKIES_BROWSER='chrome'; ./run.ps1`. Close the browser first if Windows says the cookie file is locked. |
+| **Use a cookies file** | Export `cookies.txt` from your browser and save it as `data/youtube_cookies.txt` (or point `NEONCLIPPING_COOKIES_FILE` at it). It stays on your computer. |
+| **Change network** | Home Wi-Fi instead of mobile data; turn the VPN off. |
+
+Cookies are only read when you set one of the options above; NeonClipping never reads your browser by itself. Use a throw-away Google account if you do not want your main one attached to automated downloads. Python 3.10 is deprecated by yt-dlp: use Python 3.11+ so updates keep arriving. Everything YouTube-related goes through [`ytdl.py`](ytdl.py).
+
 ## Honest limits
 
 - Highlight picking is a heuristic plus a small local LLM. It finds loud, energetic, quotable moments, not guaranteed "viral" ones. Review before posting.
