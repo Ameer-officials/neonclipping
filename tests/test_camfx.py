@@ -54,3 +54,37 @@ class JsRuntimeTests(unittest.TestCase):
         with mock.patch('shutil.which', lambda n: None):
             self.assertEqual(ytdl.js_runtimes(), {})
             self.assertTrue(all('js_runtimes' not in o for o, d in ytdl.variants({'quiet': True})))
+
+
+class Round3Tests(unittest.TestCase):
+    def test_clean_words_keeps_usable_words(self):
+        import subtitles
+        words = [{'start': -0.5, 'end': 0.4, 'text': 'a'}, {'start': 1, 'end': 99, 'text': 'b'}, {'start': 2, 'end': 2.0, 'text': 'c'},
+                 {'start': 3, 'end': 3.5, 'text': '  '}, {'start': float('nan'), 'end': 4, 'text': 'd'}, {'start': 5, 'end': 6}]
+        out = subtitles.clean_words(words, 10)
+        self.assertEqual([w['text'] for w in out], ['a', 'b'])
+        self.assertEqual((out[0]['start'], out[1]['end']), (0.0, 10.0))
+        subtitles.validate_words(out, 10)            # whatever clean_words returns passes the strict check
+
+    def test_audio_loads_without_pyav(self):
+        import wave, tempfile, numpy as np, captions
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / 'a.wav'
+            data = (np.sin(np.linspace(0, 100, 16000)) * 16000).astype(np.int16)
+            with wave.open(str(path), 'wb') as w:
+                w.setnchannels(1); w.setsampwidth(2); w.setframerate(16000); w.writeframes(data.tobytes())
+            arr = captions._load_audio(path)
+        self.assertEqual(arr.dtype, np.float32)
+        self.assertEqual(len(arr), 16000)
+        self.assertLessEqual(float(abs(arr).max()), 1.0)
+
+    def test_blocked_pyav_gets_a_stub(self):
+        import sys, subprocess
+        code = "import sys; sys.modules['av']=None; import compat; m=sys.modules['av']; print(getattr(m,'__neon_stub__',False))"
+        r = subprocess.run([sys.executable, '-c', code], capture_output=True, text=True, cwd=str(Path(__file__).resolve().parents[1]))
+        self.assertEqual(r.stdout.strip().splitlines()[-1], 'True')
+
+    def test_ass_filter_uses_explicit_option_name(self):
+        text = (Path(__file__).resolve().parents[1] / 'app.py').read_text(encoding='utf-8')
+        self.assertIn('ass=filename={ass}', text)
+        self.assertNotIn('ass={ass}', text)

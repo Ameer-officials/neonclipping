@@ -49,6 +49,23 @@ def write_track(items, format='srt', shift=0, duration=None, allow_overlap=False
         blocks.append(prefix+stamp(item['start'])+' --> '+stamp(item['end'])+'\n'+item['text'])
     return ('WEBVTT\n\n' if format=='vtt' else '')+'\n\n'.join(blocks)+'\n'
 
+def clean_words(words,duration):
+    """Automatic captions can carry a word that starts before the clip, ends after it or has a bad time. Keep what is usable."""
+    out=[]
+    for word in words or []:
+        try:
+            start=float(word['start']);end=float(word['end']);text=str(word['text']).strip()
+        except (KeyError,TypeError,ValueError):
+            continue
+        if not (math.isfinite(start) and math.isfinite(end)) or not text:
+            continue
+        start=max(0.0,start);end=min(float(duration),end)
+        if end-start<0.02:
+            continue
+        out.append({'start':round(start,3),'end':round(end,3),'text':text[:500]})
+    return out
+
+
 def validate_words(words,duration,max_words=20000):
     if not isinstance(words,list) or len(words)>max_words:raise ValueError(f'Provide at most {max_words} subtitle words.')
     out=[]

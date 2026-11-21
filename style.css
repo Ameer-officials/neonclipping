@@ -162,3 +162,7 @@ details.panel>summary{cursor:pointer;list-style:none;font-size:16px}details.pane
 .cam-look summary{cursor:pointer}
 .cam-look summary small{color:var(--muted);margin-left:6px}
 .cam-look .controls{margin-top:10px;align-items:flex-end}
+
+details.lite{margin:10px 0;padding:8px 12px;border:1px solid #3c314b;border-radius:10px;background:#120e19}
+details.lite summary{cursor:pointer}
+details.lite summary small{color:var(--muted);margin-left:6px}

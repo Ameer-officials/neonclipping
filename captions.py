@@ -83,6 +83,14 @@ def _turbo_spec():
 
 LOCK=threading.Lock()
 
+def _load_audio(path):
+    """16 kHz mono WAV written by ffmpeg -> float32 numbers, so faster-whisper never has to open the file with PyAV."""
+    import wave, numpy as np
+    with wave.open(str(path), 'rb') as w:
+        frames = w.readframes(w.getnframes())
+    return np.frombuffer(frames, dtype=np.int16).astype(np.float32) / 32768.0
+
+
 def transcribe(source,start,end,data,report=lambda message:None,language=None,model=None):
     report('Loading local speech model (first use may download it)')
     from faster_whisper import WhisperModel
@@ -103,9 +111,10 @@ def transcribe(source,start,end,data,report=lambda message:None,language=None,mo
             report('Transcribing selected clip locally')
             # 'hinglish' = Hindi speech written in Roman letters (a Roman-script prompt steers Whisper to it)
             prompt=DEVA_PROMPT if language in ('hi','hinglish') else None
-            segments,info=MODEL.transcribe(str(audio),beam_size=5,language=('hi' if language=='hinglish' else language) or None,initial_prompt=prompt,word_timestamps=True,vad_filter=True,condition_on_previous_text=False)
+            segments,info=MODEL.transcribe(_load_audio(audio),beam_size=5,language=('hi' if language=='hinglish' else language) or None,initial_prompt=prompt,word_timestamps=True,vad_filter=True,condition_on_previous_text=False)
             words=[]
             for segment in segments:
+                report(f'speech {int(segment.end)}/{int(end-start)} s')
                 for w in segment.words or []:
                     text=w.word.strip()
                     if language=='hinglish':text=ascii_fold(to_hinglish(text)).strip()

@@ -4,7 +4,7 @@ let rectEdited=false,layoutClicked=false,layoutSpecs={},editingClip=null,layoutL
 let rect={cam:{x:0,y:0,w:.25,h:.3},game:{x:.25,y:0,w:.75,h:1}};
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const status=t=>$('status').textContent=t;
-async function request(path,body){const response=await fetch(path,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await response.json();if(!response.ok)throw Error(data.detail||'Request failed');return data;}
+async function request(path,body){let response;try{response=await fetch(path,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});}catch(e){throw Error('Cannot reach the NeonClipping app. Its window was probably closed or it stopped. Start NeonClipping again from the desktop shortcut and try once more.');}const data=await response.json();if(!response.ok)throw Error(data.detail||'Request failed');return data;}
 function signature(){return [id,Number($('start').value),Number($('end').value),$('language').value].join(':');}
 function clearWords(){words=null;wordRange='';$('words').replaceChildren();}
 function setRange(start,end){$('start').value=start;$('end').value=end;clearWords();}
@@ -17,6 +17,7 @@ const fmt=s=>{s=Math.round(s);return Math.floor(s/3600)+':'+String(Math.floor(s%
 $('range-go').onclick=()=>{const a=hms($('range-start').value),b=hms($('range-end').value);if(!(b>a)){$('range-text').textContent='End must be later than start (use h:mm:ss).';return;}$('link').onclick(null,{start:a,end:b});};
 $('link').onclick=async(_e,range)=>{
  const url=$('url').value.trim();if(!url){status('Paste a video link first.');return;}$('range-pick').hidden=true;
+ if(!range&&$('part-end').value.trim()){const a=hms($('part-start').value),b=hms($('part-end').value);if(!(b>a)){$('link-status').textContent='Part: To must be later than From (h:mm:ss).';return;}range={start:a,end:b};}
  const token=++importToken;id=null;still=null;clearWords();$('frames').replaceChildren();$('link').disabled=true;$('progress-wrap').hidden=false;$('progress').style.width='2%';$('link-status').textContent='Getting early source frames…';
  const operation=(async()=>{const {job}=await request('/link',{url,source_height:Number(($('srcq')||{}).value)||1080,...(range||{})});let completed=false;
   for(;;){const s=await request('/status/'+job);if(token!==importToken)return;if(s.preview_frames)addFrames(s.preview_frames,s.preview_meta);
@@ -285,3 +286,9 @@ fetch('/healthz').then(r=>r.json()).then(h=>{if(h&&h.ffmpeg===false){const m='FF
 function camFilter(){const g=k=>Number(document.getElementById('cam-'+k)?.value);const c=g('contrast')||1,b=g('brightness')||0,s=isNaN(g('saturation'))?1:g('saturation'),k=g('clarity')||0;return `contrast(${c}) brightness(${1+b}) saturate(${s})`+(k>0.05?` contrast(${1+k*0.12})`:'');}
 ['contrast','brightness','saturation','clarity'].forEach(k=>{const el=document.getElementById('cam-'+k);if(!el)return;const out=document.getElementById('cam-'+k+'-o');const show=()=>{if(out)out.textContent=Number(el.value).toFixed(2);};el.addEventListener('input',()=>{show();if(typeof paint==='function')paint();});show();});
 const camReset=document.getElementById('cam-reset');if(camReset)camReset.onclick=()=>{const d={contrast:1,brightness:0,saturation:1,clarity:0};for(const k in d){const el=document.getElementById('cam-'+k);if(el){el.value=d[k];el.dispatchEvent(new Event('input'));}}};
+
+(async()=>{try{const s=await request('/ytdl/settings');if($('yt-browser'))$('yt-browser').value=s.cookies_browser||'';}catch(e){}
+ if($('yt-save'))$('yt-save').onclick=async()=>{try{await request('/ytdl/settings',{cookies_browser:$('yt-browser').value});$('yt-note').textContent='Saved. Press Get preview again.';}catch(e){$('yt-note').textContent=e.message;}};
+ const watch=new MutationObserver(()=>{const t=($('link-status').textContent||'')+' '+($('status')?.textContent||'');if(/bot check|not a bot/i.test(t)&&$('yt-login'))$('yt-login').open=true;});
+ if($('link-status'))watch.observe($('link-status'),{childList:true,characterData:true,subtree:true});
+})();

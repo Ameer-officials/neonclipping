@@ -7,10 +7,23 @@
 """
 import shutil
 
+def stub_av():
+    """Windows Smart App Control can block PyAV's DLLs. Audio is decoded by ffmpeg here, so a placeholder lets faster-whisper import."""
+    import sys, types
+    stub = types.ModuleType('av')
+    def _unavailable(*a, **k):
+        raise RuntimeError('PyAV is blocked or missing on this computer; NeonClipping decodes audio with FFmpeg instead.')
+    stub.open = _unavailable
+    stub.__neon_stub__ = True
+    sys.modules['av'] = stub
+    return stub
+
+
 def patch_pyav():
     try:
         import av
-    except ImportError:
+    except Exception:       # noqa: BLE001 - ImportError, DLL blocked by Application Control, broken wheel
+        stub_av()
         return False
     original = getattr(av, 'open', None)
     if original is None or getattr(original, '_neon_patched', False):

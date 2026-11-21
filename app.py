@@ -153,7 +153,7 @@ def export(b:dict):
    if words:
     (DATA/(job+'.vtt')).write_text(subtitles.write_track(subtitles.parse_track((DATA/srt).read_text(encoding='utf-8'),allow_overlap=True),'vtt',allow_overlap=True),encoding='utf-8')
    if plan:styling.append_ass(DATA/ass,plan,dur)
-   fc=g2+f';[base]ass={ass}[v]'
+   fc=g2+f';[base]ass=filename={ass}[v]'
    af,amap=plan.audio(dur) if plan else (None,None)
    if af:fc+=';'+af
    vmap='[v]';fade_af=None
@@ -397,7 +397,7 @@ def make(b:dict):
     if acc!='fast' or not c.get('words'):
      # local speech model: only when you ask for Accurate / Best, or the video has no YouTube captions (local files, Twitch)
      save(job,{'stage':f'Accurate captions {i+1}/{len(found)}'})
-     body['words']=transcribe(DATA/(sid2+'.mp4'),start,end,DATA,lambda m:None,lang,(large_v3() if acc=='best' else None))['words']
+     body['words']=transcribe(DATA/(sid2+'.mp4'),start,end,DATA,(lambda m,i=i:save(job,{'stage':f'Accurate captions {i+1}/{len(found)} · {m}'})),lang,(large_v3() if acc=='best' else None))['words']
     else:
      ws=c['words']       # YouTube's own captions: better than a local model on game audio, and no waiting
      if lang=='hinglish':
@@ -405,6 +405,7 @@ def make(b:dict):
       ws=[w for w in ws if w['text']]
      body['words']=ws
      save(job,{'caption_source':'YouTube captions' if url else 'Saved full-source transcript'})
+    body['words']=subtitles.clean_words(body.get('words'),end-start)
     ej=export(body)['job']
     while state.get(ej,{}).get('status')=='running':time.sleep(.7)
     r=state[ej]
@@ -589,6 +590,25 @@ def report_send(b:dict):
 def report_log(b:dict):
  """The page reports errors it caught itself (a request that failed)."""
  report.log_error(str(b.get('stage') or 'page')[:80],str(b.get('error') or '')[:700]);return {'ok':True}
+@app.get('/ytdl/settings')
+def ytdl_settings_get():
+ import ytdl
+ browser,cookie_file=ytdl._config()
+ return {'cookies_browser':browser,'cookie_file':bool(Path(cookie_file).is_file()),'js_runtime':sorted(ytdl.js_runtimes())}
+@app.post('/ytdl/settings')
+def ytdl_settings_set(b:dict):
+ """Which browser's YouTube login to borrow when YouTube shows its bot check ('' turns it off)."""
+ import ytdl
+ browser=str(b.get('cookies_browser') or '').strip().lower()
+ if browser not in ('','chrome','edge','firefox','brave','opera','vivaldi','chromium'):raise HTTPException(400,'Choose Chrome, Edge, Firefox, Brave, Opera or Vivaldi.')
+ path=ytdl.DATA/'ytdl.json'
+ try:cfg=json.loads(path.read_text(encoding='utf-8'))
+ except (OSError,ValueError):cfg={}
+ if browser:cfg['cookies_browser']=browser
+ else:cfg.pop('cookies_browser',None)
+ ytdl.DATA.mkdir(parents=True,exist_ok=True);path.write_text(json.dumps(cfg),encoding='utf-8')
+ return {'ok':True,'cookies_browser':browser}
+
 @app.get('/update/status')
 def update_status():
  import updater
