@@ -4,6 +4,7 @@ import sys
 import time
 import os
 import ytdl      # first: keeps yt-dlp fresh before it is imported, and handles YouTube's bot check
+import report    # local error log + "Report a problem"
 import yt_dlp
 from standalone import attach, source_height, source_format, quality_label
 from fastapi import FastAPI, UploadFile, File, HTTPException
@@ -52,7 +53,7 @@ def media(id:str):
  return FileResponse(p,media_type='video/mp4')
 @app.get('/assets/{name}')
 def assets(name:str):
- if name not in ('app.js','style.css','extras.js','transcripts.js','vision.js'):raise HTTPException(404)
+ if name not in ('app.js','style.css','extras.js','transcripts.js','vision.js','report.js'):raise HTTPException(404)
  return FileResponse(ROOT/name)
 @app.get('/text/{id}/{kind}')
 def text_file(id:str,kind:str):
@@ -521,9 +522,27 @@ def feedback_summary():
 @app.get('/make/{job}')
 def make_status(job:str):
  if job not in state:raise HTTPException(404,'Job unavailable after restart. Please retry.')
- return state[job]
+ return report.note_job_error(state[job])
 @app.get('/status/{id}')
-def status(id:str):return state.get(id,{'status':'error','error':'Server restarted. Paste the link again to retry.'})
+def status(id:str):return report.note_job_error(state.get(id,{'status':'error','error':'Server restarted. Paste the link again to retry.'}))
+
+# ---- Report a problem (all user-triggered; see report.py)
+@app.get('/report/info')
+def report_info(note:str=''):
+ return {'diagnostics':report.diagnostics(note),'issue_url':report.issue_url(note),'can_send':bool(report.report_url())}
+@app.get('/report/download')
+def report_download(note:str=''):
+ from fastapi.responses import PlainTextResponse
+ return PlainTextResponse(report.diagnostics(note,errors=40),headers={'Content-Disposition':'attachment; filename="neonclipping-diagnostics.txt"'})
+@app.post('/report/send')
+def report_send(b:dict):
+ if b.get('consent') is not True:raise HTTPException(400,'Tick the box to allow sending first.')
+ ok,message=report.send(str(b.get('note') or '')[:600])
+ return {'ok':ok,'message':message}
+@app.post('/report/log')
+def report_log(b:dict):
+ """The page reports errors it caught itself (a request that failed)."""
+ report.log_error(str(b.get('stage') or 'page')[:80],str(b.get('error') or '')[:700]);return {'ok':True}
 @app.get('/runtime')
 def runtime():
  return {'active':[{'id':job,'status':row.get('status'),'stage':row.get('stage') or row.get('message','')} for job,row in list(state.items()) if row.get('status') in ('running','queued','starting','recording')]}

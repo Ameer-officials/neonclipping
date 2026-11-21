@@ -187,6 +187,20 @@ The **Find my facecam** chip (or "find it automatically when I press Make clips"
 
 **AI parts** (below step 01): paste a YouTube link, NeonClipping splits the video's captions into ~25-minute parts and gives a copy-ready prompt per part. Paste each into any free chatbot, paste all answers back (JSON or lines like `12:30-13:10 title`), tick the moments and press Make clips: only those sections are downloaded and rendered. A chatbot given a 9-hour transcript in one go only reads the start; small parts fix that. Nothing is sent anywhere by NeonClipping; the chatbot step is manual.
 
+## Report a problem (English + Hindi)
+
+The **Report a problem · समस्या बताएँ** button (bottom-right) explains, in English and Hindi, three ways to tell the maintainer what broke. You choose how much to share and **nothing is sent unless you press a button**:
+
+| Option | What happens | Who sees it |
+|---|---|---|
+| **1 · GitHub issue (safest)** | Opens a pre-filled issue; you read it and press Submit yourself | Public on GitHub |
+| **2 · Download diagnostics** | Saves a text file; you send it yourself (GitHub, Instagram DM, WhatsApp) | Only who you send it to |
+| **3 · Send directly (optional)** | After you tick a box next to the exact text shown, posts it to the maintainer's collector | The maintainer only |
+
+What the text contains: tool versions (app, Python, Windows, ffmpeg, yt-dlp), the recent error messages with a short label such as `youtube-bot-check`, and your note if you wrote one. Video links (only the site name stays), user names in paths, e-mails, IP addresses and token-like values are removed before anything is shown, logged or shared. No videos, transcripts, cookies or browser data are ever read. Failed jobs are also written to `data/errors.log` on your own computer (redacted, trimmed automatically); that file never leaves the computer unless you share it.
+
+Option 3 stays off ("not set up") until a collector URL is configured; see [`tools/report-worker`](tools/report-worker/README.md). Code: [`report.py`](report.py), [`report.js`](report.js). Issue form: `.github/ISSUE_TEMPLATE/problem.yml`.
+
 ## Source quality (1080p default, 4K optional)
 
 Under **Resolution** there is a **Source quality** menu: how sharp the video is that gets downloaded from YouTube. It used to be fixed at 720p, which made 1080p/4K exports upscaled and soft. Now:
