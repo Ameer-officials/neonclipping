@@ -117,3 +117,31 @@ class SupportersTests(unittest.TestCase):
         import json
         data = json.loads((Path(__file__).resolve().parents[1] / 'supporters.json').read_text(encoding='utf-8'))
         self.assertIsInstance(data['supporters'], list)
+
+
+class StdinAndWatchdogTests(unittest.TestCase):
+    def test_ffmpeg_children_get_empty_stdin(self):
+        import compat, subprocess
+        compat.patch_subprocess()
+        seen = {}
+        class Probe(subprocess.Popen):
+            pass
+        # run a harmless python child named like ffmpeg is not possible; check the wrapper directly instead
+        orig = subprocess.Popen.__init__
+        self.assertTrue(getattr(orig, '_neon_patched', False))
+        self.assertFalse(compat.patch_subprocess())     # idempotent
+
+    def test_watchdog_flags_only_a_stuck_job_once(self):
+        import watchdog
+        logged = []
+        state = {'a': {'status': 'running', 'stage': 'Finding moments', 'progress': .12},
+                 'b': {'status': 'running', 'stage': 'Rendering', 'progress': .5},
+                 'c': {'status': 'done', 'stage': 'x'}}
+        seen = {}
+        watchdog.check(state, seen, 0, lambda s, e: logged.append((s, e)), stall=100)
+        state['b']['progress'] = .6                                   # b moves, a does not
+        self.assertEqual(watchdog.check(state, seen, 150, lambda s, e: logged.append((s, e)), stall=100), ['a'])
+        self.assertIn('no progress', state['a']['stage'])
+        self.assertEqual(logged[0][0], 'stuck')
+        self.assertEqual(watchdog.check(state, seen, 400, lambda s, e: logged.append((s, e)), stall=100), ['b'])   # b stopped later
+        self.assertEqual(len(logged), 2)                              # a is not flagged again

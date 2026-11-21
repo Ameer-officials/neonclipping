@@ -57,7 +57,7 @@ def geometry(name, top=.32, width=1080, height=1920):
             'w':w,'h':size,'circle':name=='circle'}]
     return {'mode':'layers','layers':layers,'width':width,'height':height}
 
-def render_graph(name, rects, top=.32, width=1080, height=1920):
+def render_graph(name, rects, top=.32, width=1080, height=1920, cam_fx=''):
     spec = geometry(name, top, width, height)
     if spec['mode'] == 'blur':
         bw,bh=max(2,width//8*2),max(2,height//8*2)
@@ -74,7 +74,8 @@ def render_graph(name, rects, top=.32, width=1080, height=1920):
         mask = ''
         if layer.get('circle'):
             mask = ",format=rgba,geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='if(lte(pow(X-W/2,2)+pow(Y-H/2,2),pow(min(W,H)/2,2)),255,0)'"
-        parts.append(source+crop+f'scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},setsar=1'+mask+f'[p{i}]')
+        look = cam_fx if layer['source'] == 'cam' else ''
+        parts.append(source+crop+f'scale={w}:{h}:force_original_aspect_ratio=increase:flags=lanczos,crop={w}:{h},setsar=1'+look+mask+f'[p{i}]')
     first = layers[0]
     parts.append(f"[p0]pad={width}:{height}:{first['x']}:{first['y']}:black[b0]")
     for i, layer in enumerate(layers[1:],1):

@@ -41,5 +41,26 @@ def ensure_ffmpeg():
         pass
     return ffmpeg_ready()
 
+def patch_subprocess():
+    """ffmpeg/ffprobe must never wait for keyboard input: when the app runs from a hidden or minimised console, a child that
+    inherits that console's stdin can stall forever (the classic 'stuck at 12%'). Give them an empty stdin unless one is set."""
+    import os, subprocess
+    original = subprocess.Popen.__init__
+    if getattr(original, '_neon_patched', False):
+        return False
+    def init(self, args, *a, **kw):
+        try:
+            first = args[0] if isinstance(args, (list, tuple)) and args else args
+            name = os.path.basename(str(first)).lower()
+            if (name.startswith('ffmpeg') or name.startswith('ffprobe')) and kw.get('stdin') is None and len(a) < 3:
+                kw['stdin'] = subprocess.DEVNULL
+        except Exception:       # noqa: BLE001 - never break process creation
+            pass
+        original(self, args, *a, **kw)
+    init._neon_patched = True
+    subprocess.Popen.__init__ = init
+    return True
+
 patch_pyav()
+patch_subprocess()
 ensure_ffmpeg()

@@ -5,7 +5,7 @@
   const STYLE_KEYS = ['template', 'tpl_name', 'tpl_handle', 'bg_mode', 'bg_color', 'bg_color2', 'bg_image', 'bg_dim', 'bg_blur', 'padding', 'radius',
     'watermark_image', 'watermark_pos', 'watermark_size', 'watermark_opacity', 'credit', 'outro_text', 'outro_seconds',
     'music', 'music_volume', 'music_peak', 'music_riser', 'caption_anim',
-    'caption_font','caption_size','caption_color','caption_active','caption_outline','caption_max_words','hook_duration','hook_background','hook_enabled','fade_inout'];
+    'caption_font','caption_size','caption_color','caption_active','caption_outline','caption_max_words','hook_duration','hook_background','hook_enabled','fade_inout','cam_contrast','cam_brightness','cam_saturation','cam_clarity'];
   const BRAND_KEYS=['caption_font','caption_size','caption_color','caption_active','caption_outline','caption_max_words'];
   const assets = { bg_image: '', watermark_image: '', music: '' };
 
@@ -35,7 +35,7 @@
     if (v.music) { o.music = v.music; o.music_volume = v.music_volume; o.music_peak = v.music_peak; o.music_riser = v.music_riser; }
     if (v.caption_anim && v.caption_anim !== 'highlight') o.caption_anim = v.caption_anim;
     for(const key of BRAND_KEYS){const value=$('brand-'+key)?.value;if(value)o[key]=['caption_size','caption_max_words'].includes(key)?Number(value):value;}
-    o.hook_duration=Number($('hook-duration')?.value||8);o.hook_background=$('hook-background')?.checked!==false;o.hook_enabled=$('hook-enabled')?.checked!==false;o.fade_inout=!!$('fade-inout')?.checked;
+    o.hook_duration=Number($('hook-duration')?.value||8);o.hook_background=$('hook-background')?.checked!==false;o.hook_enabled=$('hook-enabled')?.checked!==false;o.fade_inout=!!$('fade-inout')?.checked;['contrast','brightness','saturation','clarity'].forEach(k=>{const el=$('cam-'+k);if(el)o['cam_'+k]=Number(el.value);});
     return o;
   }
   // every key, '' when off: used when editing saved clips so a switched-off option really turns off
@@ -66,6 +66,7 @@
     if($('hook-background'))$('hook-background').checked=s.hook_background!==false;
     if($('hook-enabled'))$('hook-enabled').checked=s.hook_enabled!==false;
     if($('fade-inout'))$('fade-inout').checked=!!s.fade_inout;
+    ['contrast','brightness','saturation','clarity'].forEach(k=>{const el=$('cam-'+k);if(el&&s['cam_'+k]!==undefined&&s['cam_'+k]!==null){el.value=s['cam_'+k];el.dispatchEvent(new Event('input'));}});
   }
 
   // ---- uploads (logo, wallpaper, music)

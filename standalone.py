@@ -10,7 +10,7 @@ import ytdl
 import yt_dlp
 from fastapi import HTTPException
 
-SOURCE_HEIGHTS=(720,1080,1440,2160)
+SOURCE_HEIGHTS=(360,480,720,1080,1440,2160)
 DEFAULT_SOURCE_HEIGHT=1080
 def source_height(value):
     """Validated source download cap. Anything unknown falls back to 1080p."""

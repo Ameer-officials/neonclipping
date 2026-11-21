@@ -25,6 +25,7 @@ ROOT=Path(__file__).resolve().parent
 DATA=Path(os.environ.get('NEONCLIPPING_DATA_DIR',str(ROOT/'data'))).resolve();DATA.mkdir(parents=True,exist_ok=True)
 app=FastAPI()
 state={}
+import watchdog;watchdog.start(state,report.log_error)      # flags a job that has not moved for 15 minutes and logs where it waits
 def probe(p):
  r=subprocess.run(['ffprobe','-v','error','-show_streams','-show_format','-of','json',str(p)],capture_output=True,text=True,check=True)
  j=json.loads(r.stdout);v=next(x for x in j['streams'] if x['codec_type']=='video')
@@ -124,7 +125,10 @@ def export(b:dict):
  if b.get('captions') and 'words' in b:
   try:b={**b,'words':subtitles.validate_words(b['words'],end-start)}
   except (ValueError,KeyError,TypeError,OverflowError) as e:raise HTTPException(400,str(e))
- graph=render_graph(layout,rects,top,width,height)
+ import camfx
+ try:cam_fx=camfx.filter(b)
+ except (ValueError,TypeError,OverflowError) as e:raise HTTPException(400,str(e))
+ graph=render_graph(layout,rects,top,width,height,cam_fx)
  try:brands.appearance(b)
  except (ValueError,TypeError,OverflowError) as e:raise HTTPException(400,str(e))
  try:hooks.settings(b)
@@ -344,9 +348,14 @@ def make(b:dict):
     from yt_dlp.utils import download_range_func
     def section(i,c):
      name=uuid.uuid4().hex
-     with _yt({'format':source_format(src_h),'merge_output_format':'mp4','outtmpl':str(DATA/(name+'.%(ext)s')),
-               'download_ranges':download_range_func(None,[(max(0,c['start']-PAD),c['end']+1)])}) as y:y.download([url])
-     return name
+     for attempt in range(3):     # an FFmpeg crash on one section (seen on some FFmpeg 9.1 builds) must not lose the whole video
+      try:
+       with _yt({'format':source_format(src_h),'merge_output_format':'mp4','outtmpl':str(DATA/(name+'.%(ext)s')),
+                 'download_ranges':download_range_func(None,[(max(0,c['start']-PAD),c['end']+1)])}) as y:y.download([url])
+       return name
+      except Exception:
+       if attempt==2:raise
+       time.sleep(3*(attempt+1))
     pool=ThreadPoolExecutor(max_workers=3);sections=[pool.submit(section,i,c) for i,c in enumerate(found)]
    else:
     if url:

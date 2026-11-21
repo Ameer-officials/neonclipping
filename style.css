@@ -157,3 +157,8 @@ details.panel>summary{cursor:pointer;list-style:none;font-size:16px}details.pane
 .update-bar{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:0 0 14px;padding:12px 16px;border:1px solid #d4fb58;border-radius:12px;background:#1b2410;color:#fbf6ff;font-size:13px}
 .update-bar b{color:#d4fb58}
 .update-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+.cam-look{margin:12px 0;padding:10px 14px;border:1px solid #3c314b;border-radius:10px;background:#120e19}
+.cam-look summary{cursor:pointer}
+.cam-look summary small{color:var(--muted);margin-left:6px}
+.cam-look .controls{margin-top:10px;align-items:flex-end}
