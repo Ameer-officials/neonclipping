@@ -1,15 +1,21 @@
-"""Phone remote: use NeonClipping from a phone on the same Wi-Fi.
+"""Phone remote: use NeonClipping from a phone, or from any browser when it is hosted (for example on Railway).
 
-The heavy work (recording, speech, rendering) always happens on the PC. The phone is a remote control and viewer:
-paste a live link, watch the chat-hype meter, press "clip the last 20 s", and play / save the clips.
+The heavy work (recording, speech, rendering) always happens on the server. The browser is a remote control and viewer.
 
-Safety rules (this opens the tool to your home network, so they are strict):
-  * It is OFF unless NeonClipping is started with NEONCLIPPING_LAN=1 (the "Start-NeonClipping-Phone" shortcut).
-    Without it the server only listens on 127.0.0.1 and nothing here is reachable.
-  * Anything that is not the PC itself needs a 6-digit PIN (shown only on the PC, stored in data/phone.json). After 5 wrong
-    tries an address is locked for 10 minutes. A correct PIN gives an HttpOnly cookie.
-  * Even with the PIN a phone can only use the live, library, make, status, clips, feedback and creators routes. Uploads,
-    file-based tools, the queue and every /phone route stay PC-only.
+Safety rules:
+  * Requests from the machine itself (127.0.0.1) are never asked for a PIN.
+  * Anything else is refused unless phone access is switched on:
+        NEONCLIPPING_LAN=1   (home Wi-Fi use, the "Start-NeonClipping-Phone" shortcut), or
+        PHONE_PIN=<secret>   (hosted use; this also switches phone access on)
+  * Outside requests need the PIN. After 5 wrong tries an address is locked for 10 minutes. A correct PIN gives an HttpOnly cookie.
+  * Home Wi-Fi mode (NEONCLIPPING_LAN=1 only): a logged-in phone can use only the routes listed in ALLOW.
+  * Hosted mode (PHONE_PIN set, or NEONCLIPPING_PHONE_FULL=1): a logged-in browser can use the whole app, except the routes in BLOCK
+    (cloud AI key, self-update, YouTube cookie settings, PIN management).
+
+Settings (environment variables):
+  PHONE_PIN                 Any secret string (use 20+ random characters when the app is on the internet). Overrides data/phone.json.
+  PHONE_SALT                Optional. Changing it signs every browser out.
+  NEONCLIPPING_PHONE_FULL   1 = full access after login, 0 = phone routes only. Default: 1 when PHONE_PIN is set, otherwise 0.
 """
 import hmac
 import hashlib
@@ -17,29 +23,49 @@ import json
 import os
 import secrets
 import socket
+import threading
 import time
 from pathlib import Path
 
 from fastapi import HTTPException, Request
-from fastapi.responses import HTMLResponse, JSONResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 
 LOCAL = ('127.0.0.1', '::1', 'localhost')
 ALLOW = ('/m', '/manifest.webmanifest', '/phone-icon.svg', '/live', '/live-active', '/library', '/media', '/text', '/make', '/status',
          '/clips', '/feedback', '/creators', '/donate', '/healthz', '/assets')
+PUBLIC = ('/m', '/m/login', '/manifest.webmanifest', '/phone-icon.svg', '/healthz')   # carry no data, no PIN needed
+BLOCK = ('/phone', '/update', '/llm', '/ytdl')                                          # never reachable from outside, even after login
 MAX_TRIES, LOCK_SECONDS = 5, 600
+MAX_TRACKED = 2000
 COOKIE = 'nc_phone'
+FORWARD_HEADERS = ('x-forwarded-for', 'x-real-ip', 'forwarded', 'cf-connecting-ip')
 
 
 def is_local(host):
     return host in LOCAL or str(host).startswith('127.')
 
 
+def under(path, prefixes):
+    return any(path == p or path.startswith(p + '/') for p in prefixes)
+
+
 def allowed(path):
-    return any(path == p or path.startswith(p + '/') for p in ALLOW)
+    return under(path, ALLOW)
+
+
+def env_pin():
+    return (os.environ.get('PHONE_PIN') or '').strip()
 
 
 def lan_enabled():
-    return os.environ.get('NEONCLIPPING_LAN') == '1'
+    return os.environ.get('NEONCLIPPING_LAN') == '1' or bool(env_pin())
+
+
+def full_access():
+    flag = os.environ.get('NEONCLIPPING_PHONE_FULL')
+    if flag in ('0', '1'):
+        return flag == '1'
+    return bool(env_pin())
 
 
 def lan_ips():
@@ -60,97 +86,155 @@ def lan_ips():
     out = []
     for ip in found:
         parts = ip.split('.')
-        private = ip.startswith(('10.', '192.168.')) or (ip.startswith('172.') and len(parts) > 1 and 16 <= int(parts[1]) <= 31)
+        try:
+            private = ip.startswith(('10.', '192.168.')) or (ip.startswith('172.') and len(parts) > 1 and 16 <= int(parts[1]) <= 31)
+        except ValueError:
+            private = False
         if private and ip not in out:
             out.append(ip)
     return out
 
 
+def _same(a, b):
+    """Constant-time string comparison that never raises (non-ASCII input is fine)."""
+    return hmac.compare_digest(str(a).encode('utf-8', 'replace'), str(b).encode('utf-8', 'replace'))
+
+
 def attach(app, data, root):
     store = Path(data) / 'phone.json'
-    fails = {}          # ip -> [count, first_time]
-
-    def load():
-        env_pin = os.environ.get('PHONE_PIN')
-        if env_pin:
-            return {'pin': env_pin, 'salt': 'railway-fixed-salt'}
-        try:
-            j = json.loads(store.read_text(encoding='utf-8'))
-            if isinstance(j, dict) and j.get('pin') and j.get('salt'):
-                return j
-        except (OSError, ValueError):
-            pass
-        return new_pin()
+    fails = {}                 # client address -> [count, first_time]
+    lock = threading.Lock()
+    cache = {}                 # keeps the PIN stable even if the disk cannot be written
 
     def new_pin():
         j = {'pin': f'{secrets.randbelow(10**6):06d}', 'salt': secrets.token_hex(16)}
-        tmp = store.with_suffix('.tmp')
-        tmp.write_text(json.dumps(j), encoding='utf-8')
-        tmp.replace(store)
+        try:
+            store.parent.mkdir(parents=True, exist_ok=True)
+            tmp = store.with_suffix('.tmp')
+            tmp.write_text(json.dumps(j), encoding='utf-8')
+            tmp.replace(store)
+        except OSError:
+            pass               # read-only disk: the PIN lives in memory for this run
         return j
 
+    def load():
+        pin = env_pin()
+        if pin:
+            return {'pin': pin, 'salt': os.environ.get('PHONE_SALT') or 'neonclipping-phone'}
+        with lock:
+            if cache.get('j'):
+                return cache['j']
+            try:
+                j = json.loads(store.read_text(encoding='utf-8'))
+                if isinstance(j, dict) and j.get('pin') and j.get('salt'):
+                    cache['j'] = {'pin': str(j['pin']), 'salt': str(j['salt'])}
+                    return cache['j']
+            except (OSError, ValueError):
+                pass
+            cache['j'] = new_pin()
+            return cache['j']
+
     def token(j):
-        return hmac.new(j['salt'].encode(), j['pin'].encode(), hashlib.sha256).hexdigest()
+        return hmac.new(str(j['salt']).encode(), str(j['pin']).encode(), hashlib.sha256).hexdigest()
 
     def authed(request):
         got = request.cookies.get(COOKIE, '')
-        return bool(got) and hmac.compare_digest(got, token(load()))
+        return bool(got) and _same(got, token(load()))
+
+    def proxied(request):
+        return any(h in request.headers for h in FORWARD_HEADERS)
+
+    def on_pc(request):
+        """True only for a direct request from this machine. A request that came through a proxy is never 'the PC'."""
+        host = request.client.host if request.client else ''
+        return is_local(host) and not proxied(request)
+
+    def client_id(request):
+        fwd = request.headers.get('x-real-ip') or (request.headers.get('x-forwarded-for') or '').split(',')[0].strip()
+        return fwd or (request.client.host if request.client else '?')
+
+    def secure_cookie(request):
+        return request.headers.get('x-forwarded-proto', request.url.scheme) == 'https'
 
     def port_of(request):
         return os.environ.get('NEONCLIPPING_PORT') or str(request.url.port or 8770)
 
     @app.middleware('http')
     async def gate(request: Request, call_next):
-        host = request.client.host if request.client else ''
-        if is_local(host):
-            return await call_next(request)
-        path = request.url.path
-        if not lan_enabled():
-            return JSONResponse({'detail': 'Phone access is off on this computer.'}, status_code=403)
-        if path in ('/m', '/m/login', '/manifest.webmanifest', '/phone-icon.svg'):
-            return await call_next(request)                 # the page itself and the PIN form carry no data
-        if not allowed(path) or path.startswith('/phone'):
-            return JSONResponse({'detail': 'This is only available on the PC.'}, status_code=403)
-        if not authed(request):
-            return JSONResponse({'detail': 'Enter the PIN shown on the PC.'}, status_code=401)
+        try:
+            if on_pc(request):
+                return await call_next(request)
+            path = request.url.path
+            if not lan_enabled():
+                return JSONResponse({'detail': 'Phone access is off on this computer.'}, status_code=403)
+            if under(path, PUBLIC):
+                return await call_next(request)                 # the page itself and the PIN form carry no data
+            if under(path, BLOCK):
+                return JSONResponse({'detail': 'This is only available on the PC.'}, status_code=403)
+            if not full_access() and not allowed(path):
+                return JSONResponse({'detail': 'This is only available on the PC.'}, status_code=403)
+            if not authed(request):
+                if request.method in ('GET', 'HEAD') and path == '/':
+                    return RedirectResponse('/m', status_code=302)
+                return JSONResponse({'detail': 'Enter the PIN shown on the PC.'}, status_code=401)
+        except Exception:
+            return JSONResponse({'detail': 'Access check failed. Try again.'}, status_code=500)
         return await call_next(request)
+
+    @app.get('/healthz')
+    def healthz():
+        return {'ok': True}
 
     @app.get('/m')
     def mobile_page():
-        return HTMLResponse((Path(root) / 'mobile.html').read_text(encoding='utf-8'))
+        page = Path(root) / 'mobile.html'
+        try:
+            return HTMLResponse(page.read_text(encoding='utf-8'))
+        except OSError:
+            return JSONResponse({'detail': 'mobile.html is missing from this install.'}, status_code=404)
 
     @app.post('/m/login')
     def login(b: dict, request: Request):
-        ip = request.client.host if request.client else '?'
-        count, first = fails.get(ip, [0, time.time()])
-        if count >= MAX_TRIES and time.time() - first < LOCK_SECONDS:
-            raise HTTPException(429, 'Too many wrong PINs. Try again in a few minutes.')
-        if time.time() - first >= LOCK_SECONDS:
-            count, first = 0, time.time()
+        ip = client_id(request)
+        now = time.time()
+        with lock:
+            count, first = fails.get(ip, [0, now])
+            if now - first >= LOCK_SECONDS:
+                count, first = 0, now
+            if count >= MAX_TRIES:
+                raise HTTPException(429, 'Too many wrong PINs. Try again in a few minutes.')
         j = load()
-        if not hmac.compare_digest(str(b.get('pin', '')).strip(), j['pin']):
-            fails[ip] = [count + 1, first]
+        if not _same(str(b.get('pin', '')).strip(), j['pin']):
+            with lock:
+                if len(fails) > MAX_TRACKED:
+                    fails.clear()
+                fails[ip] = [count + 1, first]
+            time.sleep(0.4)                                     # slows down guessing
             raise HTTPException(401, 'Wrong PIN.')
-        fails.pop(ip, None)
+        with lock:
+            fails.pop(ip, None)
         resp = JSONResponse({'ok': True})
-        resp.set_cookie(COOKIE, token(j), httponly=True, samesite='lax', max_age=30 * 24 * 3600)
+        resp.set_cookie(COOKIE, token(j), httponly=True, samesite='lax', secure=secure_cookie(request), max_age=30 * 24 * 3600)
         return resp
 
     @app.get('/phone/status')
     def status(request: Request):
-        host = request.client.host if request.client else ''
-        if not is_local(host):
+        if not on_pc(request):
             raise HTTPException(403, 'This is only available on the PC.')
         port = port_of(request)
         on = lan_enabled()
-        return {'enabled': on, 'port': port, 'urls': [f'http://{ip}:{port}/m' for ip in lan_ips()] if on else [], 'pin': load()['pin'] if on else None}
+        return {'enabled': on, 'port': port, 'urls': [f'http://{ip}:{port}/m' for ip in lan_ips()] if on else [],
+                'pin': load()['pin'] if on else None}
 
     @app.post('/phone/newpin')
     def newpin(request: Request):
-        host = request.client.host if request.client else ''
-        if not is_local(host):
+        if not on_pc(request):
             raise HTTPException(403, 'This is only available on the PC.')
-        return {'pin': new_pin()['pin']}
+        if env_pin():
+            raise HTTPException(400, 'The PIN is set by the PHONE_PIN variable. Change it there.')
+        with lock:
+            cache['j'] = new_pin()
+            return {'pin': cache['j']['pin']}
 
     @app.get('/manifest.webmanifest')
     def manifest():
