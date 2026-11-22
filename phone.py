@@ -71,6 +71,9 @@ def attach(app, data, root):
     fails = {}          # ip -> [count, first_time]
 
     def load():
+        env_pin = os.environ.get('PHONE_PIN')
+        if env_pin:
+            return {'pin': env_pin, 'salt': 'railway-fixed-salt'}
         try:
             j = json.loads(store.read_text(encoding='utf-8'))
             if isinstance(j, dict) and j.get('pin') and j.get('salt'):
